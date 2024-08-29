@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     `maven-publish`
     java
@@ -7,6 +9,7 @@ plugins {
     id("dev.architectury.loom") version "1.7-SNAPSHOT"
     id("architectury-plugin") version "3.4-SNAPSHOT"
     id("me.modmuss50.mod-publish-plugin") version "0.5.+"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 class CompatMixins {
@@ -60,6 +63,33 @@ loom {
 tasks {
     withType<JavaCompile> {
         options.release = 21
+        options.annotationProcessorPath = configurations["annotationProcessor"]
+    }
+
+    withType<ShadowJar> {
+        from(sourceSets.main.get().output)
+        relocate("com.google.gson", "com.bawnorton.configurable.libs.gson")
+        relocate("com.electronwill.nightconfig", "com.bawnorton.configurable.libs.nightconfig")
+
+        dependencies {
+            include(dependency("com.google.code.gson:gson:2.10.1"))
+            include(dependency("com.electronwill.night-config:toml:3.8.0"))
+            include(dependency("com.electronwill.night-config:core:3.8.0"))
+        }
+
+        exclude(
+            "assets/minecraft/**",
+            "data/minecraft/**",
+            "mappings/**",
+            "**/.mcassetsroot",
+            "*.jfc",
+            "pack.png",
+            "version.json"
+        )
+
+        mergeServiceFiles()
+
+        archiveClassifier = null
     }
 
     processResources {
@@ -78,9 +108,9 @@ java {
 
 val buildAndCollect = tasks.register<Copy>("buildAndCollect") {
     group = "build"
-    from(tasks.remapJar.get().archiveFile)
+    from(tasks.shadowJar.get().archiveFile)
     into(rootProject.layout.buildDirectory.file("libs/${mod.version}"))
-    dependsOn("build")
+    dependsOn("remapJar", "shadowJar")
 }
 
 if (stonecutter.current.isActive) {
@@ -169,7 +199,7 @@ extensions.configure<PublishingExtension> {
         create<MavenPublication>("maven") {
             groupId = "${mod.group}.${mod.id}"
             artifactId = "${mod.id}-$loader"
-            version = "${mod.version}+$minecraftVersion"
+            version = "${mod.version}+$minecraftVersion-SNAPSHOT"
 
             from(components["java"])
         }

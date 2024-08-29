@@ -17,10 +17,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.bawnorton.modid.platform.ModIdWrapper"
+      "com.bawnorton.configurable.platform.ConfigurableWrapper"
     ],
     "client": [
-      "com.bawnorton.modid.client.platform.ModIdClientWrapper"
+      "com.bawnorton.configurable.client.platform.ConfigurableClientWrapper"
     ]
   },
   "mixins": [
