@@ -12,19 +12,6 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-class CompatMixins {
-    private var common : List<String> = listOf()
-    private var fabric : List<String> = listOf()
-    private var neoforge : List<String> = listOf()
-
-    fun getMixins() : Map<String, String> {
-        val mixins = common + if(loader.isFabric) fabric else neoforge
-        return mapOf(
-            "compat_mixins" to "[\n${mixins.joinToString(",\n") { "\"$it\"" }}\n]"
-        )
-    }
-}
-
 val mod = ModData(project)
 val loader = LoaderData(project, loom.platform.get().name.lowercase())
 val minecraftVersion = MinecraftVersionData(stonecutter)
@@ -50,20 +37,13 @@ loom {
     accessWidenerPath.set(rootProject.file("src/main/resources/$awName"))
 
     runConfigs.all {
-        ideConfigGenerated(true)
-        runDir = "../../run"
-    }
-
-    runConfigs["client"].apply {
-        vmArgs("-Dmixin.debug.export=true")
-        programArgs("--username=Bawnorton")
+        ideConfigGenerated(false)
     }
 }
 
 tasks {
     withType<JavaCompile> {
         options.release = 21
-        options.annotationProcessorPath = configurations["annotationProcessor"]
     }
 
     withType<ShadowJar> {
@@ -91,12 +71,6 @@ tasks {
 
         archiveClassifier = null
     }
-
-    processResources {
-        val compatMixins = CompatMixins().getMixins()
-        inputs.properties(compatMixins)
-        filesMatching("${mod.id}-compat.mixins.json") { expand(compatMixins) }
-    }
 }
 
 java {
@@ -121,12 +95,6 @@ if (stonecutter.current.isActive) {
 }
 
 if(loader.isFabric) {
-    fabricApi {
-        configureDataGeneration {
-            outputDirectory = rootProject.rootDir.resolve("src/main/generated")
-        }
-    }
-
     dependencies {
         mappings("net.fabricmc:yarn:$minecraftVersion+build.${property("yarn_build")}:v2")
         modImplementation("net.fabricmc:fabric-loader:${loader.getVersion()}")
@@ -149,12 +117,6 @@ if(loader.isFabric) {
 }
 
 if (loader.isNeoForge) {
-    sourceSets {
-        main {
-            resources.srcDir(rootProject.rootDir.resolve("src/main/generated"))
-        }
-    }
-
     dependencies {
         mappings(loom.layered {
             mappings("net.fabricmc:yarn:$minecraftVersion+build.${property("yarn_build")}:v2")
@@ -199,7 +161,7 @@ extensions.configure<PublishingExtension> {
         create<MavenPublication>("maven") {
             groupId = "${mod.group}.${mod.id}"
             artifactId = "${mod.id}-$loader"
-            version = "${mod.version}+$minecraftVersion-SNAPSHOT"
+            version = "${mod.version}+$minecraftVersion"
 
             from(components["java"])
         }
