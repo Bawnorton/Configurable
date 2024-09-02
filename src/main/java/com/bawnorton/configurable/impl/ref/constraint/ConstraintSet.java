@@ -3,6 +3,8 @@ package com.bawnorton.configurable.impl.ref.constraint;
 import com.bawnorton.configurable.impl.util.Pair;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class ConstraintSet {
     private final Set<ReferenceConstraint> constraints;
@@ -28,7 +30,7 @@ public class ConstraintSet {
 
     public static class Builder {
         private final Set<Pair<Double, Double>> clamps = new HashSet<>();
-        private final Set<String> predicates = new HashSet<>();
+        private final Set<Predicate<Object>> predicates = new HashSet<>();
         private final Set<String> regexes = new HashSet<>();
 
         public Builder addClamped(Double min, Double max) {
@@ -36,7 +38,7 @@ public class ConstraintSet {
             return this;
         }
 
-        public Builder addPredicate(String predicate) {
+        public Builder addPredicate(Predicate<Object> predicate) {
             predicates.add(predicate);
             return this;
         }

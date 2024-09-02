@@ -18,5 +18,5 @@ public enum ControllerType {
     LONG_FIELD,
     LONG_SLIDER,
     STRING_FIELD,
-    TICK_BOX;
+    TICK_BOX
 }

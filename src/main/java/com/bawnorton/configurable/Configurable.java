@@ -29,7 +29,7 @@ public @interface Configurable {
     String predicate() default "";
 
     /**
-     * Minimum value for a numeric field. Must be at most the same value as {@link Configurable#max}.<br>
+     * Minimum value for a numeric field. Must be at most the same value as {@link Configurable#max}.
      */
     double min() default Double.MIN_NORMAL;
 
@@ -39,31 +39,7 @@ public @interface Configurable {
     double max() default Double.MAX_VALUE;
 
     /**
-     * For UI generation set the category of this specific element to "config_name.category.%category%".<br>
-     * Defaults to the enclosing package name: "config_name.category.package_name".<br>
-     * <br>
-     * Example:<br>
-     * <pre>
-     * {@code
-     *     package com.bawnorton.package_name;
-     *
-     *     public class Holder {
-     *         @Configurable(category = "test")
-     *         public static int value;
-     *         @Configurable
-     *         public static boolean otherValue;
-     *     }
-     * }
-     * </pre>
-     * {@code Holder#value} will be placed in "config_name.category.test" and {@code Holder#otherValue} will be placed in
-     * "config_name.category.package_name".
+     * For configuring the UI Generator
      */
-    String category() default "";
-
-    /**
-     * Whether or not to exclude the field from the UI generator
-     */
-    boolean exclude() default false;
-
-    ControllerType controller() default ControllerType.AUTO;
+    Yacl yacl() default @Yacl;
 }

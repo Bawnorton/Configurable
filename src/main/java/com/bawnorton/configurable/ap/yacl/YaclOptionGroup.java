@@ -6,11 +6,13 @@ public class YaclOptionGroup extends YaclElement {
     private final YaclElement optionGroupName;
     private final YaclElement optionGroupDescription;
     private final YaclElement options;
+    private final boolean collapsed;
 
-    public YaclOptionGroup(YaclOptionGroupName optionGroupName, YaclDescription optionGroupDescription, YaclOptions options) {
+    public YaclOptionGroup(YaclOptionGroupName optionGroupName, YaclDescription optionGroupDescription, YaclOptions options, boolean collapsed) {
         this.optionGroupName = optionGroupName;
         this.optionGroupDescription = optionGroupDescription;
         this.options = options;
+        this.collapsed = collapsed;
     }
 
     @Override
@@ -28,12 +30,14 @@ public class YaclOptionGroup extends YaclElement {
         %1$s.name(%2$s)
         %1$s.description(%3$s)
         %1$s.options(%4$s)
+        %1$s.collapsed(%5$s)
         %1$s.build()
         """.formatted(
                 "\t".repeat(depth),
                 optionGroupName.getSpec(depth + 1),
                 optionGroupDescription.getSpec(depth + 1),
-                options.getSpec(depth + 1)
+                options.getSpec(depth + 1),
+                collapsed
         ).trim();
     }
 }

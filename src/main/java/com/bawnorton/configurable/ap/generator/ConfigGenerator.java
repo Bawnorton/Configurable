@@ -1,7 +1,7 @@
 package com.bawnorton.configurable.ap.generator;
 
-import com.bawnorton.configurable.Configurable;
 import com.bawnorton.configurable.ap.tree.ConfigurableElement;
+import com.bawnorton.configurable.ap.tree.ConfigurableHolder;
 import com.bawnorton.configurable.impl.ConfigurableSettings;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -104,31 +104,47 @@ public final class Config implements GeneratedConfig {
     }
 
     private String createConstraintSet(ConfigurableElement element) {
-        Configurable annotation = element.annotation();
+        ConfigurableHolder holder = element.annotationHolder();
         StringBuilder constraintSet = new StringBuilder("ConstraintSet.builder()");
-        addPredicateConstraint(annotation, constraintSet);
-        addRegexConstraint(annotation, constraintSet);
-        addClampedConstraint(annotation, element.element(), constraintSet);
+        addPredicateConstraint(element, constraintSet);
+        addRegexConstraint(holder, constraintSet);
+        addClampedConstraint(holder, element.element(), constraintSet);
         return constraintSet.toString();
     }
 
-    private void addPredicateConstraint(Configurable annotation, StringBuilder constraintSet) {
-        String predicate = annotation.predicate();
-        if(!predicate.isBlank()) {
-            constraintSet.append(".addPredicate(\"%s\")".formatted(predicate));
+    private void addPredicateConstraint(ConfigurableElement element, StringBuilder constraintSet) {
+        String predicate = element.annotationHolder().predicate();
+        if(predicate.isEmpty()) return;
+
+        if(predicate.contains("#")) {
+            String[] parts = predicate.split("#");
+            String owner = parts[0];
+            String methodName = parts[1];
+            constraintSet.append(".addPredicate(value -> %s.%s((%s) value))".formatted(
+                    owner,
+                    methodName,
+                    element.getTypeName()
+            ));
+        } else {
+            String owner = element.getFullyQualifiedOwnerName(types);
+            constraintSet.append(".addPredicate(value -> %s.%s((%s) value))".formatted(
+                    owner,
+                    predicate,
+                    element.getTypeName()
+            ));
         }
     }
 
-    private void addRegexConstraint(Configurable annotation, StringBuilder constraintSet) {
-        String regex = annotation.regex();
-        if(!regex.isBlank()) {
+    private void addRegexConstraint(ConfigurableHolder holder, StringBuilder constraintSet) {
+        String regex = holder.regex();
+        if(!regex.isEmpty()) {
             constraintSet.append(".addRegex(\"%s\")".formatted(regex));
         }
     }
 
-    private void addClampedConstraint(Configurable annotation, Element element, StringBuilder constraintSet) {
-        double min = annotation.min();
-        double max = annotation.max();
+    private void addClampedConstraint(ConfigurableHolder holder, Element element, StringBuilder constraintSet) {
+        double min = holder.min();
+        double max = holder.max();
         if (max != Double.MAX_VALUE || min != Double.MIN_NORMAL) {
             if (min > max) {
                 messager.printError("min must be smaller than or equal to the max", element);

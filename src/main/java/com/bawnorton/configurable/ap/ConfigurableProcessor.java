@@ -64,7 +64,7 @@ public final class ConfigurableProcessor extends AbstractProcessor {
         Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(Configurable.class);
         if(elements.isEmpty()) return false;
 
-        ConfigurableTree tree = new ConfigurableTree(messager, elements);
+        ConfigurableTree tree = new ConfigurableTree(messager, elementUtils, elements);
         List<ConfigurableElement> roots = tree.getRoots();
         if(roots.isEmpty()) return false;
 

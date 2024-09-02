@@ -123,19 +123,26 @@ public final class YaclScreenFactory {
             YaclOptions options = new YaclOptions();
             YaclOptionGroups optionGroups = new YaclOptionGroups();
             entries.forEach(entry -> entry.disolveMultiLevelParents().forEach(parentOrChild -> {
+                if(parentOrChild.annotationHolder().exclude()) return;
+
                 if(parentOrChild.childless()) {
                     options.addOption(createYaclOption(parentOrChild, configName, externalRefGetter));
                 } else {
                     String key = parentOrChild.getKey();
                     YaclOptions entryOptions = new YaclOptions();
-                    parentOrChild.children().forEach(child -> entryOptions.addOption(createYaclOption(child, configName, externalRefGetter)));
+                    parentOrChild.children().forEach(child -> {
+                        if(child.annotationHolder().exclude()) return;
+
+                        entryOptions.addOption(createYaclOption(child, configName, externalRefGetter));
+                    });
                     optionGroups.addOptionGroup(new YaclOptionGroup(
                             new YaclOptionGroupName(configName, key),
                             new YaclDescription(
                                     new YaclDescriptionText(configName, key),
                                     null
                             ),
-                            entryOptions
+                            entryOptions,
+                            parentOrChild.annotationHolder().collapsed()
                     ));
                 }
             }));
@@ -167,40 +174,43 @@ public final class YaclScreenFactory {
                         null
                 ),
                 new YaclOptionBinding(externalRef),
-                getOptionController(entry, externalRef)
+                getOptionController(entry, externalRef),
+                entry.annotationHolder().type(),
+                entry.getListeners(types)
         );
     }
 
     private @NotNull YaclOptionController getOptionController(ConfigurableElement entry, String externalRef) {
+        YaclValueFormatter formatter = entry.getFormatter(types);
         return switch (entry.getControllerType()) {
             case AUTO -> switch (entry.getTypeKind()) {
                 case BOOLEAN -> new YaclOptionController.TickBox();
                 case BYTE, SHORT, INT -> new YaclOptionController.IntegerSlider(
-                        new YaclValueFormatter(),
-                        (int) entry.annotation().min(),
-                        (int) entry.annotation().max()
+                        formatter,
+                        (int) entry.annotationHolder().min(),
+                        (int) entry.annotationHolder().max()
                 );
                 case DOUBLE -> new YaclOptionController.DoubleSlider(
-                        new YaclValueFormatter(),
-                        entry.annotation().min(),
-                        entry.annotation().max()
+                        formatter,
+                        entry.annotationHolder().min(),
+                        entry.annotationHolder().max()
                 );
                 case CHAR -> new YaclOptionController.StringField();
                 case FLOAT -> new YaclOptionController.FloatSlider(
-                        new YaclValueFormatter(),
-                        (float) entry.annotation().min(),
-                        (float) entry.annotation().max()
+                        formatter,
+                        (float) entry.annotationHolder().min(),
+                        (float) entry.annotationHolder().max()
                 );
                 case LONG -> new YaclOptionController.LongSlider(
-                        new YaclValueFormatter(),
-                        (long) entry.annotation().min(),
-                        (long) entry.annotation().max()
+                        formatter,
+                        (long) entry.annotationHolder().min(),
+                        (long) entry.annotationHolder().max()
                 );
                 case DECLARED -> {
                     ElementKind elementKind = entry.element().getKind();
                     if (elementKind == ElementKind.ENUM) {
                         yield new YaclOptionController.CyclingEnum(
-                                new YaclValueFormatter(),
+                                formatter,
                                 entry.getFullyQualifiedTypeName(types)
                         );
                     } else if (elementKind == ElementKind.CLASS) {
@@ -211,16 +221,20 @@ public final class YaclScreenFactory {
                         TypeElement iterable = elements.getTypeElement("java.lang.Iterable");
                         if (types.isAssignable(entry.getType(), iterable.asType())) {
                             yield new YaclOptionController.CyclingList(
-                                    new YaclValueFormatter(),
+                                    formatter,
                                     externalRef
                             );
+                        }
+                        TypeElement item = elements.getTypeElement("net.minecraft.item.Item");
+                        if (types.isSameType(entry.getType(), item.asType())) {
+                            yield new YaclOptionController.Item();
                         }
                     }
                     messager.printError("Could not automatically create controller for type: %s".formatted(entry.getFullyQualifiedTypeName(types)), entry.element());
                     throw new RuntimeException();
                 }
                 case ARRAY -> new YaclOptionController.CyclingList(
-                        new YaclValueFormatter(),
+                        formatter,
                         externalRef
                 );
                 default -> {
@@ -228,58 +242,58 @@ public final class YaclScreenFactory {
                     throw new RuntimeException();
                 }
             };
-            case BOOL -> new YaclOptionController.Bool(new YaclValueFormatter());
+            case BOOL -> new YaclOptionController.Bool(formatter);
             case COLOR -> new YaclOptionController.Color(false);
             case COLOR_WITH_ALPHA -> new YaclOptionController.Color(true);
             case CYCLING_LIST -> new YaclOptionController.CyclingList(
-                    new YaclValueFormatter(),
+                    formatter,
                     externalRef
             );
             case DOUBLE_FIELD -> new YaclOptionController.DoubleField(
-                    new YaclValueFormatter(),
-                    entry.annotation().min(),
-                    entry.annotation().max()
+                    formatter,
+                    entry.annotationHolder().min(),
+                    entry.annotationHolder().max()
             );
             case DOUBLE_SLIDER -> new YaclOptionController.DoubleSlider(
-                    new YaclValueFormatter(),
-                    entry.annotation().min(),
-                    entry.annotation().max()
+                    formatter,
+                    entry.annotationHolder().min(),
+                    entry.annotationHolder().max()
             );
             case ENUM -> new YaclOptionController.CyclingEnum(
-                    new YaclValueFormatter(),
+                    formatter,
                     entry.getFullyQualifiedTypeName(types)
             );
-            case ENUM_DROPDOWN -> new YaclOptionController.EnumDropdown(new YaclValueFormatter());
+            case ENUM_DROPDOWN -> new YaclOptionController.EnumDropdown(formatter);
             case FLOAT_FIELD -> new YaclOptionController.FloatField(
-                    new YaclValueFormatter(),
-                    (float) entry.annotation().min(),
-                    (float) entry.annotation().max()
+                    formatter,
+                    (float) entry.annotationHolder().min(),
+                    (float) entry.annotationHolder().max()
             );
             case FLOAT_SLIDER -> new YaclOptionController.FloatSlider(
-                    new YaclValueFormatter(),
-                    (float) entry.annotation().min(),
-                    (float) entry.annotation().max()
+                    formatter,
+                    (float) entry.annotationHolder().min(),
+                    (float) entry.annotationHolder().max()
             );
             case INTEGER_FIELD -> new YaclOptionController.IntegerField(
-                    new YaclValueFormatter(),
-                    (int) entry.annotation().min(),
-                    (int) entry.annotation().max()
+                    formatter,
+                    (int) entry.annotationHolder().min(),
+                    (int) entry.annotationHolder().max()
             );
             case INTEGER_SLIDER -> new YaclOptionController.IntegerSlider(
-                    new YaclValueFormatter(),
-                    (int) entry.annotation().min(),
-                    (int) entry.annotation().max()
+                    formatter,
+                    (int) entry.annotationHolder().min(),
+                    (int) entry.annotationHolder().max()
             );
             case ITEM -> new YaclOptionController.Item();
             case LONG_FIELD -> new YaclOptionController.LongField(
-                    new YaclValueFormatter(),
-                    (long) entry.annotation().min(),
-                    (long) entry.annotation().max()
+                    formatter,
+                    (long) entry.annotationHolder().min(),
+                    (long) entry.annotationHolder().max()
             );
             case LONG_SLIDER -> new YaclOptionController.LongSlider(
-                    new YaclValueFormatter(),
-                    (long) entry.annotation().min(),
-                    (long) entry.annotation().max()
+                    formatter,
+                    (long) entry.annotationHolder().min(),
+                    (long) entry.annotationHolder().max()
             );
             case STRING_FIELD -> new YaclOptionController.StringField();
             case TICK_BOX -> new YaclOptionController.TickBox();

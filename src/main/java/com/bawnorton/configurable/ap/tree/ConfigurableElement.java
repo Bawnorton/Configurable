@@ -1,7 +1,9 @@
 package com.bawnorton.configurable.ap.tree;
 
-import com.bawnorton.configurable.Configurable;
 import com.bawnorton.configurable.ControllerType;
+import com.bawnorton.configurable.ap.yacl.YaclListener;
+import com.bawnorton.configurable.ap.yacl.YaclListeners;
+import com.bawnorton.configurable.ap.yacl.YaclValueFormatter;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -13,9 +15,9 @@ import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-public record ConfigurableElement(Element element, Configurable annotation, List<ConfigurableElement> children) {
+public record ConfigurableElement(Element element, ConfigurableHolder annotationHolder, List<ConfigurableElement> children) {
     public String getKey() {
-        String key = annotation.value();
+        String key = annotationHolder.value();
         if(key.isEmpty()) {
             key = element.getSimpleName().toString();
         }
@@ -31,7 +33,8 @@ public record ConfigurableElement(Element element, Configurable annotation, List
     }
 
     public String getTypeName() {
-        return getType().toString();
+        String qualified = getType().toString();
+        return qualified.substring(qualified.lastIndexOf('.') + 1);
     }
 
     public String getBoxedType(Types types) {
@@ -121,7 +124,7 @@ public record ConfigurableElement(Element element, Configurable annotation, List
     }
 
     public String getCategory() {
-        String tab = annotation.category();
+        String tab = annotationHolder.category();
         if(tab.isEmpty()) {
             Element enclosingElement = element.getEnclosingElement();
             while(!(enclosingElement instanceof PackageElement)) {
@@ -136,6 +139,42 @@ public record ConfigurableElement(Element element, Configurable annotation, List
     }
 
     public ControllerType getControllerType() {
-        return annotation.controller();
+        return annotationHolder.controller();
+    }
+
+    public YaclValueFormatter getFormatter(Types types) {
+        String formatterMethod = annotationHolder.formatter();
+        YaclValueFormatter formatter;
+        if(formatterMethod.isEmpty()) {
+            formatter = new YaclValueFormatter();
+        } else {
+            if(formatterMethod.contains("#")) {
+                String[] parts = formatterMethod.split("#");
+                String owner = parts[0];
+                String methodName = parts[1];
+                formatter = new YaclValueFormatter(owner, methodName);
+            } else {
+                String owner = getFullyQualifiedOwnerName(types);
+                formatter = new YaclValueFormatter(owner, formatterMethod);
+            }
+        }
+        return formatter;
+    }
+
+    public YaclListeners getListeners(Types types) {
+        String[] listeners = annotationHolder.listener();
+        YaclListeners yaclListeners = new YaclListeners();
+        for(String listener : listeners) {
+            if(listener.contains("#")) {
+                String[] parts = listener.split("#");
+                String owner = parts[0];
+                String methodName = parts[1];
+                yaclListeners.addListener(new YaclListener(owner, methodName));
+            } else {
+                String owner = getFullyQualifiedOwnerName(types);
+                yaclListeners.addListener(new YaclListener(owner, listener));
+            }
+        }
+        return yaclListeners;
     }
 }

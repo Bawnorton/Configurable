@@ -6,6 +6,7 @@ import com.bawnorton.configurable.impl.ref.constraint.ConstraintSet;
 import com.bawnorton.configurable.impl.ref.constraint.ReferenceConstraint;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
+import java.util.Objects;
 
 public class Reference<T> {
     private final String name;
@@ -25,7 +26,7 @@ public class Reference<T> {
             throw new RuntimeException(e);
         }
         T defaultValue = get();
-        if(constraints.apply(defaultValue).equals(ReferenceConstraint.DEFAULT)) {
+        if(Objects.equals(constraints.apply(defaultValue), ReferenceConstraint.DEFAULT)) {
             throw new IllegalConfigException("Default value \"%s\" for \"%s\" in \"%s\" does not conform to it's constraints".formatted(
                     defaultValue,
                     name,

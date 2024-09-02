@@ -10,6 +10,13 @@ public abstract class YaclOptionController extends YaclElement {
     }
 
     @Override
+    protected void addNeededImports(Consumer<String> adder) {
+        if(valueFormatter != null) {
+            valueFormatter.addNeededImports(adder);
+        }
+    }
+
+    @Override
     protected String getSpec(int depth) {
         if (valueFormatter == null) {
             return "option -> %s".formatted(getControllerSpec(depth + 1)).trim();
@@ -34,12 +41,13 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.BooleanControllerBuilder");
         }
 
         @Override
         protected String getControllerSpec(int depth) {
-            return "BooleanControllerBuilder.create(option)\n";
+            return "BooleanControllerBuilder.create(option)";
         }
     }
 
@@ -53,6 +61,7 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.ColorControllerBuilder");
         }
 
@@ -78,6 +87,7 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.CyclingListControllerBuilder");
         }
 
@@ -115,6 +125,7 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept(enumClass);
             adder.accept("dev.isxander.yacl3.api.controller.EnumControllerBuilder");
         }
@@ -138,12 +149,13 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.EnumDropdownControllerBuilder");
         }
 
         @Override
         protected String getControllerSpec(int depth) {
-            return "EnumDropdownControllerBuilder.create(option)\n";
+            return "EnumDropdownControllerBuilder.create(option)";
         }
     }
 
@@ -178,12 +190,13 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.ItemControllerBuilder");
         }
 
         @Override
         protected String getControllerSpec(int depth) {
-            return "ItemControllerBuilder.create(option)\n";
+            return "ItemControllerBuilder.create(option)";
         }
     }
 
@@ -206,12 +219,13 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.StringControllerBuilder");
         }
 
         @Override
         protected String getControllerSpec(int depth) {
-            return "StringControllerBuilder.create(option)\n";
+            return "StringControllerBuilder.create(option)";
         }
     }
 
@@ -222,12 +236,13 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.TickBoxControllerBuilder");
         }
 
         @Override
         protected String getControllerSpec(int depth) {
-            return "TickBoxControllerBuilder.create(option)\n";
+            return "TickBoxControllerBuilder.create(option)";
         }
     }
 
@@ -247,6 +262,7 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.%sFieldControllerBuilder".formatted(name));
         }
 
@@ -280,6 +296,7 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected void addNeededImports(Consumer<String> adder) {
+            super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.%sSliderControllerBuilder".formatted(name));
         }
 

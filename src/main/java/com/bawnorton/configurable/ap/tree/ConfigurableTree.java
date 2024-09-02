@@ -2,8 +2,10 @@ package com.bawnorton.configurable.ap.tree;
 
 import com.bawnorton.configurable.Configurable;
 import javax.annotation.processing.Messager;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -13,11 +15,30 @@ import java.util.stream.Collectors;
 
 public final class ConfigurableTree {
     private final Messager messager;
+    private final Elements elementUtils;
     private final List<ConfigurableElement> roots;
 
-    public ConfigurableTree(Messager messager, Set<? extends Element> elements) {
+    public ConfigurableTree(Messager messager, Elements elementUtils, Set<? extends Element> elements) {
         this.messager = messager;
+        this.elementUtils = elementUtils;
         this.roots = constructRoots(elements);
+        applyOverrides(roots);
+    }
+
+    private void applyOverrides(List<ConfigurableElement> roots) {
+        roots.forEach(this::applyOverrides);
+    }
+
+    private void applyOverrides(ConfigurableElement root) {
+        ConfigurableHolder parentHolder = root.annotationHolder();
+        for(ConfigurableElement child : root.children()) {
+            ConfigurableHolder childHolder = child.annotationHolder();
+            ConfigurableOverrides.create(parentHolder, childHolder);
+
+            if(!child.children().isEmpty()) {
+                applyOverrides(child);
+            }
+        }
     }
 
     public List<ConfigurableElement> getRoots() {
@@ -74,8 +95,13 @@ public final class ConfigurableTree {
 
     private ConfigurableElement createConfigurableElement(Element element) {
         Configurable annotation = element.getAnnotation(Configurable.class);
+        ConfigurableHolder holder = new ConfigurableHolder(
+                annotation,
+                getAnnotationMirror(element, Configurable.class.getCanonicalName())
+        );
         if (annotation == null) {
             messager.printError("Element \"%s\" does not have Configurable annotation".formatted(element.getSimpleName()), element);
+            throw new RuntimeException();
         }
 
         Set<Modifier> modifiers = element.getModifiers();
@@ -84,6 +110,8 @@ public final class ConfigurableTree {
                 messager.printError("Configurable field \"%s\" cannot be final".formatted(element.getSimpleName()), element);
             } else if (!modifiers.contains(Modifier.STATIC)) {
                 messager.printError("Configurable field \"%s\" must be static".formatted(element.getSimpleName()), element);
+            } else if(annotation.yacl().collapsed()) {
+                messager.printError("Configurable field \"%s\" cannot be collapsed, only classes allowed".formatted(element.getSimpleName()), element);
             }
         } else if (element.getKind().isClass()) {
             if(modifiers.contains(Modifier.PRIVATE)) {
@@ -102,6 +130,15 @@ public final class ConfigurableTree {
             messager.printError("Configurable class \"%s\" must have at least one Configurable field or class".formatted(element.getSimpleName()));
         }
 
-        return new ConfigurableElement(element, annotation, children);
+        return new ConfigurableElement(element, holder, children);
+    }
+
+    private AnnotationMirror getAnnotationMirror(Element element, String annotation) {
+        for(AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+            if(annotationMirror.getAnnotationType().toString().equals(annotation)) {
+                return annotationMirror;
+            }
+        }
+        throw new IllegalStateException("No annotation mirror found for %s".formatted(element));
     }
 }
