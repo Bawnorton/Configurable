@@ -3,6 +3,7 @@
   "package": "com.bawnorton.configurable.client.mixin",
   "minVersion": "0.8",
   "mixins": [
+    "ModMenuMixin"
   ],
   "injectors": {
     "defaultRequire": 1

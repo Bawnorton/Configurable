@@ -25,12 +25,16 @@ repositories {
     mavenCentral()
     maven("https://maven.neoforged.net/releases/")
     maven("https://maven.bawnorton.com/releases/")
+    maven("https://maven.terraformersmc.com/")
+    maven("https://maven.isxander.dev/releases/")
     maven("https://maven.shedaniel.me")
     maven("https://jitpack.io")
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
+
+    modImplementation("dev.isxander:yet-another-config-lib:${property("yacl_version")}-$loader")
 }
 
 loom {
@@ -98,6 +102,7 @@ if(loader.isFabric) {
     dependencies {
         mappings("net.fabricmc:yarn:$minecraftVersion+build.${property("yarn_build")}:v2")
         modImplementation("net.fabricmc:fabric-loader:${loader.getVersion()}")
+        modCompileOnly("com.terraformersmc:modmenu:${property("modmenu")}")
     }
 
     tasks {

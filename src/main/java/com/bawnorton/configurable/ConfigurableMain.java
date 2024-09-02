@@ -1,8 +1,8 @@
 package com.bawnorton.configurable;
 
-import com.bawnorton.configurable.impl.ConfigLoaderWrapper;
-import com.bawnorton.configurable.platform.Platform;
 import com.bawnorton.configurable.impl.ConfigurableSettings;
+import com.bawnorton.configurable.impl.ConfigurableWrapper;
+import com.bawnorton.configurable.platform.Platform;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -13,12 +13,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class ConfigurableMain {
     public static final String MOD_ID = "configurable";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    private static final Map<String, ConfigLoaderWrapper> LOADERS = new HashMap<>();
+    private static final Map<String, ConfigurableWrapper> WRAPPERS = new HashMap<>();
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setPrettyPrinting()
@@ -37,30 +39,42 @@ public final class ConfigurableMain {
                 }
                 String configName = settings.name();
 
-                if(LOADERS.containsKey(configName)) {
+                if(WRAPPERS.containsKey(configName)) {
                     throw new IllegalStateException("Conflicting config name \"%s\" found in \"%s\"".formatted(configName, configurable));
                 }
 
-                String configLoader = settings.fullyQualifiedLoader();
-                String config = settings.fullyQualifiedConfig();
                 try {
-                    Class<?> configLoaderClass = Class.forName(configLoader);
-                    Class<?> configClass = Class.forName(config);
-                    LOADERS.put(configName, new ConfigLoaderWrapper(configLoaderClass, configClass));
-                } catch (ClassNotFoundException e) {
-                    LOGGER.error("Could not find config classes for \"%s\"".formatted(configName), e);
-                } catch (IllegalArgumentException e) {
-                    LOGGER.error("Could not load config \"%s\"".formatted(configName), e);
+                    ConfigurableWrapper wrapper = new ConfigurableWrapper();
+                    addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
+                    if(settings.hasScreenFactory()) {
+                        addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
+                    }
+                    WRAPPERS.put(configName, wrapper);
+                } catch (IllegalStateException e) {
+                    LOGGER.error("Could not create configurable wrapper for \"%s\"".formatted(configName), e);
                 }
             }
         });
-        LOADERS.forEach((name, loader) -> {
-            try {
-                Object config = loader.loadConfig();
-                loader.saveConfig(config);
-            } catch (Throwable t) {
-                LOGGER.error("Could not load config \"%s\"".formatted(name), t);
-            }
+        WRAPPERS.values().forEach(wrapper -> {
+            wrapper.loadConfig();
+            wrapper.saveConfig();
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> void addToWrapped(Supplier<String> nameGetter, Consumer<Class<T>> applicator, String configName) {
+        try {
+            applicator.accept((Class<T>) Class.forName(nameGetter.get()));
+        } catch (ClassNotFoundException e) {
+            LOGGER.error("Could not find config class for \"%s\"".formatted(configName), e);
+        }
+    }
+
+    public static Map<String, ConfigurableWrapper> getWrappers() {
+        return WRAPPERS;
+    }
+
+    public static ConfigurableWrapper getWrapper(String configName) {
+        return WRAPPERS.get(configName);
     }
 }

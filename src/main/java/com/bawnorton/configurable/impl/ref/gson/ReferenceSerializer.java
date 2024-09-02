@@ -1,6 +1,6 @@
-package com.bawnorton.configurable.impl.gson;
+package com.bawnorton.configurable.impl.ref.gson;
 
-import com.bawnorton.configurable.impl.Reference;
+import com.bawnorton.configurable.impl.ref.Reference;
 import com.google.gson.*;
 import java.lang.reflect.Type;
 import java.util.function.Supplier;

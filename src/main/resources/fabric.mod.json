@@ -24,10 +24,9 @@
     ]
   },
   "mixins": [
-    "${mod_id}.mixins.json",
-    "${mod_id}-compat.mixins.json",
+    "configurable.mixins.json",
     {
-      "config": "${mod_id}-client.mixins.json",
+      "config": "configurable-client.mixins.json",
       "environment": "client"
     }
   ],
