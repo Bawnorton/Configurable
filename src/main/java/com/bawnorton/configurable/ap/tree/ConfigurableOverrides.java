@@ -17,6 +17,7 @@ public final class ConfigurableOverrides {
     private final Supplier<Boolean> excludeGetter;
     private final Supplier<ControllerType> controllerTypeGetter;
     private final Supplier<String> formatterGetter;
+    private final Supplier<String> descriptionerGetter;
     private final Supplier<OptionType[]> optionTypeGetter;
     private final Supplier<String[]> listenerGetter;
 
@@ -28,6 +29,7 @@ public final class ConfigurableOverrides {
             Supplier<Boolean> excludeGetter,
             Supplier<ControllerType> controllerTypeGetter,
             Supplier<String> formatterGetter,
+            Supplier<String> descriptionerGetter,
             Supplier<OptionType[]> optionTypeGetter,
             Supplier<String[]> listenerGetter) {
         this.regexGetter = regexGetter;
@@ -38,62 +40,28 @@ public final class ConfigurableOverrides {
         this.excludeGetter = excludeGetter;
         this.controllerTypeGetter = controllerTypeGetter;
         this.formatterGetter = formatterGetter;
+        this.descriptionerGetter = descriptionerGetter;
         this.optionTypeGetter = optionTypeGetter;
         this.listenerGetter = listenerGetter;
     }
 
     public static void create(ConfigurableHolder parent, ConfigurableHolder child) {
         Builder builder = builder();
-        if(isDefaultValue(child.getConfigurableMirror(), "regex")) {
-            builder.setRegexGetter(parent::regex);
-        } else {
-            builder.setRegexGetter(() -> child.annotation().regex());
-        }
-        if(isDefaultValue(child.getConfigurableMirror(), "predicate")) {
-            builder.setPredicateGetter(parent::predicate);
-        } else {
-            builder.setPredicateGetter(() -> child.annotation().predicate());
-        }
-        if(isDefaultValue(child.getConfigurableMirror(), "min")) {
-            builder.setMinGetter(parent::min);
-        } else {
-            builder.setMinGetter(() -> child.annotation().min());
-        }
-        if(isDefaultValue(child.getConfigurableMirror(), "max")) {
-            builder.setMaxGetter(parent::max);
-        } else {
-            builder.setMaxGetter(() -> child.annotation().max());
-        }
-        if(isDefaultValue(child.getYaclMirror(), "category")) {
-            builder.setCategoryGetter(parent::category);
-        } else {
-            builder.setCategoryGetter(() -> child.annotation().yacl().category());
-        }
-        if(isDefaultValue(child.getYaclMirror(), "exclude")) {
-            builder.setExcludeGetter(parent::exclude);
-        } else {
-            builder.setExcludeGetter(() -> child.annotation().yacl().exclude());
-        }
-        if(isDefaultValue(child.getYaclMirror(), "controller")) {
-            builder.setControllerTypeGetter(parent::controller);
-        } else {
-            builder.setControllerTypeGetter(() -> child.annotation().yacl().controller());
-        }
-        if(isDefaultValue(child.getYaclMirror(), "formatter")) {
-            builder.setFormatterGetter(parent::formatter);
-        } else {
-            builder.setFormatterGetter(() -> child.annotation().yacl().formatter());
-        }
-        if(isDefaultValue(child.getYaclMirror(), "type")) {
-            builder.setOptionTypeGetter(parent::type);
-        } else {
-            builder.setOptionTypeGetter(() -> child.annotation().yacl().type());
-        }
-        if(isDefaultValue(child.getYaclMirror(), "listener")) {
-            builder.setListenerGetter(parent::listener);
-        } else {
-            builder.setListenerGetter(() -> child.annotation().yacl().listener());
-        }
+        AnnotationMirror configurableMirror = child.getConfigurableMirror();
+        builder.setRegexGetter(isDefaultValue(configurableMirror, "regex") ? parent::regex : () -> child.annotation().regex());
+        builder.setPredicateGetter(isDefaultValue(configurableMirror, "predicate") ? parent::predicate : () -> child.annotation().predicate());
+        builder.setMinGetter(isDefaultValue(configurableMirror, "min") ? parent::min : () -> child.annotation().min());
+        builder.setMaxGetter(isDefaultValue(configurableMirror, "max") ? parent::max : () -> child.annotation().max());
+
+        AnnotationMirror yaclMirror = child.getYaclMirror();
+        builder.setCategoryGetter(isDefaultValue(yaclMirror, "category") ? parent::category : () -> child.annotation().yacl().category());
+        builder.setExcludeGetter(isDefaultValue(yaclMirror, "exclude") ? parent::exclude : () -> child.annotation().yacl().exclude());
+        builder.setControllerTypeGetter(isDefaultValue(yaclMirror, "controller") ? parent::controller : () -> child.annotation().yacl().controller());
+        builder.setDescriptionerGetter(isDefaultValue(yaclMirror, "descriptioner") ? parent::descriptioner : () -> child.annotation().yacl().descriptioner());
+        builder.setFormatterGetter(isDefaultValue(yaclMirror, "formatter") ? parent::formatter : () -> child.annotation().yacl().formatter());
+        builder.setOptionTypeGetter(isDefaultValue(yaclMirror, "type") ? parent::type : () -> child.annotation().yacl().type());
+        builder.setListenerGetter(isDefaultValue(yaclMirror, "listener") ? parent::listener : () -> child.annotation().yacl().listener());
+
         child.setOverrides(builder.build());
     }
 
@@ -147,6 +115,10 @@ public final class ConfigurableOverrides {
         return formatterGetter.get();
     }
 
+    public String getDescriptioner() {
+        return descriptionerGetter.get();
+    }
+
     public OptionType[] getOptionType() {
         return optionTypeGetter.get();
     }
@@ -168,6 +140,7 @@ public final class ConfigurableOverrides {
         private Supplier<Boolean> excludeGetter;
         private Supplier<ControllerType> controllerTypeGetter;
         private Supplier<String> formatterGetter;
+        private Supplier<String> descriptionerGetter;
         private Supplier<OptionType[]> optionTypeGetter;
         private Supplier<String[]> listenerGetter;
 
@@ -203,6 +176,10 @@ public final class ConfigurableOverrides {
             this.formatterGetter = formatterGetter;
         }
 
+        public void setDescriptionerGetter(Supplier<String> descriptionerGetter) {
+            this.descriptionerGetter = descriptionerGetter;
+        }
+
         public void setOptionTypeGetter(Supplier<OptionType[]> optionTypeGetter) {
             this.optionTypeGetter = optionTypeGetter;
         }
@@ -221,6 +198,7 @@ public final class ConfigurableOverrides {
                     excludeGetter,
                     controllerTypeGetter,
                     formatterGetter,
+                    descriptionerGetter,
                     optionTypeGetter,
                     listenerGetter
             );

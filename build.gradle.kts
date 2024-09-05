@@ -17,9 +17,13 @@ val loader = LoaderData(project, loom.platform.get().name.lowercase())
 val minecraftVersion = MinecraftVersionData(stonecutter)
 val awName = "${mod.id}.accesswidener"
 
-version = "${mod.version}-$loader+$minecraftVersion"
+version = "${mod.version}-$loader-${mod.mappings}+$minecraftVersion"
 group = mod.group
 base.archivesName.set(mod.name)
+
+stonecutter {
+    debug = true
+}
 
 repositories {
     mavenCentral()
@@ -165,7 +169,7 @@ extensions.configure<PublishingExtension> {
     publications {
         create<MavenPublication>("maven") {
             groupId = "${mod.group}.${mod.id}"
-            artifactId = "${mod.id}-$loader"
+            artifactId = "${mod.id}-$loader-${mod.mappings}"
             version = "${mod.version}+$minecraftVersion"
 
             from(components["java"])

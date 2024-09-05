@@ -11,7 +11,11 @@ public abstract class YaclTextElement extends YaclElement {
 
     @Override
     protected void addNeededImports(Consumer<String> adder) {
+        //? if yarn {
         adder.accept("net.minecraft.text.Text");
+        //?} elif mojmap {
+        /*adder.accept("net.minecraft.network.chat.Component");
+         *///?}
     }
 
     @Override

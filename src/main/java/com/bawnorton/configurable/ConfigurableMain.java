@@ -1,11 +1,14 @@
 package com.bawnorton.configurable;
 
+import com.bawnorton.configurable.impl.ConfigurableApiImplLoader;
 import com.bawnorton.configurable.impl.ConfigurableSettings;
 import com.bawnorton.configurable.impl.ConfigurableWrapper;
+import com.bawnorton.configurable.impl.ref.gson.ItemTypeAdapter;
 import com.bawnorton.configurable.platform.Platform;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.minecraft.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -26,7 +29,11 @@ public final class ConfigurableMain {
             .setPrettyPrinting()
             .create();
 
+    private static final Map<String, Map<Class<?>, Object>> typeAdapters = new HashMap<>();
+
     public static void init() {
+        ConfigurableApiImplLoader.load();
+
         Platform.forEachJar(path -> {
             Path configurable = path.resolve("configurable.json");
             if(Files.exists(configurable)) {
@@ -37,11 +44,14 @@ public final class ConfigurableMain {
                     LOGGER.error("Could not load configurable settings", e);
                     return;
                 }
+
                 String configName = settings.name();
 
                 if(WRAPPERS.containsKey(configName)) {
                     throw new IllegalStateException("Conflicting config name \"%s\" found in \"%s\"".formatted(configName, configurable));
                 }
+
+                registerDefaultTypeAdapters(configName);
 
                 try {
                     ConfigurableWrapper wrapper = new ConfigurableWrapper();
@@ -55,7 +65,7 @@ public final class ConfigurableMain {
                 }
             }
         });
-        WRAPPERS.values().forEach(wrapper -> {
+        WRAPPERS.forEach((configName, wrapper) -> {
             wrapper.loadConfig();
             wrapper.saveConfig();
         });
@@ -68,6 +78,18 @@ public final class ConfigurableMain {
         } catch (ClassNotFoundException e) {
             LOGGER.error("Could not find config class for \"%s\"".formatted(configName), e);
         }
+    }
+
+    private static void registerDefaultTypeAdapters(String configName) {
+        registerTypeAdapater(configName, Item.class, new ItemTypeAdapter());
+    }
+
+    public static <T> void registerTypeAdapater(String configName, Class<T> type, Object typeAdapter) {
+        typeAdapters.computeIfAbsent(configName, k -> new HashMap<>()).put(type, typeAdapter);
+    }
+
+    public static Map<Class<?>, Object> getTypeAdapters(String configName) {
+        return typeAdapters.getOrDefault(configName, Map.of());
     }
 
     public static Map<String, ConfigurableWrapper> getWrappers() {

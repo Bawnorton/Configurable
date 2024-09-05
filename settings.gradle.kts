@@ -29,9 +29,16 @@ val versions = mapOf(
 	"neoforge" to getVersions("neoforge_versions")
 )
 
+val mappings = listOf(
+	"yarn",
+	"mojmap"
+)
+
 val sharedVersions = versions.map { entry ->
 	val loader = entry.key
-	entry.value.map { "$it-$loader" }
+	entry.value.flatMap { version ->
+		mappings.map { "$version-$loader-$it" }
+	}
 }.flatten().toSet()
 
 extensions.configure<StonecutterSettings> {

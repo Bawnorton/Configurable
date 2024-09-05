@@ -1,6 +1,10 @@
 package com.bawnorton.configurable.ap.tree;
 
 import com.bawnorton.configurable.ControllerType;
+import com.bawnorton.configurable.Image;
+import com.bawnorton.configurable.ap.yacl.YaclCustomDescriptionText;
+import com.bawnorton.configurable.ap.yacl.YaclDescriptionText;
+import com.bawnorton.configurable.ap.yacl.YaclElement;
 import com.bawnorton.configurable.ap.yacl.YaclListener;
 import com.bawnorton.configurable.ap.yacl.YaclListeners;
 import com.bawnorton.configurable.ap.yacl.YaclValueFormatter;
@@ -14,6 +18,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 public record ConfigurableElement(Element element, ConfigurableHolder annotationHolder, List<ConfigurableElement> children) {
     public String getKey() {
@@ -39,12 +45,14 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
 
     public String getBoxedType(Types types) {
         TypeMirror mirror = getType();
+        String boxed;
         if(!mirror.getKind().isPrimitive()) {
-            return mirror.toString();
+            boxed = mirror.toString();
         } else {
             PrimitiveType primitiveType = types.getPrimitiveType(mirror.getKind());
-            return types.boxedClass(primitiveType).getSimpleName().toString();
+            boxed = types.boxedClass(primitiveType).getSimpleName().toString();
         }
+        return boxed.substring(boxed.lastIndexOf('.') + 1);
     }
 
     public TypeKind getTypeKind() {
@@ -142,39 +150,49 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
         return annotationHolder.controller();
     }
 
+    public Image image() {
+        return annotationHolder.annotation().yacl().image();
+    }
+
+    public boolean hasImage() {
+        Image image = image();
+        return image.id().isEmpty() && image.custom().isEmpty();
+    }
+
     public YaclValueFormatter getFormatter(Types types) {
-        String formatterMethod = annotationHolder.formatter();
-        YaclValueFormatter formatter;
-        if(formatterMethod.isEmpty()) {
-            formatter = new YaclValueFormatter();
-        } else {
-            if(formatterMethod.contains("#")) {
-                String[] parts = formatterMethod.split("#");
-                String owner = parts[0];
-                String methodName = parts[1];
-                formatter = new YaclValueFormatter(owner, methodName);
-            } else {
-                String owner = getFullyQualifiedOwnerName(types);
-                formatter = new YaclValueFormatter(owner, formatterMethod);
-            }
+        String formatter = annotationHolder.formatter();
+        if(formatter.isEmpty()) {
+            return new YaclValueFormatter();
         }
-        return formatter;
+        return getMethodBased(types, YaclValueFormatter::new, formatter);
     }
 
     public YaclListeners getListeners(Types types) {
         String[] listeners = annotationHolder.listener();
         YaclListeners yaclListeners = new YaclListeners();
         for(String listener : listeners) {
-            if(listener.contains("#")) {
-                String[] parts = listener.split("#");
-                String owner = parts[0];
-                String methodName = parts[1];
-                yaclListeners.addListener(new YaclListener(owner, methodName));
-            } else {
-                String owner = getFullyQualifiedOwnerName(types);
-                yaclListeners.addListener(new YaclListener(owner, listener));
-            }
+            yaclListeners.addListener(getMethodBased(types, YaclListener::new, listener));
         }
         return yaclListeners;
+    }
+
+    public YaclElement getDescriptionText(Types types, String configName) {
+        String descriptioner = annotationHolder.descriptioner();
+        if(descriptioner.isEmpty()) {
+            return new YaclDescriptionText(configName, getKey());
+        }
+        return getMethodBased(types, YaclCustomDescriptionText::new, descriptioner);
+    }
+
+    private <T extends YaclElement> T getMethodBased(Types types, BiFunction<String, String, T> ctor, String methodName) {
+        if(methodName.contains("#")) {
+            String[] parts = methodName.split("#");
+            String owner = parts[0];
+            String method = parts[1];
+            return ctor.apply(owner, method);
+        } else {
+            String owner = getFullyQualifiedOwnerName(types);
+            return ctor.apply(owner, methodName);
+        }
     }
 }

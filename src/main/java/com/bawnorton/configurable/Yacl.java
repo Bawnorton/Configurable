@@ -26,6 +26,17 @@ public @interface Yacl {
     String category() default "";
 
     /**
+     * Name of a method with the signature: {@code public static List<Text> name(FieldType)} for formatting the description value
+     * within the config UI.<br>
+     * Defaults to {@code List.of(Text.translatable("configurable.config_name.description.%key%"))}
+     * Any other signature will result in a compile time exception.<br>
+     * <br>
+     * Also accepts referencing a method outside of the current class:<br>
+     * {@code fully.qualified.owner#methodName}<br>
+     */
+    String descriptioner() default "";
+
+    /**
      * Whether or not to exclude the field from the UI generator
      */
     boolean exclude() default false;
@@ -61,4 +72,6 @@ public @interface Yacl {
     String[] listener() default {};
 
     boolean collapsed() default false;
+
+    Image image() default @Image;
 }

@@ -46,10 +46,11 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     private static final Map<Class<?>, Object> instanceCache = new HashMap<>();
     
     private static Gson createGson() {
-       return new GsonBuilder()
-            .registerTypeAdapter(Reference.class, new ReferenceSerializer(() -> GSON))
+       GsonBuilder builder = new GsonBuilder()
             .setPrettyPrinting()
-            .create();
+            .registerTypeAdapter(Reference.class, new ReferenceSerializer(() -> GSON));
+       ConfigurableMain.getTypeAdapters("<name>").forEach(builder::registerTypeHierarchyAdapter);
+       return builder.create();
     }
     
     @Override

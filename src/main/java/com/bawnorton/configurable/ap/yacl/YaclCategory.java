@@ -6,7 +6,7 @@ public class YaclCategory extends YaclElement {
     private final YaclElement categoryName;
     private final YaclElement categoryTooltip;
     private final YaclElement options;
-    private final YaclElement groups;
+    private final YaclOptionGroups groups;
 
     public YaclCategory(YaclCategoryName categoryName, YaclCategoryTooltip categoryTooltip, YaclOptions options, YaclOptionGroups groups) {
         this.categoryName = categoryName;
@@ -26,19 +26,21 @@ public class YaclCategory extends YaclElement {
 
     @Override
     protected String getSpec(int depth) {
-        return """
+        String spec = """
         ConfigCategory.createBuilder()
         %1$s.name(%2$s)
         %1$s.tooltip(%3$s)
         %1$s.options(%4$s)
-        %1$s.groups(%5$s)
-        %1$s.build()
         """.formatted(
                 "\t".repeat(depth),
                 categoryName.getSpec(depth + 1),
                 categoryTooltip.getSpec(depth + 1),
-                options.getSpec(depth + 1),
-                groups.getSpec(depth + 1)
-        ).trim();
+                options.getSpec(depth + 1)
+        );
+        if(!groups.isEmpty()) {
+            spec += "%1$s.groups(%2$s)\n".formatted("\t".repeat(depth), groups.getSpec(depth + 1));
+        }
+        spec += "%1$s.build()\n".formatted("\t".repeat(depth));
+        return spec.trim();
     }
 }

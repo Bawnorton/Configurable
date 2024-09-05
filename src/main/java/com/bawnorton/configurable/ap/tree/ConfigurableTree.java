@@ -5,7 +5,8 @@ import javax.annotation.processing.Messager;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.util.Elements;
+import javax.lang.model.type.TypeKind;
+import org.spongepowered.asm.mixin.Mixin;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -15,12 +16,10 @@ import java.util.stream.Collectors;
 
 public final class ConfigurableTree {
     private final Messager messager;
-    private final Elements elementUtils;
     private final List<ConfigurableElement> roots;
 
-    public ConfigurableTree(Messager messager, Elements elementUtils, Set<? extends Element> elements) {
+    public ConfigurableTree(Messager messager, Set<? extends Element> elements) {
         this.messager = messager;
-        this.elementUtils = elementUtils;
         this.roots = constructRoots(elements);
         applyOverrides(roots);
     }
@@ -108,14 +107,18 @@ public final class ConfigurableTree {
         if(element.getKind().isField()) {
             if(modifiers.contains(Modifier.FINAL)) {
                 messager.printError("Configurable field \"%s\" cannot be final".formatted(element.getSimpleName()), element);
+                throw new RuntimeException();
             } else if (!modifiers.contains(Modifier.STATIC)) {
                 messager.printError("Configurable field \"%s\" must be static".formatted(element.getSimpleName()), element);
+                throw new RuntimeException();
             } else if(annotation.yacl().collapsed()) {
                 messager.printError("Configurable field \"%s\" cannot be collapsed, only classes allowed".formatted(element.getSimpleName()), element);
+                throw new RuntimeException();
             }
         } else if (element.getKind().isClass()) {
             if(modifiers.contains(Modifier.PRIVATE)) {
                 messager.printError("Configurable class \"%s\" cannot be private".formatted(element.getSimpleName()), element);
+                throw new RuntimeException();
             }
         }
 
@@ -127,7 +130,17 @@ public final class ConfigurableTree {
                 .toList();
 
         if (element.getKind().isClass() && children.isEmpty()) {
-            messager.printError("Configurable class \"%s\" must have at least one Configurable field or class".formatted(element.getSimpleName()));
+            messager.printError("Configurable class \"%s\" must have at least one Configurable field or class".formatted(element.getSimpleName()), element);
+            throw new RuntimeException();
+        }
+
+        Element topMost = getTopMostClass(element);
+        if(topMost != null) {
+            Mixin mixin = topMost.getAnnotation(Mixin.class);
+            if(mixin != null) {
+                messager.printError("Configurable element \"%s\" must be outside a mixin class".formatted(element.getSimpleName()), element);
+                throw new RuntimeException();
+            }
         }
 
         return new ConfigurableElement(element, holder, children);
@@ -140,5 +153,15 @@ public final class ConfigurableTree {
             }
         }
         throw new IllegalStateException("No annotation mirror found for %s".formatted(element));
+    }
+
+    private Element getTopMostClass(Element element) {
+        Element enclosing = element.getEnclosingElement();
+        while(enclosing.asType().getKind() != TypeKind.PACKAGE) {
+            element = enclosing;
+            enclosing = enclosing.getEnclosingElement();
+            if(enclosing == null) break;
+        }
+        return element;
     }
 }

@@ -7,6 +7,7 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
@@ -138,8 +139,8 @@ public final class YaclScreenFactory {
                     optionGroups.addOptionGroup(new YaclOptionGroup(
                             new YaclOptionGroupName(configName, key),
                             new YaclDescription(
-                                    new YaclDescriptionText(configName, key),
-                                    null
+                                    parentOrChild.getDescriptionText(types, configName),
+                                    parentOrChild.hasImage() ? new YaclDescriptionImage(parentOrChild.image()) : null
                             ),
                             entryOptions,
                             parentOrChild.annotationHolder().collapsed()
@@ -170,8 +171,8 @@ public final class YaclScreenFactory {
                 type,
                 new YaclOptionName(configName, key),
                 new YaclDescription(
-                        new YaclDescriptionText(configName, key),
-                        null
+                        entry.getDescriptionText(types, configName),
+                        entry.hasImage() ? new YaclDescriptionImage(entry.image()) : null
                 ),
                 new YaclOptionBinding(externalRef),
                 getOptionController(entry, externalRef),
@@ -207,7 +208,7 @@ public final class YaclScreenFactory {
                         (long) entry.annotationHolder().max()
                 );
                 case DECLARED -> {
-                    ElementKind elementKind = entry.element().getKind();
+                    ElementKind elementKind = ((DeclaredType) entry.getType()).asElement().getKind();
                     if (elementKind == ElementKind.ENUM) {
                         yield new YaclOptionController.CyclingEnum(
                                 formatter,
@@ -225,7 +226,11 @@ public final class YaclScreenFactory {
                                     externalRef
                             );
                         }
+                        //? if yarn {
                         TypeElement item = elements.getTypeElement("net.minecraft.item.Item");
+                        //?} elif mojmap {
+                        /*TypeElement item = elements.getTypeElement("net.minecraft.world.item.Item");
+                        *///?}
                         if (types.isSameType(entry.getType(), item.asType())) {
                             yield new YaclOptionController.Item();
                         }

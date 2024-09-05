@@ -6,7 +6,7 @@ public class YaclDescription extends YaclElement {
     private final YaclElement text;
     private final YaclElement image;
 
-    public YaclDescription(YaclDescriptionText text, YaclDescriptionImage image) {
+    public YaclDescription(YaclElement text, YaclDescriptionImage image) {
         this.text = text;
         this.image = image;
     }
@@ -14,6 +14,11 @@ public class YaclDescription extends YaclElement {
     @Override
     protected void addNeededImports(Consumer<String> adder) {
         adder.accept("dev.isxander.yacl3.api.OptionDescription");
+        //? if yarn {
+        adder.accept("net.minecraft.text.Text");
+        //?} elif mojmap {
+        /*adder.accept("net.minecraft.network.chat.Component");
+        *///?}
         text.addNeededImports(adder);
         if(image != null) {
             image.addNeededImports(adder);
@@ -22,18 +27,22 @@ public class YaclDescription extends YaclElement {
 
     @Override
     protected String getSpec(int depth) {
-        if (image == null) {
+        if (image == null && text instanceof YaclDescriptionText) {
             return "OptionDescription.of(%s)".formatted(text.getSpec(depth + 1));
         }
-        return """
-        OptionDescription.createBuilder()
-        %1$s.image(%2$s)
-        %1$s.text(%3$s)
-        %1$s.build()
-        """.formatted(
+        StringBuilder spec = new StringBuilder();
+        spec.append("value -> OptionDescription.createBuilder()");
+        spec.append("%1$s.text(%2$s)".formatted(
                 "\t".repeat(depth),
-                image.getSpec(depth + 1),
                 text.getSpec(depth + 1)
-        ).trim();
+        ));
+        if(image != null) {
+            spec.append("%1$s.%2$s".formatted(
+                    "\t".repeat(depth),
+                    image.getSpec(depth + 1)
+            ));
+        }
+        spec.append("%1$s.build()".formatted("\t".repeat(depth)));
+        return spec.toString();
     }
 }

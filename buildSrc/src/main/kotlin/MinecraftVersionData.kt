@@ -1,7 +1,7 @@
 import dev.kikugie.stonecutter.StonecutterBuild
 
 class MinecraftVersionData(private val stonecutter: StonecutterBuild) {
-    private val name = stonecutter.current.version.substringBeforeLast("-")
+    private val name = stonecutter.current.version.substringBefore("-")
 
     fun equalTo(other: String) : Boolean = stonecutter.compare(name, other.lowercase()) == 0
     fun greaterThan(other: String) : Boolean = stonecutter.compare(name, other.lowercase()) > 0

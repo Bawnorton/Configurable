@@ -18,6 +18,10 @@ public class YaclOptionGroups extends YaclElement {
         optionGroups.forEach(optionGroup -> optionGroup.addNeededImports(adder));
     }
 
+    public boolean isEmpty() {
+        return optionGroups.isEmpty();
+    }
+
     @Override
     protected String getSpec(int depth) {
         return "List.of(%s)".formatted(

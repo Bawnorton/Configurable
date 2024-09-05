@@ -3,6 +3,7 @@ package com.bawnorton.configurable.ap.tree;
 import com.bawnorton.configurable.Configurable;
 import com.bawnorton.configurable.ControllerType;
 import com.bawnorton.configurable.OptionType;
+import com.bawnorton.configurable.ap.helper.AnnotationHelper;
 import javax.lang.model.element.AnnotationMirror;
 import java.util.Objects;
 
@@ -10,19 +11,15 @@ public final class ConfigurableHolder {
     private final Configurable annotation;
     private final AnnotationMirror configurableMirror;
     private final AnnotationMirror yaclMirror;
+    private final AnnotationMirror imageMirror;
     private ConfigurableOverrides overrides;
 
     public ConfigurableHolder(Configurable annotation, AnnotationMirror configurableMirror) {
         this.annotation = annotation;
         this.configurableMirror = configurableMirror;
 
-        yaclMirror = configurableMirror.getElementValues()
-                .entrySet()
-                .stream()
-                .filter(entry -> entry.getKey().getSimpleName().contentEquals("yacl"))
-                .findFirst()
-                .map(entry -> (AnnotationMirror) entry.getValue())
-                .orElse(null);
+        yaclMirror = AnnotationHelper.getSubAnnotation(configurableMirror, "yacl").orElse(null);
+        imageMirror = AnnotationHelper.getSubAnnotation(yaclMirror, "image").orElse(null);
     }
 
     public void setOverrides(ConfigurableOverrides overrides) {
@@ -39,6 +36,10 @@ public final class ConfigurableHolder {
 
     public AnnotationMirror getYaclMirror() {
         return yaclMirror;
+    }
+
+    public AnnotationMirror getImageMirror() {
+        return imageMirror;
     }
 
     public String value() {
@@ -77,6 +78,10 @@ public final class ConfigurableHolder {
         return overrides == null ? annotation().yacl().formatter() : overrides.getFormatter();
     }
 
+    public String descriptioner() {
+        return overrides == null ? annotation().yacl().descriptioner() : overrides.getDescriptioner();
+    }
+
     public OptionType[] type() {
         return overrides == null ? annotation().yacl().type() : overrides.getOptionType();
     }
@@ -87,30 +92,5 @@ public final class ConfigurableHolder {
 
     public boolean collapsed() {
         return annotation.yacl().collapsed();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null || obj.getClass() != this.getClass()) {
-            return false;
-        }
-        var that = (ConfigurableHolder) obj;
-        return Objects.equals(this.annotation, that.annotation) &&
-               Objects.equals(this.configurableMirror, that.configurableMirror);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(annotation, configurableMirror);
-    }
-
-    @Override
-    public String toString() {
-        return "AnnotationHolder[" +
-               "annotation=" + annotation + ", " +
-               "configurableMirror=" + configurableMirror + ']';
     }
 }
