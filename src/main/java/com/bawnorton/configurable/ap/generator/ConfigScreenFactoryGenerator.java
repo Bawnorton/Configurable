@@ -161,7 +161,7 @@ public final class YaclScreenFactory {
                             new YaclOptionGroupName(configName, key),
                             new YaclOptionGroupDescription(
                                     parentOrChild.getDescriptionText(types, configName, YaclOptionGroupDescriptionText::new),
-                                    parentOrChild.getImage(types, YaclOptionGroupDescriptionImage::new)
+                                    parentOrChild.getOptionGroupDescriptionImage(types)
                             ),
                             entryOptions,
                             parentOrChild.annotationHolder().collapsed()
@@ -193,7 +193,7 @@ public final class YaclScreenFactory {
                 new YaclOptionName(configName, key),
                 new YaclOptionDescription(
                         entry.getDescriptionText(types, configName, YaclOptionDescriptionText::new),
-                        entry.getImage(types, YaclOptionDescriptionImage::new)
+                        entry.getOptionDescriptionImage(types)
                 ),
                 new YaclOptionBinding(externalRef),
                 getOptionController(entry, externalRef),

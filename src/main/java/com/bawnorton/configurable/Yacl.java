@@ -9,27 +9,32 @@ import java.lang.annotation.Target;
 @Target({})
 public @interface Yacl {
     /**
-     * <i><b>Inherited</b></i><br>
-     * For UI generation set the category of this specific element to "config_name.category.%category%".<br>
-     * Defaults to the enclosing package name: "config_name.category.package_name".<br>
-     * <br>
-     * Example:<br>
-     * <pre>
-     * {@code
-     *     package com.bawnorton.package_name;
-     *
-     *     public class Holder {
-     *         @Configurable(yacl = @Yacl(category = "test"))
-     *         public static int value;
-     *         @Configurable
-     *         public static boolean otherValue;
-     *     }
-     * }
-     * </pre>
-     * {@code Holder#value} will be placed in "config_name.category.test" and {@code Holder#otherValue} will be placed in
-     * "config_name.category.package_name".
+     * <i><b>Transitive</b></i><br>
+     * Set the category of the option
      */
     String category() default "";
+
+    /**
+     * <i><b>Transitive</b></i><br>
+     * Whether or not to exclude the element
+     */
+    boolean exclude() default false;
+
+    /**
+     * Whether the option group should be collapsed by default.
+     */
+    boolean collapsed() default false;
+
+    /**
+     * Which controller should the field use in the UI
+     */
+    ControllerType controller() default ControllerType.AUTO;
+
+    /**
+     * <i><b>Transitive</b></i><br>
+     * @see OptionFlag
+     */
+    OptionType[] type() default {};
 
     /**
      * Sets the method to use for setting the description of the displayed value of an option<br>
@@ -55,17 +60,6 @@ public @interface Yacl {
     String descriptioner() default "";
 
     /**
-     * <i><b>Inherited</b></i><br>
-     * Whether or not to exclude the field from the UI generator
-     */
-    boolean exclude() default false;
-
-    /**
-     * Which controller should the field use in the UI
-     */
-    ControllerType controller() default ControllerType.AUTO;
-
-    /**
      * Sets the method to use for formatting the displayed value of an option<br>
      * <br>
      * Name of a method with the following signature:
@@ -81,13 +75,7 @@ public @interface Yacl {
     String formatter() default "";
 
     /**
-     * <i><b>Inherited</b></i><br>
-     * @see OptionFlag
-     */
-    OptionType[] type() default {};
-
-    /**
-     * Sets the method(s) to use for listening to changes to an option within the config ui<br>
+     * Sets the method(s) to use for listening to changes to an option<br>
      * <br>
      * Name of a method with the following signature:
      * <pre>
@@ -102,12 +90,7 @@ public @interface Yacl {
     String[] listener() default {};
 
     /**
-     * Whether the option group should be collapsed by default.
-     */
-    boolean collapsed() default false;
-
-    /**
-     * <i><b>Inherited</b></i><br>
+     * <i><b>Transitive</b></i><br>
      * Add an image to the group/option
      */
     Image image() default @Image;

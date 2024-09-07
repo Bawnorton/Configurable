@@ -181,7 +181,18 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
         return getMethodBased(types, factory::create, descriptioner);
     }
 
-    public <T extends YaclDescriptionImage> T getImage(Types types, YaclDescriptionImage.Factory<T> factory) {
+    public YaclDescriptionImage getOptionDescriptionImage(Types types) {
+        if(annotationHolder.inheritedImage()) {
+            return getOptionGroupDescriptionImage(types);
+        }
+        return getImage(types, YaclOptionDescriptionImage::new);
+    }
+
+    public YaclDescriptionImage getOptionGroupDescriptionImage(Types types) {
+        return getImage(types, YaclOptionGroupDescriptionImage::new);
+    }
+
+    private  <T extends YaclDescriptionImage> T getImage(Types types, YaclDescriptionImage.Factory<T> factory) {
         if(!hasImage()) return null;
 
         Image image = image();

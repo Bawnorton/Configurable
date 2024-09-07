@@ -17,7 +17,14 @@ public class Reference<T> {
     public Reference(String name, Class<?> refHolder, Class<T> refType, ConstraintSet.Builder builder) {
         this.name = name;
         this.refHolder = refHolder;
-        this.constraints = builder.build(refHolder, refType);
+        try {
+            this.constraints = builder.build(refHolder, refType);
+        } catch (RuntimeException e) {
+            throw new IllegalConfigException("Could not build constraints for \"%s\" in \"%s\"".formatted(
+                    name,
+                    refHolder.getSimpleName()
+            ), e);
+        }
         try {
             MethodHandles.Lookup publicLookup = MethodHandles.lookup();
             MethodHandles.Lookup privateLookup = MethodHandles.privateLookupIn(refHolder, publicLookup);
