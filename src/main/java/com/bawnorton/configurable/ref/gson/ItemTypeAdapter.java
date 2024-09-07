@@ -1,4 +1,4 @@
-package com.bawnorton.configurable.impl.ref.gson;
+package com.bawnorton.configurable.ref.gson;
 
 import com.bawnorton.configurable.ConfigurableMain;
 import com.google.gson.JsonDeserializationContext;

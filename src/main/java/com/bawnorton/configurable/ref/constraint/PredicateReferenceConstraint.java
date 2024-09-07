@@ -1,4 +1,4 @@
-package com.bawnorton.configurable.impl.ref.constraint;
+package com.bawnorton.configurable.ref.constraint;
 
 import com.bawnorton.configurable.ConfigurableMain;
 import java.util.function.Predicate;

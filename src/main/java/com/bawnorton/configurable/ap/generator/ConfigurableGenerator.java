@@ -1,6 +1,6 @@
 package com.bawnorton.configurable.ap.generator;
 
-import com.bawnorton.configurable.impl.ConfigurableSettings;
+import com.bawnorton.configurable.load.ConfigurableSettings;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.util.Types;

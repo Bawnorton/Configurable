@@ -1,8 +1,16 @@
 package com.bawnorton.configurable.ap.generator;
 
+import com.bawnorton.configurable.ap.helper.MappingsHelper;
 import com.bawnorton.configurable.ap.tree.ConfigurableElement;
 import com.bawnorton.configurable.ap.yacl.*;
-import com.bawnorton.configurable.impl.ConfigurableSettings;
+import com.bawnorton.configurable.ap.yacl.YaclOptionDescriptionText;
+import com.bawnorton.configurable.ap.yacl.YaclOptionGroupDescriptionText;
+import com.bawnorton.configurable.ap.yacl.YaclOptionDescription;
+import com.bawnorton.configurable.ap.yacl.YaclOptionDescriptionImage;
+import com.bawnorton.configurable.ap.yacl.YaclOptionGroup;
+import com.bawnorton.configurable.ap.yacl.YaclOptionGroupDescription;
+import com.bawnorton.configurable.ap.yacl.YaclOptionGroupDescriptionImage;
+import com.bawnorton.configurable.load.ConfigurableSettings;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.ElementKind;
@@ -28,14 +36,9 @@ package <configurable_package>.client;
 
 import <config_class_name>;
 import com.bawnorton.configurable.ConfigurableMain;
-import com.bawnorton.configurable.impl.generated.GeneratedConfigScreenFactory;
+import com.bawnorton.configurable.generated.GeneratedConfigScreenFactory;
 import com.bawnorton.configurable.platform.Platform;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
-import net.minecraft.util.Util;
+<imports>
 import java.net.URI;
 
 public final class ConfigScreenFactory implements GeneratedConfigScreenFactory {
@@ -66,7 +69,6 @@ public final class ConfigScreenFactory implements GeneratedConfigScreenFactory {
 package <configurable_package>.client;
 
 import <config_class_name>;
-import net.minecraft.client.gui.screen.Screen;
 <imports>
 
 public final class YaclScreenFactory {
@@ -85,6 +87,24 @@ public final class YaclScreenFactory {
 
     public void generateConfigScreenFactory() throws IOException {
         String spec = SCREEN_FACTORY_SPEC;
+        String mcImports =
+        """
+        import %s;
+        import %s;
+        import %s;
+        import %s;
+        import %s;
+        import %s;
+        """.formatted(
+                MappingsHelper.getMinecraftClient(),
+                MappingsHelper.getConfirmScreen(),
+                MappingsHelper.getScreen(),
+                MappingsHelper.getScreenTexts(),
+                MappingsHelper.getText(),
+                MappingsHelper.getUtil()
+        ).trim();
+        spec = spec.replaceAll("<imports>", mcImports);
+
         spec = applyReplacements(spec);
         JavaFileObject configLoader = filer.createSourceFile(settings.fullyQualifiedScreenFactory());
         try (PrintWriter out = new PrintWriter(configLoader.openWriter())) {
@@ -98,6 +118,7 @@ public final class YaclScreenFactory {
         spec = spec.replaceAll("<yacl>", root.getSpec(4));
 
         StringBuilder importBuilder = new StringBuilder();
+        importBuilder.append("import %s;\n".formatted(MappingsHelper.getScreen()));
         for(String neededImport : root.getNeededImports()) {
             importBuilder.append("import ")
                     .append(neededImport)
@@ -138,9 +159,9 @@ public final class YaclScreenFactory {
                     });
                     optionGroups.addOptionGroup(new YaclOptionGroup(
                             new YaclOptionGroupName(configName, key),
-                            new YaclDescription(
-                                    parentOrChild.getDescriptionText(types, configName),
-                                    parentOrChild.hasImage() ? new YaclDescriptionImage(parentOrChild.image()) : null
+                            new YaclOptionGroupDescription(
+                                    parentOrChild.getDescriptionText(types, configName, YaclOptionGroupDescriptionText::new),
+                                    parentOrChild.getImage(types, YaclOptionGroupDescriptionImage::new)
                             ),
                             entryOptions,
                             parentOrChild.annotationHolder().collapsed()
@@ -170,9 +191,9 @@ public final class YaclScreenFactory {
         return new YaclOption(
                 type,
                 new YaclOptionName(configName, key),
-                new YaclDescription(
-                        entry.getDescriptionText(types, configName),
-                        entry.hasImage() ? new YaclDescriptionImage(entry.image()) : null
+                new YaclOptionDescription(
+                        entry.getDescriptionText(types, configName, YaclOptionDescriptionText::new),
+                        entry.getImage(types, YaclOptionDescriptionImage::new)
                 ),
                 new YaclOptionBinding(externalRef),
                 getOptionController(entry, externalRef),
@@ -226,11 +247,7 @@ public final class YaclScreenFactory {
                                     externalRef
                             );
                         }
-                        //? if yarn {
-                        TypeElement item = elements.getTypeElement("net.minecraft.item.Item");
-                        //?} elif mojmap {
-                        /*TypeElement item = elements.getTypeElement("net.minecraft.world.item.Item");
-                        *///?}
+                        TypeElement item = MappingsHelper.getItemType(elements);
                         if (types.isSameType(entry.getType(), item.asType())) {
                             yield new YaclOptionController.Item();
                         }

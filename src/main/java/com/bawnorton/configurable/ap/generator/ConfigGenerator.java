@@ -2,7 +2,7 @@ package com.bawnorton.configurable.ap.generator;
 
 import com.bawnorton.configurable.ap.tree.ConfigurableElement;
 import com.bawnorton.configurable.ap.tree.ConfigurableHolder;
-import com.bawnorton.configurable.impl.ConfigurableSettings;
+import com.bawnorton.configurable.load.ConfigurableSettings;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
@@ -24,9 +24,9 @@ public final class ConfigGenerator extends ConfigurableGenerator {
 package <configurable_package>;
 
 <imports>
-import com.bawnorton.configurable.impl.generated.GeneratedConfig;
-import com.bawnorton.configurable.impl.ref.Reference;
-import com.bawnorton.configurable.impl.ref.constraint.*;
+import com.bawnorton.configurable.generated.GeneratedConfig;
+import com.bawnorton.configurable.ref.constraint.*;
+import com.bawnorton.configurable.ref.Reference;
 
 public final class Config implements GeneratedConfig {
 <content>

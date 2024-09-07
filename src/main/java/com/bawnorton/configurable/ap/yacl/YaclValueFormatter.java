@@ -1,5 +1,6 @@
 package com.bawnorton.configurable.ap.yacl;
 
+import com.bawnorton.configurable.ap.helper.MappingsHelper;
 import java.util.function.Consumer;
 
 public class YaclValueFormatter extends YaclElement {
@@ -18,11 +19,7 @@ public class YaclValueFormatter extends YaclElement {
 
     @Override
     protected void addNeededImports(Consumer<String> adder) {
-        //? if yarn {
-        adder.accept("net.minecraft.text.Text");
-        //?} elif mojmap {
-        /*adder.accept("net.minecraft.network.chat.Component");
-         *///?}
+        adder.accept(MappingsHelper.getText());
         if (owner != null) {
             adder.accept(owner);
         }
@@ -31,7 +28,11 @@ public class YaclValueFormatter extends YaclElement {
     @Override
     protected String getSpec(int depth) {
         if (owner == null) {
+            //? if yarn {
             return "Text.literal(value.toString())";
+            //?} elif mojmap {
+            /*return "Component.literal(value.toString())";
+            *///?}
         }
 
         return "%s.%s(value)".formatted(

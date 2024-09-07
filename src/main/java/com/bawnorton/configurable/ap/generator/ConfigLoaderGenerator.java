@@ -1,6 +1,6 @@
 package com.bawnorton.configurable.ap.generator;
 
-import com.bawnorton.configurable.impl.ConfigurableSettings;
+import com.bawnorton.configurable.load.ConfigurableSettings;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.util.Types;
@@ -16,9 +16,9 @@ package <configurable_package>;
 
 import <config_class_name>;
 import com.bawnorton.configurable.ConfigurableMain;
-import com.bawnorton.configurable.impl.generated.GeneratedConfigLoader;
-import com.bawnorton.configurable.impl.ref.Reference;
-import com.bawnorton.configurable.impl.ref.gson.ReferenceSerializer;
+import com.bawnorton.configurable.generated.GeneratedConfigLoader;
+import com.bawnorton.configurable.ref.Reference;
+import com.bawnorton.configurable.ref.gson.ReferenceSerializer;
 import com.bawnorton.configurable.platform.Platform;
 import com.bawnorton.configurable.libs.gson.Gson;
 import com.bawnorton.configurable.libs.gson.GsonBuilder;
@@ -48,7 +48,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     private static Gson createGson() {
        GsonBuilder builder = new GsonBuilder()
             .setPrettyPrinting()
-            .registerTypeAdapter(Reference.class, new ReferenceSerializer(() -> GSON));
+            .registerTypeAdapter(Reference.class, new ReferenceSerializer());
        ConfigurableMain.getTypeAdapters("<name>").forEach(builder::registerTypeHierarchyAdapter);
        return builder.create();
     }

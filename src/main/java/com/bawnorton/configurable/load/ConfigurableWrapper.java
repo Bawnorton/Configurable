@@ -1,8 +1,9 @@
-package com.bawnorton.configurable.impl;
+package com.bawnorton.configurable.load;
 
-import com.bawnorton.configurable.impl.generated.GeneratedConfig;
-import com.bawnorton.configurable.impl.generated.GeneratedConfigLoader;
-import com.bawnorton.configurable.impl.generated.GeneratedConfigScreenFactory;
+import com.bawnorton.configurable.api.ConfigurableApi;
+import com.bawnorton.configurable.generated.GeneratedConfig;
+import com.bawnorton.configurable.generated.GeneratedConfigLoader;
+import com.bawnorton.configurable.generated.GeneratedConfigScreenFactory;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import java.lang.reflect.Constructor;
@@ -11,6 +12,11 @@ public final class ConfigurableWrapper {
     private GeneratedConfigLoader<GeneratedConfig> loader;
     private GeneratedConfigScreenFactory screenFactory;
     private GeneratedConfig lastLoadedConfig;
+    private final ConfigurableApi apiImpl;
+
+    public ConfigurableWrapper(ConfigurableApi apiImpl) {
+        this.apiImpl = apiImpl;
+    }
 
     public void setLoader(Class<? extends GeneratedConfigLoader<GeneratedConfig>> loaderClass) {
         if(loader != null) throw new IllegalStateException("loader already set");
@@ -51,9 +57,15 @@ public final class ConfigurableWrapper {
 
     public void loadConfig() {
         lastLoadedConfig = loader.loadConfig();
+        if(apiImpl != null) {
+            lastLoadedConfig = apiImpl.afterLoad(lastLoadedConfig);
+        }
     }
 
     public void saveConfig() {
+        if(apiImpl != null) {
+            lastLoadedConfig = apiImpl.beforeSave(lastLoadedConfig);
+        }
         loader.saveConfig(lastLoadedConfig);
     }
 

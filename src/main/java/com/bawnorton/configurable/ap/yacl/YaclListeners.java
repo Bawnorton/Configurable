@@ -1,6 +1,5 @@
 package com.bawnorton.configurable.ap.yacl;
 
-import dev.isxander.yacl3.api.OptionGroup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -11,6 +10,10 @@ public class YaclListeners extends YaclElement {
 
     public void addListener(YaclListener listener) {
         listeners.add(listener);
+    }
+
+    public boolean isEmpty() {
+        return listeners.isEmpty();
     }
 
     @Override

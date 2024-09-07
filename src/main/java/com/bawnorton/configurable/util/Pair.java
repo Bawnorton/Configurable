@@ -1,4 +1,4 @@
-package com.bawnorton.configurable.impl.util;
+package com.bawnorton.configurable.util;
 
 public record Pair<A, B>(A a, B b) {
     public static <A, B> Pair<A, B> of(A a, B b) {

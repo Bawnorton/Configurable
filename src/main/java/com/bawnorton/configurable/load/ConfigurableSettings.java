@@ -1,4 +1,4 @@
-package com.bawnorton.configurable.impl;
+package com.bawnorton.configurable.load;
 
 public record ConfigurableSettings(
         String name,

@@ -4,7 +4,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 //? if fabric {
 import com.bawnorton.configurable.ConfigurableMain;
-import com.bawnorton.configurable.impl.ConfigurableWrapper;
+import com.bawnorton.configurable.load.ConfigurableWrapper;
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;

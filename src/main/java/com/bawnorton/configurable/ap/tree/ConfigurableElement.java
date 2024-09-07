@@ -2,12 +2,10 @@ package com.bawnorton.configurable.ap.tree;
 
 import com.bawnorton.configurable.ControllerType;
 import com.bawnorton.configurable.Image;
-import com.bawnorton.configurable.ap.yacl.YaclCustomDescriptionText;
+import com.bawnorton.configurable.ap.yacl.*;
+import com.bawnorton.configurable.ap.yacl.YaclDescriptionImage;
 import com.bawnorton.configurable.ap.yacl.YaclDescriptionText;
-import com.bawnorton.configurable.ap.yacl.YaclElement;
-import com.bawnorton.configurable.ap.yacl.YaclListener;
-import com.bawnorton.configurable.ap.yacl.YaclListeners;
-import com.bawnorton.configurable.ap.yacl.YaclValueFormatter;
+import com.bawnorton.configurable.ap.yacl.YaclSimpleDescriptionText;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -18,7 +16,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public record ConfigurableElement(Element element, ConfigurableHolder annotationHolder, List<ConfigurableElement> children) {
@@ -151,18 +148,18 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
     }
 
     public Image image() {
-        return annotationHolder.annotation().yacl().image();
+        return annotationHolder.image();
     }
 
     public boolean hasImage() {
         Image image = image();
-        return image.id().isEmpty() && image.custom().isEmpty();
+        return !(image.value().isEmpty() && image.custom().isEmpty());
     }
 
     public YaclValueFormatter getFormatter(Types types) {
         String formatter = annotationHolder.formatter();
         if(formatter.isEmpty()) {
-            return new YaclValueFormatter();
+            return null;
         }
         return getMethodBased(types, YaclValueFormatter::new, formatter);
     }
@@ -176,12 +173,23 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
         return yaclListeners;
     }
 
-    public YaclElement getDescriptionText(Types types, String configName) {
+    public YaclElement getDescriptionText(Types types, String configName, YaclDescriptionText.Factory<?> factory) {
         String descriptioner = annotationHolder.descriptioner();
         if(descriptioner.isEmpty()) {
-            return new YaclDescriptionText(configName, getKey());
+            return new YaclSimpleDescriptionText(configName, getKey());
         }
-        return getMethodBased(types, YaclCustomDescriptionText::new, descriptioner);
+        return getMethodBased(types, factory::create, descriptioner);
+    }
+
+    public <T extends YaclDescriptionImage> T getImage(Types types, YaclDescriptionImage.Factory<T> factory) {
+        if(!hasImage()) return null;
+
+        String custom = annotationHolder.custom();
+        Image image = image();
+        if(custom.isEmpty()) {
+            return factory.create(image, null, null);
+        }
+        return getMethodBased(types, (owner, method) -> factory.create(image, owner, method), custom);
     }
 
     private <T extends YaclElement> T getMethodBased(Types types, BiFunction<String, String, T> ctor, String methodName) {
@@ -191,7 +199,14 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
             String method = parts[1];
             return ctor.apply(owner, method);
         } else {
-            String owner = getFullyQualifiedOwnerName(types);
+            String owner;
+            if(element.getKind().isField()) {
+                owner = getFullyQualifiedOwnerName(types);
+            } else if (element.getKind().isClass()) {
+                owner = getFullyQualifiedTypeName(types);
+            } else {
+                throw new IllegalStateException("Could not determine owner for \"%s\"".formatted(methodName));
+            }
             return ctor.apply(owner, methodName);
         }
     }

@@ -1,5 +1,6 @@
 package com.bawnorton.configurable.ap.yacl;
 
+import com.bawnorton.configurable.ap.helper.MappingsHelper;
 import java.util.function.Consumer;
 
 public abstract class YaclOptionController extends YaclElement {
@@ -18,8 +19,9 @@ public abstract class YaclOptionController extends YaclElement {
 
     @Override
     protected String getSpec(int depth) {
+        String controllerSpec = getControllerSpec(depth + 1);
         if (valueFormatter == null) {
-            return "option -> %s".formatted(getControllerSpec(depth + 1)).trim();
+            return "option -> %s".formatted(controllerSpec).trim();
         }
 
         return """
@@ -27,7 +29,7 @@ public abstract class YaclOptionController extends YaclElement {
         %1$s.formatValue(value -> %3$s)
         """.formatted(
                 "\t".repeat(depth + 1),
-                getControllerSpec(depth + 1),
+                controllerSpec,
                 valueFormatter.getSpec(depth + 1)
         ).trim();
     }
@@ -113,6 +115,11 @@ public abstract class YaclOptionController extends YaclElement {
         public DoubleSlider(YaclElement valueFormatter, double min, double max) {
             super(valueFormatter, "Double", "", min, max);
         }
+
+        @Override
+        protected String getStep(Double max) {
+            return "%s / 100".formatted(max);
+        }
     }
 
     public static class CyclingEnum extends YaclOptionController {
@@ -169,6 +176,11 @@ public abstract class YaclOptionController extends YaclElement {
         public FloatSlider(YaclElement valueFormatter, float min, float max) {
             super(valueFormatter, "Float", "F", min, max);
         }
+
+        @Override
+        protected String getStep(Float max) {
+            return "%sF / 100".formatted(max);
+        }
     }
 
     public static class IntegerField extends NumberField<Integer> {
@@ -181,6 +193,11 @@ public abstract class YaclOptionController extends YaclElement {
         public IntegerSlider(YaclElement valueFormatter, int min, int max) {
             super(valueFormatter, "Integer", "", min, max);
         }
+
+        @Override
+        protected String getStep(Integer max) {
+            return "Math.max(1, %s / 100)".formatted(max);
+        }
     }
 
     public static class Item extends YaclOptionController {
@@ -192,6 +209,7 @@ public abstract class YaclOptionController extends YaclElement {
         protected void addNeededImports(Consumer<String> adder) {
             super.addNeededImports(adder);
             adder.accept("dev.isxander.yacl3.api.controller.ItemControllerBuilder");
+            adder.accept(MappingsHelper.getItem());
         }
 
         @Override
@@ -209,6 +227,11 @@ public abstract class YaclOptionController extends YaclElement {
     public static class LongSlider extends NumberSlider<Long> {
         public LongSlider(YaclElement valueFormatter, long min, long max) {
             super(valueFormatter, "Long", "L", min, max);
+        }
+
+        @Override
+        protected String getStep(Long max) {
+            return "Math.max(1, %sL / 100)".formatted(max);
         }
     }
 
@@ -300,17 +323,20 @@ public abstract class YaclOptionController extends YaclElement {
             adder.accept("dev.isxander.yacl3.api.controller.%sSliderControllerBuilder".formatted(name));
         }
 
+        protected abstract String getStep(T max);
+
         @Override
         protected String getControllerSpec(int depth) {
             return """
             %2$sSliderControllerBuilder.create(option)
             %1$s.range(%3$s, %4$s)
-            %1$s.step(Math.max(1, %4$s / 100))
+            %1$s.step(%5$s)
             """.formatted(
                     "\t".repeat(depth),
                     name,
                     min + suffix,
-                    max + suffix
+                    max + suffix,
+                    getStep(max)
             ).trim();
         }
     }

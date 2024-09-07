@@ -1,5 +1,6 @@
 package com.bawnorton.configurable.ap.yacl;
 
+import com.bawnorton.configurable.ap.helper.MappingsHelper;
 import java.util.function.Consumer;
 
 public abstract class YaclTextElement extends YaclElement {
@@ -11,16 +12,16 @@ public abstract class YaclTextElement extends YaclElement {
 
     @Override
     protected void addNeededImports(Consumer<String> adder) {
-        //? if yarn {
-        adder.accept("net.minecraft.text.Text");
-        //?} elif mojmap {
-        /*adder.accept("net.minecraft.network.chat.Component");
-         *///?}
+        adder.accept(MappingsHelper.getText());
     }
 
     @Override
     protected String getSpec(int depth) {
+        //? if yarn {
         return "Text.translatable(\"configurable.%s.yacl.%s\")".formatted(configName, getKey());
+        //?} elif mojmap {
+        /*return "Component.translatable(\"configurable.%s.yacl.%s\")".formatted(configName, getKey());
+        *///?}
     }
 
     protected abstract String getKey();

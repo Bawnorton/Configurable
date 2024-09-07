@@ -8,7 +8,7 @@ import com.bawnorton.configurable.ap.sourceprovider.SourceProvider;
 import com.bawnorton.configurable.ap.sourceprovider.SourceProviders;
 import com.bawnorton.configurable.ap.tree.ConfigurableTree;
 import com.bawnorton.configurable.ap.tree.ConfigurableElement;
-import com.bawnorton.configurable.impl.ConfigurableSettings;
+import com.bawnorton.configurable.load.ConfigurableSettings;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

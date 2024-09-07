@@ -1,4 +1,4 @@
-package com.bawnorton.configurable.impl.generated;
+package com.bawnorton.configurable.generated;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;

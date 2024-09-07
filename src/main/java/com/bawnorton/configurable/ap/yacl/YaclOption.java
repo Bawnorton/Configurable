@@ -12,11 +12,11 @@ public class YaclOption extends YaclElement {
     private final YaclElement optionBinding;
     private final YaclElement optionController;
     private final String optionFlags;
-    private final YaclElement listeners;
+    private final YaclListeners listeners;
 
     public YaclOption(String generic,
             YaclOptionName optionName,
-            YaclDescription optionDescription,
+            YaclOptionDescription optionDescription,
             YaclOptionBinding optionBinding,
             YaclOptionController optionController,
             OptionType[] optionTypes,
@@ -45,24 +45,28 @@ public class YaclOption extends YaclElement {
 
     @Override
     protected String getSpec(int depth) {
-        return """
+        StringBuilder spec = new StringBuilder();
+        spec.append("""
         Option.<%2$s>createBuilder()
         %1$s.name(%3$s)
         %1$s.description(%4$s)
         %1$s.binding(%5$s)
         %1$s.controller(%6$s)
-        %1$s.flag(%7$s)
-        %1$s.listeners(%8$s)
-        %1$s.build()
         """.formatted(
                 "\t".repeat(depth),
                 generic,
                 optionName.getSpec(depth + 1),
                 optionDescription.getSpec(depth + 1),
                 optionBinding.getSpec(depth + 1),
-                optionController.getSpec(depth + 1),
-                optionFlags,
-                listeners.getSpec(depth + 1)
-        ).trim();
+                optionController.getSpec(depth + 1)
+        ));
+        if (!optionFlags.isEmpty()) {
+            spec.append("%1$s.flag(%2$s)\n".formatted("\t".repeat(depth), optionFlags));
+        }
+        if (!listeners.isEmpty()) {
+            spec.append("%1$s.listeners(%2$s)\n".formatted("\t".repeat(depth), listeners));
+        }
+        spec.append("%1$s.build()".formatted("\t".repeat(depth)));
+        return spec.toString();
     }
 }

@@ -1,9 +1,8 @@
-package com.bawnorton.configurable.impl.ref.constraint;
+package com.bawnorton.configurable.ref.constraint;
 
-import com.bawnorton.configurable.impl.util.Pair;
+import com.bawnorton.configurable.util.Pair;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class ConstraintSet {

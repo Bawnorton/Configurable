@@ -1,7 +1,8 @@
-package com.bawnorton.configurable.impl;
+package com.bawnorton.configurable.load;
 
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.api.ConfigurableApi;
+import java.util.HashMap;
 import java.util.Map;
 
 //? if fabric {
@@ -13,6 +14,7 @@ import net.fabricmc.loader.api.FabricLoader;
 public final class ConfigurableApiImplLoader {
     //? if neoforge
     /*private static final ServiceLoader<ConfigurableApi> serviceLoader = ServiceLoader.load(ConfigurableApi.class);*/
+    private static final Map<String, ConfigurableApi> impls = new HashMap<>();
 
     public static void load() {
         //? if fabric {
@@ -32,5 +34,10 @@ public final class ConfigurableApiImplLoader {
     private static void applyImpl(String id, ConfigurableApi apiImpl) {
         Map<Class<?>, Object> adapters = apiImpl.getTypeAdapters();
         adapters.forEach((type, adapter) -> ConfigurableMain.registerTypeAdapater(id, type, adapter));
+        impls.put(id, apiImpl);
+    }
+
+    public static ConfigurableApi getImpl(String name) {
+        return impls.get(name);
     }
 }

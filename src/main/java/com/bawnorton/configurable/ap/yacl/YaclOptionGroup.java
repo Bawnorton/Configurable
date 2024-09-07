@@ -8,7 +8,7 @@ public class YaclOptionGroup extends YaclElement {
     private final YaclElement options;
     private final boolean collapsed;
 
-    public YaclOptionGroup(YaclOptionGroupName optionGroupName, YaclDescription optionGroupDescription, YaclOptions options, boolean collapsed) {
+    public YaclOptionGroup(YaclOptionGroupName optionGroupName, YaclOptionGroupDescription optionGroupDescription, YaclOptions options, boolean collapsed) {
         this.optionGroupName = optionGroupName;
         this.optionGroupDescription = optionGroupDescription;
         this.options = options;

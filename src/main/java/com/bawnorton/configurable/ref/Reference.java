@@ -1,9 +1,9 @@
-package com.bawnorton.configurable.impl.ref;
+package com.bawnorton.configurable.ref;
 
 import com.bawnorton.configurable.ConfigurableMain;
-import com.bawnorton.configurable.impl.IllegalConfigException;
-import com.bawnorton.configurable.impl.ref.constraint.ConstraintSet;
-import com.bawnorton.configurable.impl.ref.constraint.ReferenceConstraint;
+import com.bawnorton.configurable.load.IllegalConfigException;
+import com.bawnorton.configurable.ref.constraint.ConstraintSet;
+import com.bawnorton.configurable.ref.constraint.ReferenceConstraint;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.util.Objects;

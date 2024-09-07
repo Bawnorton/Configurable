@@ -1,4 +1,4 @@
-package com.bawnorton.configurable.impl.ref.constraint;
+package com.bawnorton.configurable.ref.constraint;
 
 public class ClampedReferenceConstraint extends ReferenceConstraint {
     protected final double min;

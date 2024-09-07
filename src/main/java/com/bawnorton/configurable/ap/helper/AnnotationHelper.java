@@ -1,6 +1,8 @@
 package com.bawnorton.configurable.ap.helper;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import java.util.Optional;
 
 public class AnnotationHelper {

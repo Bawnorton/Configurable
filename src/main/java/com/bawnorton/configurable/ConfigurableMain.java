@@ -1,9 +1,9 @@
 package com.bawnorton.configurable;
 
-import com.bawnorton.configurable.impl.ConfigurableApiImplLoader;
-import com.bawnorton.configurable.impl.ConfigurableSettings;
-import com.bawnorton.configurable.impl.ConfigurableWrapper;
-import com.bawnorton.configurable.impl.ref.gson.ItemTypeAdapter;
+import com.bawnorton.configurable.load.ConfigurableApiImplLoader;
+import com.bawnorton.configurable.load.ConfigurableSettings;
+import com.bawnorton.configurable.load.ConfigurableWrapper;
+import com.bawnorton.configurable.ref.gson.ItemTypeAdapter;
 import com.bawnorton.configurable.platform.Platform;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -54,7 +54,7 @@ public final class ConfigurableMain {
                 registerDefaultTypeAdapters(configName);
 
                 try {
-                    ConfigurableWrapper wrapper = new ConfigurableWrapper();
+                    ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
                     addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
                     if(settings.hasScreenFactory()) {
                         addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
