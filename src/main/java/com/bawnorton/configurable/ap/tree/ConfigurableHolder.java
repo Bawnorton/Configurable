@@ -98,8 +98,4 @@ public final class ConfigurableHolder {
     public boolean collapsed() {
         return annotation.yacl().collapsed();
     }
-
-    public String custom() {
-        return annotation.yacl().image().custom();
-    }
 }

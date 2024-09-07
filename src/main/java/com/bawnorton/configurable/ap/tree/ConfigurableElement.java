@@ -184,8 +184,8 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
     public <T extends YaclDescriptionImage> T getImage(Types types, YaclDescriptionImage.Factory<T> factory) {
         if(!hasImage()) return null;
 
-        String custom = annotationHolder.custom();
         Image image = image();
+        String custom = image.custom();
         if(custom.isEmpty()) {
             return factory.create(image, null, null);
         }
