@@ -1,10 +1,10 @@
 # Configurable
-### Decentrailised Config System
+### Decentralised Config System
 
 [![Modrinth](https://img.shields.io/modrinth/dt/configurable?color=00AF5C&label=downloads&logo=modrinth)](https://modrinth.com/mod/configurable)
-[![CurseForge](https://cf.way2muchnoise.eu/full_0000000_downloads.svg)](https://curseforge.com/minecraft/mc-mods/configurable)
+[![CurseForge](https://cf.way2muchnoise.eu/full_1092048_downloads.svg)](https://curseforge.com/minecraft/mc-mods/configurable)
 
-See the [wiki](https://github.com/Bawnorton/MixinSquared/wiki) for usage
+See the [wiki](https://github.com/Bawnorton/Configurable/wiki) for usage
 
 ## Gradle
 
