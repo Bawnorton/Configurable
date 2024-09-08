@@ -6,7 +6,6 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeKind;
-import org.spongepowered.asm.mixin.Mixin;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -136,11 +135,18 @@ public final class ConfigurableTree {
 
         Element topMost = getTopMostClass(element);
         if(topMost != null) {
-            Mixin mixin = topMost.getAnnotation(Mixin.class);
-            if(mixin != null) {
-                messager.printError("Configurable element \"%s\" must be outside a mixin class".formatted(element.getSimpleName()), element);
-                throw new RuntimeException();
-            }
+            topMost.getAnnotationMirrors()
+                    .stream()
+                    .filter(mirror -> mirror.getAnnotationType()
+                            .asElement()
+                            .asType()
+                            .toString()
+                            .equals("org.spongepowered.asm.mixin.Mixin"))
+                    .findFirst()
+                    .ifPresent(mirror -> {
+                        messager.printError("Configurable element \"%s\" must be outside a mixin class".formatted(element.getSimpleName()), element);
+                        throw new RuntimeException();
+                    });
         }
 
         return new ConfigurableElement(element, holder, children);

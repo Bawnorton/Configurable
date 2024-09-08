@@ -2,71 +2,50 @@ package com.bawnorton.configurable.ap.tree;
 
 import com.bawnorton.configurable.Image;
 import com.bawnorton.configurable.OptionType;
+import com.bawnorton.configurable.util.Pair;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class ConfigurableOverrides {
-    private final Supplier<String> categoryGetter;
-    private final Supplier<Boolean> excludeGetter;
-    private final Supplier<OptionType[]> optionTypeGetter;
-    private final Supplier<Image> imageGetter;
+    private final Map<String, Pair<Boolean, Supplier<?>>> overrides = new HashMap<>();
 
-    public ConfigurableOverrides(Supplier<String> categoryGetter,
-            Supplier<Boolean> excludeGetter,
-            Supplier<OptionType[]> optionTypeGetter,
-            Supplier<Image> imageGetter) {
-        this.categoryGetter = categoryGetter;
-        this.excludeGetter = excludeGetter;
-        this.optionTypeGetter = optionTypeGetter;
-        this.imageGetter = imageGetter;
+    public ConfigurableOverrides(Map<String, Pair<Boolean, Supplier<?>>> overrides) {
+        this.overrides.putAll(overrides);
     }
 
     public static void create(ConfigurableHolder parent, ConfigurableHolder child) {
-        Builder builder = builder();
         AnnotationMirror yaclMirror = child.getYaclMirror();
-        builder.setCategoryGetter(isDefaultValue(yaclMirror, "category") ? parent::category : () -> child.annotation().yacl().category());
-        builder.setExcludeGetter(isDefaultValue(yaclMirror, "exclude") ? parent::exclude : () -> child.annotation().yacl().exclude());
-        builder.setOptionTypeGetter(isDefaultValue(yaclMirror, "type") ? parent::type : () -> child.annotation().yacl().type());
-        builder.setImageGetter(isDefaultValue(yaclMirror, "image") ? parent::image : () -> child.annotation().yacl().image());
-
-        child.setOverrides(builder.build());
-    }
-
-    private static boolean isDefaultValue(AnnotationMirror annotation, String methodName) {
-        if(annotation == null) return true;
-
-        ExecutableElement methodElement = null;
-        for (ExecutableElement executableElement : annotation.getElementValues().keySet()) {
-            if (executableElement.getSimpleName().contentEquals(methodName)) {
-                methodElement = executableElement;
-                break;
-            }
-        }
-        if (methodElement == null) return true;
-
-        AnnotationValue defaultValue = methodElement.getDefaultValue();
-        AnnotationValue actualValue = annotation.getElementValues().get(methodElement);
-
-        return Objects.equals(actualValue, defaultValue);
+        child.setOverrides(builder()
+                .addOverride(yaclMirror, "category", parent::category, () -> child.annotation().yacl().category())
+                .addOverride(yaclMirror, "exclude", parent::exclude, () -> child.annotation().yacl().exclude())
+                .addOverride(yaclMirror, "type", parent::type, () -> child.annotation().yacl().type())
+                .addOverride(yaclMirror, "image", parent::image, () -> child.annotation().yacl().image())
+                .build());
     }
 
     public String getCategory() {
-        return categoryGetter.get();
+        return (String) overrides.get("category").second().get();
     }
 
     public boolean getExclude() {
-        return excludeGetter.get();
+        return (Boolean) overrides.get("exclude").second().get();
     }
 
     public OptionType[] getOptionType() {
-        return optionTypeGetter.get();
+        return (OptionType[]) overrides.get("type").second().get();
     }
 
     public Image getImage() {
-        return imageGetter.get();
+        return (Image) overrides.get("image").second().get();
+    }
+
+    public boolean imageOverridden() {
+        return overrides.get("image").first();
     }
 
     private static Builder builder() {
@@ -74,34 +53,34 @@ public final class ConfigurableOverrides {
     }
 
     private static class Builder {
-        private Supplier<String> categoryGetter;
-        private Supplier<Boolean> excludeGetter;
-        private Supplier<OptionType[]> optionTypeGetter;
-        private Supplier<Image> imageGetter;
+        private final Map<String, Pair<Boolean, Supplier<?>>> overrides = new HashMap<>();
 
-        public void setCategoryGetter(Supplier<String> categoryGetter) {
-            this.categoryGetter = categoryGetter;
+        public <T> Builder addOverride(AnnotationMirror mirror, String name, Supplier<T> override, Supplier<T> natural) {
+            boolean isDefaultValue = isDefaultValue(mirror, name);
+            overrides.put(name, Pair.of(isDefaultValue, isDefaultValue ? override : natural));
+            return this;
         }
 
-        public void setExcludeGetter(Supplier<Boolean> excludeGetter) {
-            this.excludeGetter = excludeGetter;
-        }
+        private static boolean isDefaultValue(AnnotationMirror annotation, String methodName) {
+            if(annotation == null) return true;
 
-        public void setOptionTypeGetter(Supplier<OptionType[]> optionTypeGetter) {
-            this.optionTypeGetter = optionTypeGetter;
-        }
+            ExecutableElement methodElement = null;
+            for (ExecutableElement executableElement : annotation.getElementValues().keySet()) {
+                if (executableElement.getSimpleName().contentEquals(methodName)) {
+                    methodElement = executableElement;
+                    break;
+                }
+            }
+            if (methodElement == null) return true;
 
-        public void setImageGetter(Supplier<Image> imageGetter) {
-            this.imageGetter = imageGetter;
+            AnnotationValue defaultValue = methodElement.getDefaultValue();
+            AnnotationValue actualValue = annotation.getElementValues().get(methodElement);
+
+            return Objects.equals(actualValue, defaultValue);
         }
 
         public ConfigurableOverrides build() {
-            return new ConfigurableOverrides(
-                    categoryGetter,
-                    excludeGetter,
-                    optionTypeGetter,
-                    imageGetter
-            );
+            return new ConfigurableOverrides(overrides);
         }
     }
 }

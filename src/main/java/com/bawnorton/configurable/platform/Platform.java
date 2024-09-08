@@ -1,11 +1,11 @@
 package com.bawnorton.configurable.platform;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.Consumer;
 
-        //? if fabric {
-import net.fabricmc.loader.api.FabricLoader;
+//? if fabric {
+/*import net.fabricmc.loader.api.FabricLoader;
+import java.util.List;
 
 public final class Platform {
     public static Path getConfigDir() {
@@ -30,8 +30,8 @@ public final class Platform {
     }
 }
 
-//?} elif neoforge {
-/*import net.neoforged.fml.loading.FMLLoader;
+*///?} elif neoforge {
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.fml.ModList;
@@ -59,7 +59,15 @@ public final class Platform {
 
     public static void forEachJar(Consumer<Path> consumer) {
         ModList modList = ModList.get();
-        modList.forEachModFile(modFile -> consumer.accept(Path.of(modFile.toString())));
+        modList.forEachModFile(modFile -> consumer.accept(modFile.getFilePath()));
+    }
+
+    public static ModContainer getContainer(String name) {
+        ModList modList = ModList.get();
+        if(modList != null) {
+            return modList.getModContainerById(name).orElse(null);
+        }
+        return null;
     }
 }
-*///?}
+//?}

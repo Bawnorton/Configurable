@@ -6,11 +6,6 @@ import com.bawnorton.configurable.Image;
 import com.bawnorton.configurable.OptionType;
 import com.bawnorton.configurable.ap.helper.AnnotationHelper;
 import javax.lang.model.element.AnnotationMirror;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextContent;
-import net.minecraft.text.TranslatableTextContent;
-import java.util.Objects;
 
 public final class ConfigurableHolder {
     private final Configurable annotation;
@@ -64,10 +59,10 @@ public final class ConfigurableHolder {
     }
 
     public boolean inheritedImage() {
-        if(overrides == null) {
+        if (overrides == null) {
             return false;
         }
-        return overrides.getImage().equals(annotation().yacl().image());
+        return overrides.imageOverridden();
     }
 
     public String value() {

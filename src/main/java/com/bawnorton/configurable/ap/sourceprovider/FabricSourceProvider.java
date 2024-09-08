@@ -2,7 +2,7 @@ package com.bawnorton.configurable.ap.sourceprovider;
 
 //? if fabric {
 
-import com.google.gson.Gson;
+/*import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import javax.annotation.processing.Filer;
@@ -44,4 +44,4 @@ public final class FabricSourceProvider extends SourceProvider {
         return fmj.get("id").getAsString();
     }
 }
-//?}
+*///?}
