@@ -4,7 +4,8 @@ import java.nio.file.Path;
 import java.util.function.Consumer;
 
 //? if fabric {
-/*import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import java.util.List;
 
 public final class Platform {
@@ -28,10 +29,15 @@ public final class Platform {
             }
         });
     }
+
+    public static boolean isServer() {
+        return FabricLoader.getInstance().getEnvironmentType().equals(EnvType.SERVER);
+    }
 }
 
-*///?} elif neoforge {
-import net.neoforged.fml.ModContainer;
+//?} elif neoforge {
+/*import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.fml.ModList;
@@ -69,5 +75,9 @@ public final class Platform {
         }
         return null;
     }
+
+    public static boolean isServer() {
+        return FMLEnvironment.dist.isDedicatedServer();
+    }
 }
-//?}
+*///?}

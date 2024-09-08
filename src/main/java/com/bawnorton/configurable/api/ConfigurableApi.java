@@ -11,5 +11,5 @@ public interface ConfigurableApi {
     GeneratedConfig afterLoad(GeneratedConfig config);
 
     //? if neoforge
-    String getConfigName();
+    /*String getConfigName();*/
 }

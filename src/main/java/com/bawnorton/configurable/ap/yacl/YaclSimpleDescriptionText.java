@@ -10,6 +10,6 @@ public class YaclSimpleDescriptionText extends YaclTextElement {
 
     @Override
     public String getKey() {
-        return key;
+        return "description.%s".formatted(key);
     }
 }

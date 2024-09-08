@@ -56,7 +56,7 @@ public final class ConfigurableMain {
                 try {
                     ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
                     addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
-                    if(settings.hasScreenFactory()) {
+                    if(settings.hasScreenFactory() && !Platform.isServer()) {
                         addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
                     }
                     WRAPPERS.put(configName, wrapper);

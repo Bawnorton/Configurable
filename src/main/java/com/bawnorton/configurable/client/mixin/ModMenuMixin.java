@@ -3,7 +3,7 @@ package com.bawnorton.configurable.client.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 
 //? if fabric {
-/*import com.bawnorton.configurable.ConfigurableMain;
+import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.load.ConfigurableWrapper;
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
@@ -51,9 +51,9 @@ public abstract class ModMenuMixin {
         });
     }
 }
-*///?} else {
-import com.bawnorton.configurable.client.ConfigurableClient;
+//?} else {
+/*import com.bawnorton.configurable.client.ConfigurableClient;
 
 @Mixin(ConfigurableClient.class)
 public abstract class ModMenuMixin {}
-//?}
+*///?}

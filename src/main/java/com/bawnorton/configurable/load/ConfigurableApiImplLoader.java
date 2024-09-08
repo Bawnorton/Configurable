@@ -6,19 +6,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 //? if fabric {
-/*import net.fabricmc.loader.api.FabricLoader;
-*///?} elif neoforge {
-import java.util.ServiceLoader;
-//?}
+import net.fabricmc.loader.api.FabricLoader;
+//?} elif neoforge {
+/*import java.util.ServiceLoader;
+*///?}
 
 public final class ConfigurableApiImplLoader {
     //? if neoforge
-    private static final ServiceLoader<ConfigurableApi> serviceLoader = ServiceLoader.load(ConfigurableApi.class);
+    /*private static final ServiceLoader<ConfigurableApi> serviceLoader = ServiceLoader.load(ConfigurableApi.class);*/
     private static final Map<String, ConfigurableApi> impls = new HashMap<>();
 
     public static void load() {
         //? if fabric {
-        /*FabricLoader.getInstance().getEntrypointContainers("configurable", ConfigurableApi.class).forEach(container -> {
+        FabricLoader.getInstance().getEntrypointContainers("configurable", ConfigurableApi.class).forEach(container -> {
             String id = container.getProvider().getMetadata().getId();
             try {
                 applyImpl(id, container.getEntrypoint());
@@ -26,9 +26,9 @@ public final class ConfigurableApiImplLoader {
                 ConfigurableMain.LOGGER.error("Mod {} provides a broken ConfigurableApi implemenation", id, e);
             }
         });
-        *///?} elif neoforge {
-        serviceLoader.forEach(apiImpl -> applyImpl(apiImpl.getConfigName(), apiImpl));
-        //?}
+        //?} elif neoforge {
+        /*serviceLoader.forEach(apiImpl -> applyImpl(apiImpl.getConfigName(), apiImpl));
+        *///?}
     }
 
     private static void applyImpl(String id, ConfigurableApi apiImpl) {

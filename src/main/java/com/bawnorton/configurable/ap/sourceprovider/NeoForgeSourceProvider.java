@@ -2,7 +2,7 @@ package com.bawnorton.configurable.ap.sourceprovider;
 
 //? if neoforge {
 
-import com.electronwill.nightconfig.core.Config;
+/*import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.toml.TomlParser;
 import javax.annotation.processing.Filer;
 import java.io.IOException;
@@ -41,4 +41,4 @@ public final class NeoForgeSourceProvider extends SourceProvider {
         return config.<ArrayList<Config>>get("mods").getFirst().get("modId");
     }
 }
-//?}
+*///?}

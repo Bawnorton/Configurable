@@ -178,11 +178,11 @@ extensions.configure<PublishingExtension> {
 }
 
 publishMods {
-    file = tasks.remapJar.get().archiveFile
-    val tag = "$loader-${mod.version}+$minecraftVersion"
+    file = tasks.shadowJar.get().archiveFile
+    val tag = "$loader-${mod.mappings}-${mod.version}+$minecraftVersion"
     val branch = "main"
     changelog = "[Changelog](https://github.com/Bawnorton/${mod.name}/blob/$branch/CHANGELOG.md)"
-    displayName = "${mod.name} ${loader.toString().replaceFirstChar { it.uppercase() }} ${mod.version} for $minecraftVersion"
+    displayName = "${mod.name} ${loader.toString().replaceFirstChar { it.uppercase() }} (${mod.mappings}) ${mod.version} for $minecraftVersion"
     type = STABLE
     modLoaders.add(loader.toString())
 

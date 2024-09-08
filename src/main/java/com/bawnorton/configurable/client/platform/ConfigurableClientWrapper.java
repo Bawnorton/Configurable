@@ -3,7 +3,7 @@ package com.bawnorton.configurable.client.platform;
 import com.bawnorton.configurable.client.ConfigurableClient;
 
 //? if fabric {
-/*import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.ClientModInitializer;
 
 public final class ConfigurableClientWrapper implements ClientModInitializer {
     @Override
@@ -11,8 +11,8 @@ public final class ConfigurableClientWrapper implements ClientModInitializer {
         ConfigurableClient.init();
     }
 }
-*///?} elif neoforge {
-import com.bawnorton.configurable.ConfigurableMain;
+//?} elif neoforge {
+/*import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.platform.Platform;
 import net.minecraft.client.MinecraftClient;
 import net.neoforged.api.distmarker.Dist;
@@ -41,4 +41,4 @@ public final class ConfigurableClientWrapper {
         });
     }
 }
-//?}
+*///?}
