@@ -1,6 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
     `maven-publish`
@@ -20,10 +21,6 @@ val awName = "${mod.id}.accesswidener"
 version = "${mod.version}-$loader-${mod.mappings}+$minecraftVersion"
 group = mod.group
 base.archivesName.set(mod.name)
-
-stonecutter {
-    debug = true
-}
 
 repositories {
     mavenCentral()
@@ -54,6 +51,12 @@ tasks {
         options.release = 21
     }
 
+    withType<RemapJarTask> {
+        dependsOn("shadowJar")
+        inputFile.set(shadowJar.get().archiveFile.get())
+        addNestedDependencies = true
+    }
+
     withType<ShadowJar> {
         from(sourceSets.main.get().output)
         relocate("com.google.gson", "com.bawnorton.configurable.libs.gson")
@@ -74,10 +77,7 @@ tasks {
             "pack.png",
             "version.json"
         )
-
         mergeServiceFiles()
-
-        archiveClassifier = null
     }
 }
 
@@ -90,9 +90,9 @@ java {
 
 val buildAndCollect = tasks.register<Copy>("buildAndCollect") {
     group = "build"
-    from(tasks.shadowJar.get().archiveFile)
+    from(tasks.remapJar.get().archiveFile)
     into(rootProject.layout.buildDirectory.file("libs/${mod.version}"))
-    dependsOn("remapJar", "shadowJar")
+    dependsOn("remapJar")
 }
 
 if (stonecutter.current.isActive) {
@@ -178,7 +178,7 @@ extensions.configure<PublishingExtension> {
 }
 
 publishMods {
-    file = tasks.shadowJar.get().archiveFile
+    file = tasks.remapJar.get().archiveFile
     val tag = "$loader-${mod.mappings}-${mod.version}+$minecraftVersion"
     val branch = "main"
     changelog = "[Changelog](https://github.com/Bawnorton/${mod.name}/blob/$branch/CHANGELOG.md)"
@@ -196,12 +196,12 @@ publishMods {
     modrinth {
         accessToken = providers.gradleProperty("MODRINTH_TOKEN")
         projectId = mod.modrinthProjId
-        minecraftVersions.addAll(mod.supportedVersions)
+        minecraftVersions.addAll(mod.supportedVersions.split(", "))
     }
 
     curseforge {
         accessToken = providers.gradleProperty("CURSEFORGE_TOKEN")
         projectId = mod.curseforgeProjId
-        minecraftVersions.addAll(mod.supportedVersions)
+        minecraftVersions.addAll(mod.supportedVersions.split(", "))
     }
 }
