@@ -4,8 +4,13 @@ import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.load.IllegalConfigException;
 import com.bawnorton.configurable.ref.constraint.ConstraintSet;
 import com.bawnorton.configurable.ref.constraint.ReferenceConstraint;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.spongepowered.asm.service.MixinService;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
+import java.util.List;
 import java.util.Objects;
 
 public class Reference<T> {
@@ -13,6 +18,7 @@ public class Reference<T> {
     private final Class<?> refHolder;
     private final VarHandle varHandle;
     private final ConstraintSet constraints;
+    private final T defaultValue;
 
     public Reference(String name, Class<?> refHolder, Class<T> refType, ConstraintSet.Builder builder) {
         this.name = name;
@@ -32,7 +38,8 @@ public class Reference<T> {
         } catch (IllegalAccessException | NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
-        T defaultValue = get();
+
+        defaultValue = get();
         if(Objects.equals(constraints.apply(defaultValue), ReferenceConstraint.DEFAULT)) {
             throw new IllegalConfigException("Default value \"%s\" for \"%s\" in \"%s\" does not conform to it's constraints".formatted(
                     defaultValue,
@@ -45,6 +52,10 @@ public class Reference<T> {
     @SuppressWarnings("unchecked")
     public T get() {
         return (T) varHandle.get();
+    }
+
+    public T getDefault() {
+        return defaultValue;
     }
 
     public void set(Object value) throws ClassCastException {

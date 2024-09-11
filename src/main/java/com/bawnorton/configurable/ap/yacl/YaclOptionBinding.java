@@ -16,6 +16,6 @@ public class YaclOptionBinding extends YaclElement {
 
     @Override
     protected String getSpec(int depth) {
-        return "Binding.generic(%1$s.get(), %1$s::get, %1$s::set)".formatted(externalRef);
+        return "Binding.generic(%1$s.getDefault(), %1$s::get, %1$s::set)".formatted(externalRef);
     }
 }

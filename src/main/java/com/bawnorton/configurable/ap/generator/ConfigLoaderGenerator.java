@@ -65,6 +65,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
                 JsonObject config = GSON.fromJson(Files.newBufferedReader(configPath), JsonObject.class);
                 Config parsed = parseConfig(config);
                 ConfigurableMain.LOGGER.info("Successfully loaded config \\"<file_name>\\"");
+                return parsed;
             } catch (JsonSyntaxException e) {
                 ConfigurableMain.LOGGER.error("Failed to parse \\"<file_name>\\" config file, using default", e);
             }

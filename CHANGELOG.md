@@ -1,3 +1,6 @@
+# 1.1.2
+- Fix YACL bindings incorrectly using the current value as the default
+
 # 1.1.1
 - Fix clamped constraint applying to any configurable element
 
