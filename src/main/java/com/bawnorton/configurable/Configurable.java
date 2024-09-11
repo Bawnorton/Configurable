@@ -39,12 +39,12 @@ public @interface Configurable {
     /**
      * Minimum value for a numeric field. Must be at most the same value as {@link Configurable#max}<br>
      */
-    double min() default Double.MIN_NORMAL;
+    double min() default 0;
 
     /**
      * Max value for a numeric field. Must be at minimum the same value as {@link Configurable#min}
      */
-    double max() default Double.MAX_VALUE;
+    double max() default 100;
 
     /**
      * For configuring the UI Generator

@@ -1,3 +1,8 @@
+# 1.1.0
+- Support split-sources
+- Fix source provider locator being OS dependent
+- Migrate bundled `configurable.json` to `configurble/<source_set>.json`
+
 # 1.0.3
 - Fix build using dev names (thanks gradle)
 

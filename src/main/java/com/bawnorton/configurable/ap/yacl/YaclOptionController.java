@@ -196,7 +196,7 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected String getStep(Integer max) {
-            return "Math.max(1, %s / 100)".formatted(max);
+            return "Math.min(1, Math.max(1, %s / 100))".formatted(max);
         }
     }
 
@@ -231,7 +231,7 @@ public abstract class YaclOptionController extends YaclElement {
 
         @Override
         protected String getStep(Long max) {
-            return "Math.max(1, %sL / 100)".formatted(max);
+            return "Math.min(1, Math.max(1, %sL / 100))".formatted(max);
         }
     }
 

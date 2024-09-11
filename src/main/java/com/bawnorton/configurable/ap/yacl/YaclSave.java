@@ -12,10 +12,11 @@ public class YaclSave extends YaclElement {
     @Override
     protected void addNeededImports(Consumer<String> adder) {
         adder.accept("com.bawnorton.configurable.ConfigurableMain");
+        adder.accept("com.bawnorton.configurable.load.ConfigurableWrapper");
     }
 
     @Override
     protected String getSpec(int depth) {
-        return "() -> ConfigurableMain.getWrapper(\"%s\").saveConfig()".formatted(configName);
+        return "() -> ConfigurableMain.getWrappers(\"%s\").values().forEach(ConfigurableWrapper::saveConfig)".formatted(configName);
     }
 }

@@ -14,16 +14,20 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public final class ConfigurableMain {
     public static final String MOD_ID = "configurable";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    private static final Map<String, ConfigurableWrapper> WRAPPERS = new HashMap<>();
+    private static final Map<String, Map<String, ConfigurableWrapper>> WRAPPERS = new HashMap<>();
+
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setPrettyPrinting()
@@ -35,20 +39,33 @@ public final class ConfigurableMain {
         ConfigurableApiImplLoader.load();
 
         Platform.forEachJar(path -> {
-            Path configurable = path.resolve("configurable.json");
-            if(Files.exists(configurable)) {
+            Path configurable = path.resolve("configurable");
+            if (!(Files.exists(configurable) && Files.isDirectory(configurable))) return;
+
+            List<Path> sourceSetSettings = new ArrayList<>();
+            try (Stream<Path> stream = Files.list(configurable)) {
+                stream.filter(Files::isRegularFile).forEach(sourceSetSettings::add);
+            } catch (IOException e) {
+                ConfigurableMain.LOGGER.error("Could not find configurable settings", e);
+            }
+
+            for(Path sourceSetSetting : sourceSetSettings) {
                 ConfigurableSettings settings;
                 try {
-                    settings = GSON.fromJson(Files.newBufferedReader(configurable), ConfigurableSettings.class);
+                    settings = GSON.fromJson(Files.newBufferedReader(sourceSetSetting), ConfigurableSettings.class);
                 } catch (IOException e) {
                     LOGGER.error("Could not load configurable settings", e);
                     return;
                 }
 
                 String configName = settings.name();
+                String sourceSet = settings.sourceSet();
 
                 if(WRAPPERS.containsKey(configName)) {
-                    throw new IllegalStateException("Conflicting config name \"%s\" found in \"%s\"".formatted(configName, configurable));
+                    Map<String, ConfigurableWrapper> wrappers = WRAPPERS.get(configName);
+                    if(wrappers.containsKey(sourceSet)) {
+                        throw new IllegalStateException("Conflicting config name \"%s\" for source set \"%s\" found in \"%s\"".formatted(configName, sourceSet, sourceSetSetting));
+                    }
                 }
 
                 registerDefaultTypeAdapters(configName);
@@ -59,16 +76,16 @@ public final class ConfigurableMain {
                     if(settings.hasScreenFactory() && !Platform.isServer()) {
                         addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
                     }
-                    WRAPPERS.put(configName, wrapper);
+                    WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
                 } catch (IllegalStateException e) {
                     LOGGER.error("Could not create configurable wrapper for \"%s\"".formatted(configName), e);
                 }
             }
         });
-        WRAPPERS.forEach((configName, wrapper) -> {
+        WRAPPERS.values().forEach(sourceSetWrappers -> sourceSetWrappers.values().forEach(wrapper -> {
             wrapper.loadConfig();
             wrapper.saveConfig();
-        });
+        }));
     }
 
     @SuppressWarnings("unchecked")
@@ -92,11 +109,11 @@ public final class ConfigurableMain {
         return typeAdapters.getOrDefault(configName, Map.of());
     }
 
-    public static Map<String, ConfigurableWrapper> getWrappers() {
+    public static Map<String, Map<String, ConfigurableWrapper>> getAllWrappers() {
         return WRAPPERS;
     }
 
-    public static ConfigurableWrapper getWrapper(String configName) {
+    public static Map<String, ConfigurableWrapper> getWrappers(String configName) {
         return WRAPPERS.get(configName);
     }
 }

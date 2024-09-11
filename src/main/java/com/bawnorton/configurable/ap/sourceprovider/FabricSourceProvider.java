@@ -10,17 +10,18 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public final class FabricSourceProvider extends SourceProvider {
     private JsonObject fmj;
 
-    public FabricSourceProvider(Filer filer) {
-        this(filer, new GsonBuilder().setPrettyPrinting().create());
+    public FabricSourceProvider(Filer filer, Path buildPath) {
+        this(filer, buildPath, new GsonBuilder().setPrettyPrinting().create());
     }
 
-    public FabricSourceProvider(Filer filer, Gson gson) {
-        super(filer);
+    public FabricSourceProvider(Filer filer, Path buildPath, Gson gson) {
+        super(filer, buildPath);
         try {
             fmj = gson.fromJson(getConfigFile(), JsonObject.class);
         } catch (IOException e) {
@@ -30,7 +31,8 @@ public final class FabricSourceProvider extends SourceProvider {
 
     @Override
     protected Reader getConfigFile() throws IOException {
-        String json = Files.readString(Paths.get("src/main/resources/fabric.mod.json"));
+        Path projectRoot = findProjectRoot();
+        String json = Files.readString(projectRoot.resolve("src/main/resources/fabric.mod.json"));
         return new StringReader(json);
     }
 

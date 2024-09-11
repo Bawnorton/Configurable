@@ -39,7 +39,9 @@ public abstract class ModMenuMixin {
             }
         };
 
-        ConfigurableMain.getWrappers().forEach((name, wrapper) -> {
+        ConfigurableMain.getAllWrappers().forEach((name, sourceSetWrappers) -> sourceSetWrappers.values().forEach(wrapper -> {
+            if(!wrapper.hasScreenFactory()) return;
+
             if(configScreenFactories.containsKey(name)) {
                 ConfigurableMain.LOGGER.warn("Config screen factory already exists for \"{}\"", name);
                 return;
@@ -48,7 +50,7 @@ public abstract class ModMenuMixin {
             ModMenuApi api = apiGetter.apply(wrapper);
             configScreenFactories.put(name, api.getModConfigScreenFactory());
             apiImplementations.add(api);
-        });
+        }));
     }
 }
 //?} else {

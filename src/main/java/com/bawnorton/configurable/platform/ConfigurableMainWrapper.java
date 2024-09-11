@@ -5,7 +5,7 @@ import com.bawnorton.configurable.ConfigurableMain;
 //? if fabric {
 import net.fabricmc.api.ModInitializer;
 
-public final class ConfigurableWrapper implements ModInitializer {
+public final class ConfigurableMainWrapper implements ModInitializer {
     @Override
     public void onInitialize() {
         ConfigurableMain.init();
@@ -15,8 +15,8 @@ public final class ConfigurableWrapper implements ModInitializer {
 /*import net.neoforged.fml.common.Mod;
 
 @Mod(ConfigurableMain.MOD_ID)
-public final class ConfigurableWrapper {
-    public ConfigurableWrapper() {
+public final class ConfigurableMainWrapper {
+    public ConfigurableMainWrapper() {
         ConfigurableMain.init();
     }
 }

@@ -17,7 +17,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.bawnorton.configurable.platform.ConfigurableWrapper"
+      "com.bawnorton.configurable.platform.ConfigurableMainWrapper"
     ],
     "client": [
       "com.bawnorton.configurable.client.platform.ConfigurableClientWrapper"

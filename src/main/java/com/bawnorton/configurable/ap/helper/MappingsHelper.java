@@ -5,10 +5,6 @@ import javax.lang.model.util.Elements;
 
 public class MappingsHelper {
     //? if yarn {
-    public static TypeElement getItemType(Elements elements) {
-        return elements.getTypeElement("net.minecraft.item.Item");
-    }
-
     public static String getMinecraftClient() {
         return "net.minecraft.client.MinecraftClient";
     }
@@ -42,11 +38,7 @@ public class MappingsHelper {
     }
 
     //?} elif mojmap {
-    /*public static TypeElement getItemType(Elements elements) {
-        return elements.getTypeElement("net.minecraft.world.item.Item");
-    }
-
-    public static String getMinecraftClient() {
+    /*public static String getMinecraftClient() {
         return "net.minecraft.client.Minecraft";
     }
 

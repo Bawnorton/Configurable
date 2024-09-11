@@ -25,7 +25,9 @@ import java.util.function.Supplier;
 public final class ConfigurableClientWrapper {
     public ConfigurableClientWrapper() {
         ConfigurableClient.init();
-        ConfigurableMain.getWrappers().forEach((name, wrapper) -> {
+        ConfigurableMain.getAllWrappers().forEach((name, sourceSetWrappers) -> sourceSetWrappers.values().forEach(wrapper -> {
+            if(!wrapper.hasScreenFactory()) return;
+
             ModContainer container = Platform.getContainer(name);
             if(container == null) {
                 ConfigurableMain.LOGGER.error("Could not attach screen factory to \"{}\"", name);
@@ -38,7 +40,7 @@ public final class ConfigurableClientWrapper {
                             (Supplier<IConfigScreenFactory>) () -> (c, parent) -> wrapper.createScreen(MinecraftClient.getInstance(), parent)
                     )
             );
-        });
+        }));
     }
 }
 *///?}

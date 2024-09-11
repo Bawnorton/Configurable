@@ -6,10 +6,8 @@ import com.bawnorton.configurable.ap.yacl.*;
 import com.bawnorton.configurable.ap.yacl.YaclOptionDescriptionText;
 import com.bawnorton.configurable.ap.yacl.YaclOptionGroupDescriptionText;
 import com.bawnorton.configurable.ap.yacl.YaclOptionDescription;
-import com.bawnorton.configurable.ap.yacl.YaclOptionDescriptionImage;
 import com.bawnorton.configurable.ap.yacl.YaclOptionGroup;
 import com.bawnorton.configurable.ap.yacl.YaclOptionGroupDescription;
-import com.bawnorton.configurable.ap.yacl.YaclOptionGroupDescriptionImage;
 import com.bawnorton.configurable.load.ConfigurableSettings;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -37,9 +35,11 @@ package <configurable_package>.client;
 import <config_class_name>;
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.generated.GeneratedConfigScreenFactory;
+import com.bawnorton.configurable.load.ConfigurableWrapper;
 import com.bawnorton.configurable.platform.Platform;
-<imports>
 import java.net.URI;
+import java.util.Optional;
+<imports>
 
 public final class ConfigScreenFactory implements GeneratedConfigScreenFactory {
     @Override
@@ -54,10 +54,15 @@ public final class ConfigScreenFactory implements GeneratedConfigScreenFactory {
         }
         return createYaclScreen(parent);
     }
-    
+   \s
     private Screen createYaclScreen(Screen parent) {
-        Config config = (Config) ConfigurableMain.getWrapper("<name>").getConfig();
-        return YaclScreenFactory.create(parent, config);
+        return ConfigurableMain.getWrappers("<name>")
+            .values()
+            .stream()
+            .filter(ConfigurableWrapper::hasScreenFactory)
+            .findFirst()
+            .map(wrapper -> YaclScreenFactory.create(parent, (Config) wrapper.getConfig()))
+            .orElse(parent);
     }
 }
 
@@ -106,8 +111,8 @@ public final class YaclScreenFactory {
         spec = spec.replaceAll("<imports>", mcImports);
 
         spec = applyReplacements(spec);
-        JavaFileObject configLoader = filer.createSourceFile(settings.fullyQualifiedScreenFactory());
-        try (PrintWriter out = new PrintWriter(configLoader.openWriter())) {
+        JavaFileObject configScreenFactory = filer.createSourceFile(settings.fullyQualifiedScreenFactory());
+        try (PrintWriter out = new PrintWriter(configScreenFactory.openWriter())) {
             out.println(spec);
         }
     }
@@ -127,8 +132,8 @@ public final class YaclScreenFactory {
         spec = spec.replaceAll("<imports>", importBuilder.toString());
 
         spec = applyReplacements(spec);
-        JavaFileObject configLoader = filer.createSourceFile("%s.client.YaclScreenFactory".formatted(settings.packageName()));
-        try (PrintWriter out = new PrintWriter(configLoader.openWriter())) {
+        JavaFileObject configYaclScreenFactory = filer.createSourceFile("%s.client.YaclScreenFactory".formatted(settings.packageName()));
+        try (PrintWriter out = new PrintWriter(configYaclScreenFactory.openWriter())) {
             out.println(spec);
         }
     }
@@ -247,7 +252,7 @@ public final class YaclScreenFactory {
                                     externalRef
                             );
                         }
-                        TypeElement item = MappingsHelper.getItemType(elements);
+                        TypeElement item = elements.getTypeElement(MappingsHelper.getItem());
                         if (types.isSameType(entry.getType(), item.asType())) {
                             yield new YaclOptionController.Item();
                         }

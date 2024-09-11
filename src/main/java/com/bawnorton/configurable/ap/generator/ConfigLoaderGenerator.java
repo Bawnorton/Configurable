@@ -41,7 +41,7 @@ import java.util.Set;
 public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     private static final Gson GSON = createGson();
     private static final Path configPath = Platform.getConfigDir()
-            .resolve("configurable/<name>.json");
+            .resolve("configurable/<file_name>.json");
     
     private static final Map<Class<?>, Object> instanceCache = new HashMap<>();
     
@@ -64,12 +64,12 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
             try {
                 JsonObject config = GSON.fromJson(Files.newBufferedReader(configPath), JsonObject.class);
                 Config parsed = parseConfig(config);
-                ConfigurableMain.LOGGER.info("Successfully loaded config \\"<name>\\"");
+                ConfigurableMain.LOGGER.info("Successfully loaded config \\"<file_name>\\"");
             } catch (JsonSyntaxException e) {
-                ConfigurableMain.LOGGER.error("Failed to parse \\"<name>\\" config file, using default", e);
+                ConfigurableMain.LOGGER.error("Failed to parse \\"<file_name>\\" config file, using default", e);
             }
         } catch (IOException e) {
-            ConfigurableMain.LOGGER.error("Failed to load \\"<name>\\" config file, using default", e);
+            ConfigurableMain.LOGGER.error("Failed to load \\"<file_name>\\" config file, using default", e);
         }
         return new Config();
     }
@@ -79,7 +79,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
         try {
             Files.write(configPath, GSON.toJson(config).getBytes());
         } catch (IOException e) {
-            ConfigurableMain.LOGGER.error("Failed to write \\"<name>\\" config file", e);
+            ConfigurableMain.LOGGER.error("Failed to write \\"<file_name>\\" config file", e);
         }
     }
     

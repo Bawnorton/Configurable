@@ -4,10 +4,11 @@ import com.bawnorton.configurable.Configurable;
 import com.bawnorton.configurable.ap.generator.ConfigGenerator;
 import com.bawnorton.configurable.ap.generator.ConfigLoaderGenerator;
 import com.bawnorton.configurable.ap.generator.ConfigScreenFactoryGenerator;
+import com.bawnorton.configurable.ap.helper.MappingsHelper;
 import com.bawnorton.configurable.ap.sourceprovider.SourceProvider;
 import com.bawnorton.configurable.ap.sourceprovider.SourceProviders;
-import com.bawnorton.configurable.ap.tree.ConfigurableTree;
 import com.bawnorton.configurable.ap.tree.ConfigurableElement;
+import com.bawnorton.configurable.ap.tree.ConfigurableTree;
 import com.bawnorton.configurable.load.ConfigurableSettings;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -26,10 +27,10 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
+import org.jetbrains.annotations.NotNull;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,7 +48,9 @@ public final class ConfigurableProcessor extends AbstractProcessor {
     private Types types;
     private Messager messager;
     private Elements elementUtils;
+
     private boolean yaclPresent;
+    private boolean clientAccess;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -56,7 +59,9 @@ public final class ConfigurableProcessor extends AbstractProcessor {
         types = processingEnv.getTypeUtils();
         messager = processingEnv.getMessager();
         elementUtils = processingEnv.getElementUtils();
+
         yaclPresent = elementUtils.getTypeElement("dev.isxander.yacl3.api.YetAnotherConfigLib") != null;
+        clientAccess = elementUtils.getTypeElement(MappingsHelper.getMinecraftClient()) != null;
     }
 
     @Override
@@ -71,13 +76,31 @@ public final class ConfigurableProcessor extends AbstractProcessor {
         SourceProviders.registerDefaultSourceProviders();
 
         Filer filer = processingEnv.getFiler();
-        SourceProvider sourceProvider = SourceProviders.getSourceProvider(filer);
+        String sourceSet;
+        Path buildPath;
+        try {
+            FileObject dummyClass = filer.getResource(StandardLocation.CLASS_OUTPUT, "", "dummy.class");
+            Path dummyPath = Paths.get(dummyClass.toUri());
+            buildPath = dummyPath.getParent();
+            sourceSet = buildPath.getFileName().toString();
+
+            if(sourceSet.equals("main")) {
+                sourceSet = null;
+            }
+        } catch (IOException e) {
+            messager.printError("Cannot determine source set");
+            throw new RuntimeException(e);
+        }
+
+        SourceProvider sourceProvider = SourceProviders.getSourceProvider(filer, buildPath);
+        if(sourceProvider == null) {
+            messager.printError("Cannot determine source provider");
+            throw new RuntimeException();
+        }
+
         String configName = sourceProvider.getName();
-        messager.printNote("Found config name: %s".formatted(configName));
-
-        String packageName = "com.bawnorton.configurable.%s".formatted(configName.replaceAll("[^A-Za-z]", ""));
-
-        ConfigurableSettings settings = generateSettings(configName, packageName, filer);
+        ConfigurableSettings settings = generateSettings(sourceSet, configName, buildPath);
+        messager.printNote("Found config name: \"%s\" for source set \"%s\"".formatted(settings.name(), settings.sourceSet()));
 
         ConfigLoaderGenerator loaderGenerator = new ConfigLoaderGenerator(filer, types, messager, settings);
         ConfigGenerator configGenerator = new ConfigGenerator(filer, types, messager, settings);
@@ -85,55 +108,66 @@ public final class ConfigurableProcessor extends AbstractProcessor {
         try {
             loaderGenerator.generateConfigLoader();
             configGenerator.generateConfig(roots);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not generate config classes", e);
-        }
 
-        if(yaclPresent) {
-            ConfigScreenFactoryGenerator screenFactoryGenerator = new ConfigScreenFactoryGenerator(filer, elementUtils, types, messager, settings);
-            try {
+            if(settings.hasScreenFactory()) {
+                ConfigScreenFactoryGenerator screenFactoryGenerator = new ConfigScreenFactoryGenerator(filer, elementUtils, types, messager, settings);
                 screenFactoryGenerator.generateConfigScreenFactory();
                 screenFactoryGenerator.generateYaclScreenFactory(roots, configGenerator::getExternalReference);
-            } catch (IOException e) {
-                throw new RuntimeException("Could not generate config screen factory", e);
             }
+        } catch (IOException e) {
+            messager.printError("Could not generate config classes");
+            throw new RuntimeException(e);
         }
 
         return true;
     }
 
-    private ConfigurableSettings generateSettings(String configName, String packageName, Filer filer) {
-        ConfigurableSettings settings = new ConfigurableSettings(
+    private ConfigurableSettings generateSettings(String sourceSet, String configName, Path buildPath) {
+        ConfigurableSettings settings = createSettings(sourceSet, configName);
+        generateSettingsFile(settings, buildPath);
+        return settings;
+    }
+
+    private @NotNull ConfigurableSettings createSettings(String sourceSet, String configName) {
+        String normalisedConfigName = configName.replaceAll("[^A-Za-z]", "");
+        String packageName;
+        if(sourceSet == null) {
+            packageName = "com.bawnorton.configurable.%s".formatted(normalisedConfigName);
+        } else {
+            packageName = "com.bawnorton.configurable.%s.%s".formatted(sourceSet, normalisedConfigName);
+        }
+        return new ConfigurableSettings(
+                sourceSet,
                 configName,
                 "Config",
                 "ConfigLoader",
-                yaclPresent ? "ConfigScreenFactory" : null,
+                yaclPresent && clientAccess ? "ConfigScreenFactory" : null,
                 packageName
         );
-        try {
-            // try to find the build dir
-            FileObject dummy = filer.createResource(StandardLocation.CLASS_OUTPUT, "", "dummy.txt");
-            URI location = dummy.toUri();
-            Path path = Paths.get(location);
-            while(!path.endsWith("build")) {
-                path = path.getParent();
-                if(path == null) {
-                    return settings;
-                }
-            }
+    }
 
-            path = path.resolve("resources/main/configurable.json");
+    private void generateSettingsFile(ConfigurableSettings settings, Path buildPath) {
+        // try to find the build dir
+        Path path = buildPath;
+        while(!path.endsWith("build")) {
+            path = path.getParent();
+            if(path == null) {
+                return;
+            }
+        }
+
+        path = path.resolve("resources/%1$s/configurable/%1$s.json".formatted(settings.sourceSet()));
+        try {
             if(!Files.exists(path)) {
                 Files.createDirectories(path.getParent());
                 Files.createFile(path);
             }
-            OutputStream out = new FileOutputStream(path.toFile());
-            out.write(gson.toJson(settings).getBytes());
-            out.flush();
-            out.close();
+            try(OutputStream out = new FileOutputStream(path.toFile())) {
+                out.write(gson.toJson(settings).getBytes());
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Could not write settings file", e);
+            messager.printError("Could not write settings file");
+            throw new RuntimeException(e);
         }
-        return settings;
     }
 }

@@ -9,14 +9,14 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public final class NeoForgeSourceProvider extends SourceProvider {
     private Config config;
 
-    public NeoForgeSourceProvider(Filer filer) {
-        super(filer);
+    public NeoForgeSourceProvider(Filer filer, Path buildPath) {
+        super(filer, buildPath);
         try {
             Reader reader = getConfigFile();
             TomlParser parser = new TomlParser();
@@ -27,7 +27,8 @@ public final class NeoForgeSourceProvider extends SourceProvider {
 
     @Override
     protected Reader getConfigFile() throws IOException {
-        String toml = Files.readString(Paths.get("src/main/resources/META-INF/neoforge.mods.toml"));
+        Path projectRoot = findProjectRoot();
+        String toml = Files.readString(projectRoot.resolve("src/main/resources/META-INF/neoforge.mods.toml"));
         return new StringReader(toml);
     }
 
