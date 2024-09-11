@@ -1,3 +1,6 @@
+# 1.1.1
+- Fix clamped constraint applying to any configurable element
+
 # 1.1.0
 - Support split-sources
 - Fix source provider locator being OS dependent

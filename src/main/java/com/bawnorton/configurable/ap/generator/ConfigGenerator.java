@@ -143,9 +143,9 @@ public final class Config implements GeneratedConfig {
     }
 
     private void addClampedConstraint(ConfigurableHolder holder, Element element, StringBuilder constraintSet) {
-        double min = holder.min();
-        double max = holder.max();
-        if (max != Double.MAX_VALUE || min != Double.MIN_NORMAL) {
+        if (holder.isMaxSet() || holder.isMinSet()) {
+            double min = holder.min();
+            double max = holder.max();
             if (min > max) {
                 messager.printError("min must be smaller than or equal to the max", element);
             }

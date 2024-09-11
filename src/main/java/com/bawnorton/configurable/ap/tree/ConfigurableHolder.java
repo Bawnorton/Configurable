@@ -104,4 +104,12 @@ public final class ConfigurableHolder {
     public boolean collapsed() {
         return annotation.yacl().collapsed();
     }
+
+    public boolean isMinSet() {
+        return !AnnotationHelper.isDefaultValue(configurableMirror, "min");
+    }
+
+    public boolean isMaxSet() {
+        return !AnnotationHelper.isDefaultValue(configurableMirror, "max");
+    }
 }

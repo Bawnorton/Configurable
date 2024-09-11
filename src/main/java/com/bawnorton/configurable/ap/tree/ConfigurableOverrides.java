@@ -2,13 +2,11 @@ package com.bawnorton.configurable.ap.tree;
 
 import com.bawnorton.configurable.Image;
 import com.bawnorton.configurable.OptionType;
+import com.bawnorton.configurable.ap.helper.AnnotationHelper;
 import com.bawnorton.configurable.util.Pair;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.ExecutableElement;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class ConfigurableOverrides {
@@ -56,27 +54,9 @@ public final class ConfigurableOverrides {
         private final Map<String, Pair<Boolean, Supplier<?>>> overrides = new HashMap<>();
 
         public <T> Builder addOverride(AnnotationMirror mirror, String name, Supplier<T> override, Supplier<T> natural) {
-            boolean isDefaultValue = isDefaultValue(mirror, name);
+            boolean isDefaultValue = AnnotationHelper.isDefaultValue(mirror, name);
             overrides.put(name, Pair.of(isDefaultValue, isDefaultValue ? override : natural));
             return this;
-        }
-
-        private static boolean isDefaultValue(AnnotationMirror annotation, String methodName) {
-            if(annotation == null) return true;
-
-            ExecutableElement methodElement = null;
-            for (ExecutableElement executableElement : annotation.getElementValues().keySet()) {
-                if (executableElement.getSimpleName().contentEquals(methodName)) {
-                    methodElement = executableElement;
-                    break;
-                }
-            }
-            if (methodElement == null) return true;
-
-            AnnotationValue defaultValue = methodElement.getDefaultValue();
-            AnnotationValue actualValue = annotation.getElementValues().get(methodElement);
-
-            return Objects.equals(actualValue, defaultValue);
         }
 
         public ConfigurableOverrides build() {

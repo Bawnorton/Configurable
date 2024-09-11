@@ -1,8 +1,5 @@
 package com.bawnorton.configurable.ap.helper;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-
 public class MappingsHelper {
     //? if yarn {
     public static String getMinecraftClient() {
