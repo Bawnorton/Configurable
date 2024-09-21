@@ -30,20 +30,25 @@ public abstract class YaclDescriptionImage extends YaclElement {
         if(customOwner != null && customMethod != null) {
             return "customImage(%s)".formatted(getCustomImageSpec());
         }
+        //? if >=1.21 {
+        /*String id = "Identifier.of(\"%s\")".formatted(image.value());
+        *///?} else {
+        String id = "new Identifier(\"%s\")".formatted(image.value());
+        //?}
         return switch (image.type()) {
             case RESOURCE -> {
                 if(!image.path().isEmpty()) {
-                    yield "image(Path.of(\"%s\"), Identifier.of(\"%s\"))".formatted(
+                    yield "image(Path.of(\"%s\"), %s)".formatted(
                             image.path(),
-                            image.value()
+                            id
                     );
                 }
 
                 int textureWidth = image.textureWidth() == 0 ? image.width() : image.textureWidth();
                 int textureHeight = image.textureHeight() == 0 ? image.height() : image.textureHeight();
 
-                yield "image(Identifier.of(\"%s\"), %sF, %sF, %s, %s, %s, %s)".formatted(
-                        image.value(),
+                yield "image(%s, %sF, %sF, %s, %s, %s, %s)".formatted(
+                        id,
                         image.u(),
                         image.v(),
                         image.width(),
@@ -54,13 +59,13 @@ public abstract class YaclDescriptionImage extends YaclElement {
             }
             case WEBP -> {
                 if(!image.path().isEmpty()) {
-                    yield "webpImage(Path.of(\"%s\"), Identifier.of(\"%s\"))".formatted(
+                    yield "webpImage(Path.of(\"%s\"), %s)".formatted(
                             image.path(),
-                            image.value()
+                            id
                     );
                 }
 
-                yield "webpImage(Identifier.of(\"%s\"))".formatted(image.value());
+                yield "webpImage(%s)".formatted(id);
             }
         };
     }

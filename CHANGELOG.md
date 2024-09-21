@@ -1,3 +1,7 @@
+# 1.2.0
+
+- Backport to 1.20.1
+
 # 1.1.2
 - Fix YACL bindings incorrectly using the current value as the default
 

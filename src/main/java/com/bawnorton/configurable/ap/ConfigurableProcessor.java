@@ -25,6 +25,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,11 @@ import java.util.List;
 import java.util.Set;
 
 @SupportedAnnotationTypes("com.bawnorton.configurable.Configurable")
-@SupportedSourceVersion(SourceVersion.RELEASE_21)
+//? if >=1.21 {
+/*@SupportedSourceVersion(SourceVersion.RELEASE_21)
+*///?} else {
+@SupportedSourceVersion(SourceVersion.RELEASE_17)
+//?}
 public final class ConfigurableProcessor extends AbstractProcessor {
     private final Gson gson = new GsonBuilder()
             .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -88,19 +93,19 @@ public final class ConfigurableProcessor extends AbstractProcessor {
                 sourceSet = null;
             }
         } catch (IOException e) {
-            messager.printError("Cannot determine source set");
+            messager.printMessage(Diagnostic.Kind.ERROR, "Cannot determine source set");
             throw new RuntimeException(e);
         }
 
         SourceProvider sourceProvider = SourceProviders.getSourceProvider(filer, buildPath);
         if(sourceProvider == null) {
-            messager.printError("Cannot determine source provider");
+            messager.printMessage(Diagnostic.Kind.ERROR,"Cannot determine source provider");
             throw new RuntimeException();
         }
 
         String configName = sourceProvider.getName();
         ConfigurableSettings settings = generateSettings(sourceSet, configName, buildPath);
-        messager.printNote("Found config name: \"%s\" for source set \"%s\"".formatted(settings.name(), settings.sourceSet()));
+        messager.printMessage(Diagnostic.Kind.NOTE, "Found config name: \"%s\" for source set \"%s\"".formatted(settings.name(), settings.sourceSet()));
 
         ConfigLoaderGenerator loaderGenerator = new ConfigLoaderGenerator(filer, types, messager, settings);
         ConfigGenerator configGenerator = new ConfigGenerator(filer, types, messager, settings);
@@ -115,7 +120,7 @@ public final class ConfigurableProcessor extends AbstractProcessor {
                 screenFactoryGenerator.generateYaclScreenFactory(roots, configGenerator::getExternalReference);
             }
         } catch (IOException e) {
-            messager.printError("Could not generate config classes");
+            messager.printMessage(Diagnostic.Kind.ERROR,"Could not generate config classes");
             throw new RuntimeException(e);
         }
 
@@ -166,7 +171,7 @@ public final class ConfigurableProcessor extends AbstractProcessor {
                 out.write(gson.toJson(settings).getBytes());
             }
         } catch (IOException e) {
-            messager.printError("Could not write settings file");
+            messager.printMessage(Diagnostic.Kind.ERROR,"Could not write settings file");
             throw new RuntimeException(e);
         }
     }

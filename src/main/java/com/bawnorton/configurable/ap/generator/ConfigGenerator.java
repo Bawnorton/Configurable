@@ -7,6 +7,7 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -147,7 +148,7 @@ public final class Config implements GeneratedConfig {
             double min = holder.min();
             double max = holder.max();
             if (min > max) {
-                messager.printError("min must be smaller than or equal to the max", element);
+                messager.printMessage(Diagnostic.Kind.ERROR, "min must be smaller than or equal to the max", element);
             }
             constraintSet.append(".addClamped(%s, %s)".formatted(min, max));
         }

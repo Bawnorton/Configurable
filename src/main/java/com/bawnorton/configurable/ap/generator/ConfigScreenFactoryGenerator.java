@@ -16,6 +16,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
@@ -257,7 +258,7 @@ public final class YaclScreenFactory {
                             yield new YaclOptionController.Item();
                         }
                     }
-                    messager.printError("Could not automatically create controller for type: %s".formatted(entry.getFullyQualifiedTypeName(types)), entry.element());
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Could not automatically create controller for type: %s".formatted(entry.getFullyQualifiedTypeName(types)), entry.element());
                     throw new RuntimeException();
                 }
                 case ARRAY -> new YaclOptionController.CyclingList(
@@ -265,7 +266,7 @@ public final class YaclScreenFactory {
                         externalRef
                 );
                 default -> {
-                    messager.printError("Could not automatically create controller for type: %s".formatted(entry.getFullyQualifiedTypeName(types)), entry.element());
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Could not automatically create controller for type: %s".formatted(entry.getFullyQualifiedTypeName(types)), entry.element());
                     throw new RuntimeException();
                 }
             };

@@ -96,9 +96,9 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
        for(String key : keys) {
            JsonElement element = nestedJson.get(key);
            if(element.isJsonObject()) {
-               stack.addLast(key);
+               stack.add(key);
                parseNested(stack, element.getAsJsonObject(), config);
-               stack.removeLast();
+               stack.remove(stack.size() - 1);
            } else if (element.isJsonNull()) {
                parseReference(key, null, stack, config);
            } else if (element.isJsonPrimitive()) {

@@ -48,7 +48,7 @@ loom {
 
 tasks {
     withType<JavaCompile> {
-        options.release = 21
+        options.release = minecraftVersion.javaVersion()
     }
 
     withType<RemapJarTask> {
@@ -84,8 +84,8 @@ tasks {
 java {
     withSourcesJar()
 
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.toVersion(minecraftVersion.javaVersion())
+    targetCompatibility = JavaVersion.toVersion(minecraftVersion.javaVersion())
 }
 
 val buildAndCollect = tasks.register<Copy>("buildAndCollect") {

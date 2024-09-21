@@ -6,6 +6,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeKind;
+import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -98,25 +99,25 @@ public final class ConfigurableTree {
                 getAnnotationMirror(element, Configurable.class.getCanonicalName())
         );
         if (annotation == null) {
-            messager.printError("Element \"%s\" does not have Configurable annotation".formatted(element.getSimpleName()), element);
+            messager.printMessage(Diagnostic.Kind.ERROR, "Element \"%s\" does not have Configurable annotation".formatted(element.getSimpleName()), element);
             throw new RuntimeException();
         }
 
         Set<Modifier> modifiers = element.getModifiers();
         if(element.getKind().isField()) {
             if(modifiers.contains(Modifier.FINAL)) {
-                messager.printError("Configurable field \"%s\" cannot be final".formatted(element.getSimpleName()), element);
+                messager.printMessage(Diagnostic.Kind.ERROR, "Configurable field \"%s\" cannot be final".formatted(element.getSimpleName()), element);
                 throw new RuntimeException();
             } else if (!modifiers.contains(Modifier.STATIC)) {
-                messager.printError("Configurable field \"%s\" must be static".formatted(element.getSimpleName()), element);
+                messager.printMessage(Diagnostic.Kind.ERROR, "Configurable field \"%s\" must be static".formatted(element.getSimpleName()), element);
                 throw new RuntimeException();
             } else if(annotation.yacl().collapsed()) {
-                messager.printError("Configurable field \"%s\" cannot be collapsed, only classes allowed".formatted(element.getSimpleName()), element);
+                messager.printMessage(Diagnostic.Kind.ERROR, "Configurable field \"%s\" cannot be collapsed, only classes allowed".formatted(element.getSimpleName()), element);
                 throw new RuntimeException();
             }
         } else if (element.getKind().isClass()) {
             if(modifiers.contains(Modifier.PRIVATE)) {
-                messager.printError("Configurable class \"%s\" cannot be private".formatted(element.getSimpleName()), element);
+                messager.printMessage(Diagnostic.Kind.ERROR, "Configurable class \"%s\" cannot be private".formatted(element.getSimpleName()), element);
                 throw new RuntimeException();
             }
         }
@@ -129,7 +130,7 @@ public final class ConfigurableTree {
                 .toList();
 
         if (element.getKind().isClass() && children.isEmpty()) {
-            messager.printError("Configurable class \"%s\" must have at least one Configurable field or class".formatted(element.getSimpleName()), element);
+            messager.printMessage(Diagnostic.Kind.ERROR, "Configurable class \"%s\" must have at least one Configurable field or class".formatted(element.getSimpleName()), element);
             throw new RuntimeException();
         }
 
@@ -144,7 +145,7 @@ public final class ConfigurableTree {
                             .equals("org.spongepowered.asm.mixin.Mixin"))
                     .findFirst()
                     .ifPresent(mirror -> {
-                        messager.printError("Configurable element \"%s\" must be outside a mixin class".formatted(element.getSimpleName()), element);
+                        messager.printMessage(Diagnostic.Kind.ERROR, "Configurable element \"%s\" must be outside a mixin class".formatted(element.getSimpleName()), element);
                         throw new RuntimeException();
                     });
         }
