@@ -8,6 +8,7 @@ See the [wiki](https://github.com/Bawnorton/Configurable/wiki) for usage
 
 ## Gradle
 
+⚠️ domain currently being transferred, may not be up ⚠️
 ```gradle
 repositories {
     maven { url = "https://maven.bawnorton.com/releases" }
