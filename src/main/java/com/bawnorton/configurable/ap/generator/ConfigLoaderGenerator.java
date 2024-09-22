@@ -158,25 +158,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     }
 
     private Object getRefValue(JsonPrimitive value, Class<?> expected) {
-        if (expected.equals(int.class) || expected.equals(Integer.class)) {
-            return value.getAsInt();
-        } else if (expected.equals(long.class) || expected.equals(Long.class)) {
-            return value.getAsLong();
-        } else if (expected.equals(float.class) || expected.equals(Float.class)) {
-            return value.getAsFloat();
-        } else if (expected.equals(double.class) || expected.equals(Double.class)) {
-            return value.getAsDouble();
-        } else if (expected.equals(boolean.class) || expected.equals(Boolean.class)) {
-            return value.getAsBoolean();
-        } else if (expected.equals(byte.class) || expected.equals(Byte.class)) {
-            return value.getAsByte();
-        } else if (expected.equals(short.class) || expected.equals(Short.class)) {
-            return value.getAsShort();
-        } else if (expected.equals(String.class)) {
-            return value.getAsString();
-        } else {
-            return null;
-        }
+        return GSON.getAdapter(expected).fromJsonTree(value);
     }
 }
 """;

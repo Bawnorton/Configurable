@@ -1,3 +1,7 @@
+# 1.2.1
+
+- Properly handle non-primitive type deserialisation
+
 # 1.2.0
 
 - Backport to 1.20.1
