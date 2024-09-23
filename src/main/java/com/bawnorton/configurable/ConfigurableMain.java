@@ -3,12 +3,14 @@ package com.bawnorton.configurable;
 import com.bawnorton.configurable.load.ConfigurableApiImplLoader;
 import com.bawnorton.configurable.load.ConfigurableSettings;
 import com.bawnorton.configurable.load.ConfigurableWrapper;
-import com.bawnorton.configurable.ref.gson.ItemTypeAdapter;
+import com.bawnorton.configurable.networking.Networking;
 import com.bawnorton.configurable.platform.Platform;
+import com.bawnorton.configurable.ref.gson.ItemTypeAdapter;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.minecraft.item.Item;
+import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -35,8 +37,13 @@ public final class ConfigurableMain {
 
     private static final Map<String, Map<Class<?>, Object>> typeAdapters = new HashMap<>();
 
+    public static Identifier id(String path) {
+        return Identifier.of(MOD_ID, path);
+    }
+
     public static void init() {
         ConfigurableApiImplLoader.load();
+        Networking.init();
 
         Platform.forEachJar(path -> {
             Path configurable = path.resolve("configurable");

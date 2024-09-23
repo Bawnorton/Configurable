@@ -5,4 +5,6 @@ import net.minecraft.client.gui.screen.Screen;
 
 public interface GeneratedConfigScreenFactory {
     Screen createScreen(MinecraftClient client, Screen parent);
+
+    void refresh();
 }

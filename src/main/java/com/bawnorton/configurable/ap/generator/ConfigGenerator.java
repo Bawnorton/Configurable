@@ -25,14 +25,20 @@ public final class ConfigGenerator extends ConfigurableGenerator {
 package <configurable_package>;
 
 <imports>
+import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.generated.GeneratedConfig;
 import com.bawnorton.configurable.ref.constraint.*;
 import com.bawnorton.configurable.ref.Reference;
 
 public final class Config implements GeneratedConfig {
 <content>
+    @Override
+    public void update(boolean fromServer) {
+        boolean serverEnforces = ConfigurableMain.getWrappers("<name>").get("<source_set>").serverEnforces();
+<validator>
+    }
 }
-    """;
+""";
 
     public Map<ConfigurableElement, String> externalReferenceMap = new HashMap<>();
 
@@ -41,12 +47,14 @@ public final class Config implements GeneratedConfig {
     }
 
     public void generateConfig(List<ConfigurableElement> roots) throws IOException {
+        StringBuilder validator = new StringBuilder();
         StringBuilder content = new StringBuilder();
         Set<String> neededImports = new HashSet<>();
-        roots.forEach(root -> addElement(content, root, neededImports, "config", 1));
-        
+        roots.forEach(root -> addElement(content, root, validator, neededImports, "config", 1));
+
         String spec = CONFIG_SPEC;
         spec = spec.replaceAll("<content>", content.toString());
+        spec = spec.replaceAll("<validator>", validator.toString());
 
         StringBuilder importBuilder = new StringBuilder();
         for(String neededImport : neededImports) {
@@ -63,31 +71,35 @@ public final class Config implements GeneratedConfig {
         }
     }
 
-    private void addElement(StringBuilder builder, ConfigurableElement element, Set<String> neededImports, String externalParent, int depth) {
+    private void addElement(StringBuilder builder, ConfigurableElement element, StringBuilder validator, Set<String> neededImports, String externalParent, int depth) {
         if (element.childless()) {
-            addReference(builder, element, neededImports, externalParent, depth);
+            addReference(builder, element, validator, neededImports, externalParent, depth);
         } else {
-            String container = """
-            %1$spublic final %2$s %3$s = new %2$s();
-            
-            %1$spublic static class %2$s {
-            <content>
-            %1$s}
-            """.formatted(
-                    "\t".repeat(depth),
-                    element.getElementConfigName(),
-                    element.getKey()
-            );
-            StringBuilder contentBuilder = new StringBuilder();
-            for (ConfigurableElement child : element.children()) {
-                addElement(contentBuilder, child, neededImports, "%s.%s".formatted(externalParent, element.getKey()), depth + 1);
-            }
-            container = container.replaceAll("<content>", contentBuilder.toString().replaceAll("\\r?\\n$", ""));
-            builder.append(container);
+            addContainer(builder, element, validator, neededImports, externalParent, depth);
         }
     }
 
-    private void addReference(StringBuilder builder, ConfigurableElement element, Set<String> neededImports, String externalParent, int depth) {
+    private void addContainer(StringBuilder builder, ConfigurableElement element, StringBuilder validator, Set<String> neededImports, String externalParent, int depth) {
+        String container = """
+        %1$spublic final %2$s %3$s = new %2$s();
+        
+        %1$spublic static class %2$s {
+        <content>
+        %1$s}
+        """.formatted(
+                "\t".repeat(depth),
+                element.getElementConfigName(),
+                element.getKey()
+        );
+        StringBuilder contentBuilder = new StringBuilder();
+        for (ConfigurableElement child : element.children()) {
+            addElement(contentBuilder, child, validator, neededImports, "%s.%s".formatted(externalParent, element.getKey()), depth + 1);
+        }
+        container = container.replaceAll("<content>", contentBuilder.toString().replaceAll("\\r?\\n$", ""));
+        builder.append(container);
+    }
+
+    private void addReference(StringBuilder builder, ConfigurableElement element, StringBuilder validator, Set<String> neededImports, String externalParent, int depth) {
         String reference = "public final Reference<%s> %s = new Reference<>(\"%s\", %s.class, %s.class, %s);".formatted(
                 element.getBoxedType(types),
                 element.getKey(),
@@ -102,6 +114,15 @@ public final class Config implements GeneratedConfig {
 
         String externalReference = "%s.%s".formatted(externalParent, element.getKey());
         externalReferenceMap.put(element, externalReference);
+
+        String internalReference = externalReference.substring(externalReference.indexOf(".") + 1);
+        validator.append("\t".repeat(2));
+        if(element.defaultServerEnforces()) {
+            validator.append("%1$s.update(fromServer, serverEnforces);".formatted(internalReference));
+        } else {
+            validator.append("%1$s.update(fromServer, %2$s);".formatted(internalReference, element.annotationHolder().serverEnforces()));
+        }
+        validator.append("\n");
     }
 
     private String createConstraintSet(ConfigurableElement element) {

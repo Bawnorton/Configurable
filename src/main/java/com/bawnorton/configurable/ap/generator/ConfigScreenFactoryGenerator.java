@@ -33,7 +33,6 @@ public final class ConfigScreenFactoryGenerator extends ConfigurableGenerator {
 
 package <configurable_package>.client;
 
-import <config_class_name>;
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.generated.GeneratedConfigScreenFactory;
 import com.bawnorton.configurable.load.ConfigurableWrapper;
@@ -55,7 +54,14 @@ public final class ConfigScreenFactory implements GeneratedConfigScreenFactory {
         }
         return createYaclScreen(parent);
     }
-   \s
+    
+    @Override
+    public void refresh() {
+        if(Platform.isModLoaded("yet_another_config_lib_v3")) {
+            YaclScreenFactory.refresh();
+        }
+    }
+
     private Screen createYaclScreen(Screen parent) {
         return ConfigurableMain.getWrappers("<name>")
             .values()
@@ -74,12 +80,31 @@ public final class ConfigScreenFactory implements GeneratedConfigScreenFactory {
 
 package <configurable_package>.client;
 
-import <config_class_name>;
+import dev.isxander.yacl3.api.Option;
+import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.utils.OptionUtils;
+
 <imports>
 
 public final class YaclScreenFactory {
+    private static YetAnotherConfigLib yacl;
+    
     public static Screen create(Screen parent, Config config) {
-        return <yacl>
+        yacl = createYacl(config);
+        return yacl.generateScreen(parent);
+    }
+    
+    private static YetAnotherConfigLib createYacl(Config config) {
+        return <yacl>;
+    }
+    
+    public static void refresh() {
+        if(yacl == null) return;
+        
+        OptionUtils.forEachOptions(yacl, option -> {
+            option.forgetPendingValue();
+            option.applyValue();
+        });
     }
 }
 """;
@@ -95,6 +120,7 @@ public final class YaclScreenFactory {
         String spec = SCREEN_FACTORY_SPEC;
         String mcImports =
         """
+        import <config_class_name>;
         import %s;
         import %s;
         import %s;
@@ -125,6 +151,7 @@ public final class YaclScreenFactory {
 
         StringBuilder importBuilder = new StringBuilder();
         importBuilder.append("import %s;\n".formatted(MappingsHelper.getScreen()));
+        importBuilder.append("import <config_class_name>;\n");
         for(String neededImport : root.getNeededImports()) {
             importBuilder.append("import ")
                     .append(neededImport)

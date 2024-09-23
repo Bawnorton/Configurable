@@ -3,6 +3,7 @@
   "package": "com.bawnorton.configurable.mixin",
   "minVersion": "0.8",
   "mixins": [
+    "PlayerManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

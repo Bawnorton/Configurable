@@ -1,5 +1,6 @@
 package com.bawnorton.configurable;
 
+import com.bawnorton.configurable.api.ConfigurableApi;
 import com.bawnorton.configurable.load.IllegalConfigException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -45,6 +46,12 @@ public @interface Configurable {
      * Max value for a numeric field. Must be at minimum the same value as {@link Configurable#min}
      */
     double max() default 100;
+
+    /**
+     * <i><b>Transitive</b></i><br>
+     * Whether or not the server ovewrites client values. Defaults to {@link ConfigurableApi#serverEnforces}
+     */
+    boolean serverEnforces() default true;
 
     /**
      * For configuring the UI Generator

@@ -1,3 +1,7 @@
+# 1.3.0
+
+- Add server enforcement and config syncing
+
 # 1.2.1
 
 - Properly handle non-primitive type deserialisation

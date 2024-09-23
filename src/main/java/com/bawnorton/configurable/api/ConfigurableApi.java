@@ -10,6 +10,10 @@ public interface ConfigurableApi {
 
     GeneratedConfig afterLoad(GeneratedConfig config);
 
+    default boolean serverEnforces() {
+        return true;
+    }
+
     //? if neoforge
     /*String getConfigName();*/
 }

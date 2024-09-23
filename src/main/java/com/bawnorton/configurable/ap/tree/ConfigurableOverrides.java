@@ -17,13 +17,19 @@ public final class ConfigurableOverrides {
     }
 
     public static void create(ConfigurableHolder parent, ConfigurableHolder child) {
+        AnnotationMirror configurableMirror = child.getConfigurableMirror();
         AnnotationMirror yaclMirror = child.getYaclMirror();
         child.setOverrides(builder()
+                .addOverride(configurableMirror, "serverEnforces", parent::serverEnforces, () -> child.annotation().serverEnforces())
                 .addOverride(yaclMirror, "category", parent::category, () -> child.annotation().yacl().category())
                 .addOverride(yaclMirror, "exclude", parent::exclude, () -> child.annotation().yacl().exclude())
                 .addOverride(yaclMirror, "type", parent::type, () -> child.annotation().yacl().type())
                 .addOverride(yaclMirror, "image", parent::image, () -> child.annotation().yacl().image())
                 .build());
+    }
+
+    public boolean getServerEnforces() {
+        return (boolean) overrides.get("serverEnforces").second().get();
     }
 
     public String getCategory() {

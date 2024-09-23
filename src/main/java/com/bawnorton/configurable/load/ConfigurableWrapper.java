@@ -9,10 +9,11 @@ import net.minecraft.client.gui.screen.Screen;
 import java.lang.reflect.Constructor;
 
 public final class ConfigurableWrapper {
+    private final ConfigurableApi apiImpl;
+
     private GeneratedConfigLoader<GeneratedConfig> loader;
     private GeneratedConfigScreenFactory screenFactory;
     private GeneratedConfig lastLoadedConfig;
-    private final ConfigurableApi apiImpl;
 
     public ConfigurableWrapper(ConfigurableApi apiImpl) {
         this.apiImpl = apiImpl;
@@ -36,6 +37,12 @@ public final class ConfigurableWrapper {
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public boolean serverEnforces() {
+        if(apiImpl == null) return true;
+
+        return apiImpl.serverEnforces();
     }
 
     public GeneratedConfig getConfig() {
@@ -69,7 +76,23 @@ public final class ConfigurableWrapper {
         loader.saveConfig(lastLoadedConfig);
     }
 
+    public void deserializeConfig(String serialized) {
+        lastLoadedConfig = loader.deserializeConfig(serialized);
+    }
+
+    public String serializeConfig(GeneratedConfig config) {
+        return loader.serializeConfig(config);
+    }
+
     public Screen createScreen(MinecraftClient client, Screen parent) {
+        if(screenFactory == null) return parent;
+
         return screenFactory.createScreen(client, parent);
+    }
+
+    public void refreshConfigScreen() {
+        if(screenFactory == null) return;
+
+        screenFactory.refresh();
     }
 }

@@ -30,6 +30,7 @@ repositories {
     maven("https://maven.isxander.dev/releases/")
     maven("https://maven.shedaniel.me")
     maven("https://jitpack.io")
+    maven("https://maven.su5ed.dev/releases")
 }
 
 dependencies {
@@ -107,6 +108,8 @@ if(loader.isFabric) {
         mappings("net.fabricmc:yarn:$minecraftVersion+build.${property("yarn_build")}:v2")
         modImplementation("net.fabricmc:fabric-loader:${loader.getVersion()}")
         modCompileOnly("com.terraformersmc:modmenu:${property("modmenu")}")
+
+        modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api")}+$minecraftVersion")
     }
 
     tasks {
@@ -132,6 +135,8 @@ if (loader.isNeoForge) {
             mappings("dev.architectury:yarn-mappings-patch-neoforge:1.21+build.4")
         })
         neoForge("net.neoforged:neoforge:${loader.getVersion()}")
+
+        include(modImplementation("org.sinytra.forgified-fabric-api:fabric-networking-api-v1:4.2.2+247fd407d1")!!)
     }
 
     tasks {

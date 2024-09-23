@@ -31,10 +31,10 @@ public abstract class YaclDescriptionImage extends YaclElement {
             return "customImage(%s)".formatted(getCustomImageSpec());
         }
         //? if >=1.21 {
-        /*String id = "Identifier.of(\"%s\")".formatted(image.value());
-        *///?} else {
-        String id = "new Identifier(\"%s\")".formatted(image.value());
-        //?}
+        String id = "Identifier.of(\"%s\")".formatted(image.value());
+        //?} else {
+        /*String id = "new Identifier(\"%s\")".formatted(image.value());
+        *///?}
         return switch (image.type()) {
             case RESOURCE -> {
                 if(!image.path().isEmpty()) {

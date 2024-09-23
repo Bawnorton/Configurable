@@ -29,7 +29,7 @@ import com.bawnorton.configurable.libs.gson.JsonElement;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.ReflectiveOperationException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -42,8 +42,6 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     private static final Gson GSON = createGson();
     private static final Path configPath = Platform.getConfigDir()
             .resolve("configurable/<file_name>.json");
-    
-    private static final Map<Class<?>, Object> instanceCache = new HashMap<>();
     
     private static Gson createGson() {
        GsonBuilder builder = new GsonBuilder()
@@ -63,7 +61,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
             }
             try {
                 JsonObject config = GSON.fromJson(Files.newBufferedReader(configPath), JsonObject.class);
-                Config parsed = parseConfig(config);
+                Config parsed = parseConfig(config, true);
                 ConfigurableMain.LOGGER.info("Successfully loaded config \\"<file_name>\\"");
                 return parsed;
             } catch (JsonSyntaxException e) {
@@ -84,58 +82,62 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
         }
     }
     
-    private Config parseConfig(JsonObject configJson) {
+    @Override
+    public String serializeConfig(Config config) {
+        return GSON.toJson(config);
+    }
+    
+    @Override
+    public Config deserializeConfig(String serializedConfig) {
+        return parseConfig(GSON.fromJson(serializedConfig, JsonObject.class), false);
+    }
+    
+    private Config parseConfig(JsonObject configJson, boolean set) {
         List<String> stack = new ArrayList<>();
         Config config = new Config();
-        parseNested(stack, configJson, config);
+        parseNested(stack, configJson, config, set);
         return config;
     }
     
-    private void parseNested(List<String> stack, JsonObject nestedJson, Config config) {
+    private void parseNested(List<String> stack, JsonObject nestedJson, Config config, boolean set) {
        Set<String> keys = nestedJson.keySet();
        for(String key : keys) {
            JsonElement element = nestedJson.get(key);
            if(element.isJsonObject()) {
                stack.add(key);
-               parseNested(stack, element.getAsJsonObject(), config);
+               parseNested(stack, element.getAsJsonObject(), config, set);
                stack.remove(stack.size() - 1);
            } else if (element.isJsonNull()) {
-               parseReference(key, null, stack, config);
+               parseReference(key, null, stack, config, set);
            } else if (element.isJsonPrimitive()) {
-               parseReference(key, element.getAsJsonPrimitive(), stack, config);
+               parseReference(key, element.getAsJsonPrimitive(), stack, config, set);
            }
        }
     }
     
-    private void parseReference(String key, JsonPrimitive value, List<String> parents, Config config) {
+    private void parseReference(String key, JsonPrimitive value, List<String> parents, Config config, boolean set) {
         Class<? extends Config> configClass = config.getClass();
-        Field target;
-        Object instance;
         String keyPath = "";
         if(!parents.isEmpty()) {
             keyPath = String.join(".", parents) + ".";
         }
         keyPath += key;
         
+        Field target;
+        Object instance = config;
+        
         try {
             if(parents.isEmpty()) {
-                instance = config;
                 target = configClass.getDeclaredField(key);
             } else {
                 Class<?> nested = configClass;
                 for(String parent : parents) {
                     Field parentField = nested.getDeclaredField(parent);
                     nested = parentField.getType();
-                }
-                instance = instanceCache.get(nested);
-                if(instance == null) {
                     try {
-                        Constructor<?> ctor = nested.getConstructor();
-                        instance = ctor.newInstance();
-                        instanceCache.put(nested, instance);
-                    } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | InstantiationException e) {
+                        instance = parentField.get(instance);
+                    } catch (ReflectiveOperationException e) {
                         ConfigurableMain.LOGGER.error("Field: \\"%s\\" could not be set.".formatted(keyPath), e);
-                        return;
                     }
                 }
                 target = nested.getDeclaredField(key);
@@ -148,7 +150,12 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
             Reference<?> reference = (Reference<?>) target.get(instance);
             Class<?> expected = reference.getType();
             try {
-                reference.set(getRefValue(value, expected));
+                Object refValue = getRefValue(value, expected);
+                if(set) {
+                    reference.set(refValue);
+                } else {
+                    reference.setMemento(refValue);
+                }
             } catch (ClassCastException e) {
                ConfigurableMain.LOGGER.error("Field: \\"%s\\" of type \\"%s\\" could not be set.".formatted(keyPath, expected), e);
             }
@@ -158,6 +165,8 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     }
 
     private Object getRefValue(JsonPrimitive value, Class<?> expected) {
+        if(value == null) return null;
+        
         return GSON.getAdapter(expected).fromJsonTree(value);
     }
 }

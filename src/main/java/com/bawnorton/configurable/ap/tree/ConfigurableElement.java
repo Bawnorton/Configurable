@@ -2,6 +2,7 @@ package com.bawnorton.configurable.ap.tree;
 
 import com.bawnorton.configurable.ControllerType;
 import com.bawnorton.configurable.Image;
+import com.bawnorton.configurable.ap.helper.AnnotationHelper;
 import com.bawnorton.configurable.ap.yacl.*;
 import com.bawnorton.configurable.ap.yacl.YaclDescriptionImage;
 import com.bawnorton.configurable.ap.yacl.YaclDescriptionText;
@@ -87,6 +88,10 @@ public record ConfigurableElement(Element element, ConfigurableHolder annotation
 
     public String getElementConfigName() {
         return getElementName() + "Config";
+    }
+
+    public boolean defaultServerEnforces() {
+        return AnnotationHelper.isDefaultValue(annotationHolder.getConfigurableMirror(), "serverEnforces");
     }
 
     /**

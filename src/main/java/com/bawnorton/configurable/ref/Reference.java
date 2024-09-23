@@ -4,13 +4,8 @@ import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.load.IllegalConfigException;
 import com.bawnorton.configurable.ref.constraint.ConstraintSet;
 import com.bawnorton.configurable.ref.constraint.ReferenceConstraint;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.spongepowered.asm.service.MixinService;
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
-import java.util.List;
 import java.util.Objects;
 
 public class Reference<T> {
@@ -19,6 +14,8 @@ public class Reference<T> {
     private final VarHandle varHandle;
     private final ConstraintSet constraints;
     private final T defaultValue;
+
+    private Object memento;
 
     public Reference(String name, Class<?> refHolder, Class<T> refType, ConstraintSet.Builder builder) {
         this.name = name;
@@ -69,6 +66,24 @@ public class Reference<T> {
                     name,
                     refHolder.getSimpleName()
             ));
+        }
+    }
+
+    public void setMemento(Object value) {
+        memento = value;
+    }
+
+    public void applyMemento() {
+        if(memento != null) {
+            set(memento);
+        }
+    }
+
+    public void update(boolean fromServer, boolean serverEnforces) {
+        if (fromServer == serverEnforces) {
+            applyMemento();
+        } else {
+            memento = null;
         }
     }
 

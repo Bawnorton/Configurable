@@ -21,14 +21,14 @@ import java.util.function.Function;
 @Mixin(value = ModMenu.class, remap = false)
 public abstract class ModMenuMixin {
     //? if >=1.21 {
-    /*@Shadow @Final private static Map<String, ConfigScreenFactory<?>> configScreenFactories;
+    @Shadow @Final private static Map<String, ConfigScreenFactory<?>> configScreenFactories;
 
     @Shadow @Final private static List<ModMenuApi> apiImplementations;
-    *///?} else {
-    @Shadow private static Map<String, ConfigScreenFactory<?>> configScreenFactories;
+    //?} else {
+    /*@Shadow private static Map<String, ConfigScreenFactory<?>> configScreenFactories;
 
     @Shadow private static List<Map<String, ConfigScreenFactory<?>>> delayedScreenFactoryProviders;
-    //?}
+    *///?}
 
 
     @Inject(
@@ -57,10 +57,10 @@ public abstract class ModMenuMixin {
             ModMenuApi api = apiGetter.apply(wrapper);
             configScreenFactories.put(name, api.getModConfigScreenFactory());
             //? if >=1.21 {
-            /*apiImplementations.add(api);
-            *///?} else {
-            delayedScreenFactoryProviders.add(api.getProvidedConfigScreenFactories());
-            //?}
+            apiImplementations.add(api);
+            //?} else {
+            /*delayedScreenFactoryProviders.add(api.getProvidedConfigScreenFactories());
+            *///?}
         }));
     }
 }

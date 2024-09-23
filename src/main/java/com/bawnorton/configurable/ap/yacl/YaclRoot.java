@@ -29,7 +29,6 @@ public class YaclRoot extends YaclElement {
         %1$s.categories(%3$s)
         %1$s.save(%4$s)
         %1$s.build()
-        %1$s.generateScreen(parent);
         """.formatted(
                 "\t".repeat(depth),
                 title.getSpec(depth + 1),

@@ -40,10 +40,10 @@ import java.util.Set;
 
 @SupportedAnnotationTypes("com.bawnorton.configurable.Configurable")
 //? if >=1.21 {
-/*@SupportedSourceVersion(SourceVersion.RELEASE_21)
-*///?} else {
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
-//?}
+@SupportedSourceVersion(SourceVersion.RELEASE_21)
+//?} else {
+/*@SupportedSourceVersion(SourceVersion.RELEASE_17)
+*///?}
 public final class ConfigurableProcessor extends AbstractProcessor {
     private final Gson gson = new GsonBuilder()
             .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)

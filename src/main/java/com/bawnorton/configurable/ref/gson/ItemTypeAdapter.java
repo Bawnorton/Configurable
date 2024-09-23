@@ -20,10 +20,10 @@ public class ItemTypeAdapter implements JsonSerializer<Item>, JsonDeserializer<I
         try {
             String itemName = json.getAsString();
             //? if <1.21 {
-            Identifier id = new Identifier(itemName);
-            //?} else {
-            /*Identifier id = Identifier.of(itemName);
-            *///?}
+            /*Identifier id = new Identifier(itemName);
+            *///?} else {
+            Identifier id = Identifier.of(itemName);
+            //?}
             return Registries.ITEM.getOrEmpty(id).orElse(Items.AIR);
         } catch (Exception e) {
             ConfigurableMain.LOGGER.warn("Failed to parse item from json: \"%s\"".formatted(json));

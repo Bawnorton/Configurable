@@ -42,6 +42,10 @@ public final class ConfigurableHolder {
         return imageMirror;
     }
 
+    public boolean serverEnforces() {
+        return overrides == null ? annotation().serverEnforces() : overrides.getServerEnforces();
+    }
+
     public boolean exclude() {
         return overrides == null ? annotation().yacl().exclude() : overrides.getExclude();
     }

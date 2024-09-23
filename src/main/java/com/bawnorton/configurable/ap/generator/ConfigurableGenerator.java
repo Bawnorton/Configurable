@@ -20,6 +20,7 @@ public abstract class ConfigurableGenerator {
 
     protected String applyReplacements(String spec) {
         spec = spec.replaceAll("<name>", settings.name());
+        spec = spec.replaceAll("<source_set>", settings.sourceSet());
         spec = spec.replaceAll("<file_name>", settings.configFileName());
         spec = spec.replaceAll("<configurable_package>", settings.packageName());
         spec = spec.replaceAll("<config_class_name>", settings.fullyQualifiedConfig());
