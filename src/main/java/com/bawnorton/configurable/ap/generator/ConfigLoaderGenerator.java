@@ -20,6 +20,7 @@ import com.bawnorton.configurable.generated.GeneratedConfigLoader;
 import com.bawnorton.configurable.ref.Reference;
 import com.bawnorton.configurable.ref.gson.ReferenceSerializer;
 import com.bawnorton.configurable.platform.Platform;
+import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonPrimitive;
@@ -42,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
 public final class ConfigLoader implements GeneratedConfigLoader<Config> {
@@ -49,6 +51,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
             .resolve("configurable/<file_name>.json5");
     private static final Path legacyConfigPath = Platform.getConfigDir()
             .resolve("configurable/<file_name>.json");
+    private static final Map<String, Field> FIELDS_BY_KEY_PATH = new HashMap<>();
     private static final Gson GSON = createGson();
     
     private static Gson createGson() {
@@ -56,8 +59,24 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
             .setPrettyPrinting()
             .registerTypeAdapter(Reference.class, new ReferenceSerializer());
        ConfigurableMain.getTypeAdapters("<name>", "<source_set>").forEach(builder::registerTypeHierarchyAdapter);
-       builder.setFieldNamingStrategy(ConfigurableMain.getFieldNamingStrategy("<name>", "<source_set>"));
+       FieldNamingStrategy namingStrategy = ConfigurableMain.getFieldNamingStrategy("<name>", "<source_set>");
+       builder.setFieldNamingStrategy(namingStrategy);
+       
+       recordNestedKeyPaths(Config.class, "", namingStrategy, FIELDS_BY_KEY_PATH::put);
+       
        return builder.create();
+    }
+    
+    private static void recordNestedKeyPaths(Class<?> clazz, String keyPath, FieldNamingStrategy namingStrategy, BiConsumer<String, Field> setter) {
+        for (Field field : clazz.getDeclaredFields()) {
+            if(field.getName().equals("CONFIGURABLE_COMMENT")) continue;
+            
+            String fieldPath = keyPath + namingStrategy.translateName(field);
+            setter.accept(fieldPath, field);
+            if(!field.getType().equals(Reference.class)) {
+                recordNestedKeyPaths(field.getType(), "%s.".formatted(fieldPath), namingStrategy, setter);
+            }
+        }
     }
     
     @Override
@@ -135,7 +154,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
         if(ref.hasComment()) {
             writer.blockComment(ref.getComment());
         }
-        writer.name(field.getName());
+        writer.name(GSON.fieldNamingStrategy().translateName(field));
         JsonElement elemnt = GSON.toJsonTree(ref, field.getGenericType());
         GSON.toJson(elemnt, new GsonWriter(writer));
     }
@@ -148,7 +167,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
                 writer.blockComment(comment);
             }
         } catch (NoSuchFieldException ignored) {}
-        writer.name(field.getName());
+        writer.name(GSON.fieldNamingStrategy().translateName(field));
         writer.beginObject();
         Field[] nestedFields = instance.getClass().getDeclaredFields();
         for(Field nestedField : nestedFields) {
@@ -201,26 +220,28 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
         }
         keyPath += key;
         
-        Field target;
+        Field target = FIELDS_BY_KEY_PATH.get(keyPath);
         Object instance = config;
         
         try {
-            if(parents.isEmpty()) {
-                target = configClass.getDeclaredField(key);
-            } else {
-                Class<?> nested = configClass;
-                for(String parent : parents) {
-                    Field parentField = nested.getDeclaredField(parent);
-                    nested = parentField.getType();
+            if (!parents.isEmpty()) {
+                String parentKeyPath = parents.get(0);
+                Field parentField = FIELDS_BY_KEY_PATH.get(parentKeyPath);
+                
+                for (int i = 0; i < parents.size(); i++) {
+                    if (i > 0) {
+                        parentKeyPath += "." + parents.get(i);
+                        parentField = FIELDS_BY_KEY_PATH.get(parentKeyPath);
+                    }
+            
                     try {
                         instance = parentField.get(instance);
                     } catch (ReflectiveOperationException e) {
                         ConfigurableMain.LOGGER.error("Field: \\"%s\\" could not be set.".formatted(keyPath), e);
                     }
                 }
-                target = nested.getDeclaredField(key);
             }
-        } catch (NoSuchFieldException ignored) {
+        } catch (RuntimeException ignored) {
             ConfigurableMain.LOGGER.warn("Field: \\"%s\\" could not be found.".formatted(keyPath));
             return;
         }

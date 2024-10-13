@@ -1,3 +1,7 @@
+# 2.0.1
+
+- Fix default naming not applying correctly
+
 # 2.0.0
 
 - Migrated from json to json5 configs
