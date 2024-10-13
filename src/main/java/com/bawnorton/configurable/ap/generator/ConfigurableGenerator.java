@@ -24,6 +24,8 @@ public abstract class ConfigurableGenerator {
         spec = spec.replaceAll("<file_name>", settings.configFileName());
         spec = spec.replaceAll("<configurable_package>", settings.packageName());
         spec = spec.replaceAll("<config_class_name>", settings.fullyQualifiedConfig());
+        spec = spec.replaceAll("com\\.google\\.gson", "com.bawnorton.configurable.libs.gson");
+        spec = spec.replaceAll("org\\.quiltmc\\.parsers", "com.bawnorton.configurable.libs.parsers");
         return spec;
     }
 }

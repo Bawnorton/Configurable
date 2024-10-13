@@ -38,6 +38,6 @@ public final class ConfigurableApiImplLoader {
     }
 
     public static ConfigurableApi getImpl(String name) {
-        return impls.get(name);
+        return impls.getOrDefault(name, ConfigurableApi.DEFAULT);
     }
 }

@@ -1,17 +1,35 @@
 package com.bawnorton.configurable.api;
 
 import com.bawnorton.configurable.generated.GeneratedConfig;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.FieldNamingStrategy;
 import java.util.Map;
 
 public interface ConfigurableApi {
-    Map<Class<?>, Object> getTypeAdapters();
+    ConfigurableApi DEFAULT = new ConfigurableApi() {};
 
-    GeneratedConfig beforeSave(GeneratedConfig config);
+    default Map<Class<?>, Object> getTypeAdapters() {
+        return Map.of();
+    }
 
-    GeneratedConfig afterLoad(GeneratedConfig config);
+    default GeneratedConfig beforeSave(GeneratedConfig config) {
+        return config;
+    }
+
+    default String beforeLoad(String config) {
+        return config;
+    }
+
+    default GeneratedConfig afterLoad(GeneratedConfig config) {
+        return config;
+    }
 
     default boolean serverEnforces() {
         return true;
+    }
+
+    default FieldNamingStrategy defaultFieldNamingStrategy() {
+        return FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES;
     }
 
     //? if neoforge

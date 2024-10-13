@@ -37,6 +37,7 @@ dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
 
     modImplementation("dev.isxander:yet-another-config-lib:${property("yacl_version")}-$loader")
+    implementation("org.quiltmc.parsers:gson:0.3.0")
 }
 
 loom {
@@ -61,12 +62,15 @@ tasks {
     withType<ShadowJar> {
         from(sourceSets.main.get().output)
         relocate("com.google.gson", "com.bawnorton.configurable.libs.gson")
+        relocate("org.quiltmc.parsers", "com.bawnorton.configurable.libs.parsers")
         relocate("com.electronwill.nightconfig", "com.bawnorton.configurable.libs.nightconfig")
 
         dependencies {
             include(dependency("com.google.code.gson:gson:2.10.1"))
             include(dependency("com.electronwill.night-config:toml:3.8.0"))
             include(dependency("com.electronwill.night-config:core:3.8.0"))
+            include(dependency("org.quiltmc.parsers:gson:0.3.0"))
+            include(dependency("org.quiltmc.parsers:json:0.3.0"))
         }
 
         exclude(

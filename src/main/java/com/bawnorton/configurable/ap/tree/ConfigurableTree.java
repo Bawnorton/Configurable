@@ -6,6 +6,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,10 +17,12 @@ import java.util.stream.Collectors;
 
 public final class ConfigurableTree {
     private final Messager messager;
+    private final Elements elementUtils;
     private final List<ConfigurableElement> roots;
 
-    public ConfigurableTree(Messager messager, Set<? extends Element> elements) {
+    public ConfigurableTree(Messager messager, Elements elementUtil, Set<? extends Element> elements) {
         this.messager = messager;
+        this.elementUtils = elementUtil;
         this.roots = constructRoots(elements);
         applyOverrides(roots);
     }
@@ -150,7 +153,8 @@ public final class ConfigurableTree {
                     });
         }
 
-        return new ConfigurableElement(element, holder, children);
+        String comment = elementUtils.getDocComment(element);
+        return new ConfigurableElement(element, comment == null ? "" : comment, holder, children);
     }
 
     private AnnotationMirror getAnnotationMirror(Element element, String annotation) {

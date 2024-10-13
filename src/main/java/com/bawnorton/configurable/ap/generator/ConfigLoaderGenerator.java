@@ -20,28 +20,35 @@ import com.bawnorton.configurable.generated.GeneratedConfigLoader;
 import com.bawnorton.configurable.ref.Reference;
 import com.bawnorton.configurable.ref.gson.ReferenceSerializer;
 import com.bawnorton.configurable.platform.Platform;
-import com.bawnorton.configurable.libs.gson.Gson;
-import com.bawnorton.configurable.libs.gson.GsonBuilder;
-import com.bawnorton.configurable.libs.gson.JsonPrimitive;
-import com.bawnorton.configurable.libs.gson.JsonSyntaxException;
-import com.bawnorton.configurable.libs.gson.JsonObject;
-import com.bawnorton.configurable.libs.gson.JsonElement;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
+import org.quiltmc.parsers.json.JsonReader;
+import org.quiltmc.parsers.json.JsonWriter;
+import org.quiltmc.parsers.json.gson.GsonReader;
+import org.quiltmc.parsers.json.gson.GsonWriter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.ReflectiveOperationException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Set;import java.util.function.UnaryOperator;
 
 public final class ConfigLoader implements GeneratedConfigLoader<Config> {
-    private static final Gson GSON = createGson();
     private static final Path configPath = Platform.getConfigDir()
+            .resolve("configurable/<file_name>.json5");
+    private static final Path legacyConfigPath = Platform.getConfigDir()
             .resolve("configurable/<file_name>.json");
+    private static final Gson GSON = createGson();
     
     private static Gson createGson() {
        GsonBuilder builder = new GsonBuilder()
@@ -52,22 +59,37 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     }
     
     @Override
-    public Config loadConfig() {
+    public Config loadConfig(UnaryOperator<String> datafixer) {
         try {
-            if(!Files.exists(configPath)) {
-                Files.createDirectories(configPath.getParent());
-                Files.createFile(configPath);
+            boolean usingLegacyConfig = false;
+            Path loadingPath = configPath;
+            if(Files.exists(legacyConfigPath)) {
+                loadingPath = legacyConfigPath;
+                usingLegacyConfig = true;
+            }
+            
+            if(!Files.exists(loadingPath)) {
+                Files.createDirectories(loadingPath.getParent());
+                Files.createFile(loadingPath);
                 return new Config();
             }
             try {
-                JsonObject config = GSON.fromJson(Files.newBufferedReader(configPath), JsonObject.class);
+                GsonReader reader = new GsonReader(JsonReader.json5(Files.newBufferedReader(loadingPath)));
+                JsonObject config = GSON.fromJson(reader, JsonObject.class);
                 Config parsed = parseConfig(config, true);
+                
+                if(usingLegacyConfig) {
+                    ConfigurableMain.LOGGER.info("Migrating legacy config \\"<file_name>\\"");
+                    Files.deleteIfExists(legacyConfigPath);
+                    saveConfig(config);
+                }
+                
                 ConfigurableMain.LOGGER.info("Successfully loaded config \\"<file_name>\\"");
                 return parsed;
             } catch (JsonSyntaxException e) {
                 ConfigurableMain.LOGGER.error("Failed to parse \\"<file_name>\\" config file, using default", e);
             }
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             ConfigurableMain.LOGGER.error("Failed to load \\"<file_name>\\" config file, using default", e);
         }
         return new Config();
@@ -75,11 +97,65 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     
     @Override
     public void saveConfig(Config config) {
-        try {
-            Files.write(configPath, GSON.toJson(config).getBytes());
+        try(StringWriter stringWriter = new StringWriter()) {
+            JsonWriter writer = JsonWriter.json5(stringWriter);
+            writer.beginObject();
+            
+            Field[] fields = Config.class.getDeclaredFields();
+            for(Field field : fields) {
+                writeField(field, config, writer);
+            }
+            
+            writer.endObject();
+            writer.flush();
+            
+            Files.writeString(configPath, stringWriter.toString(), StandardOpenOption.CREATE);
         } catch (IOException e) {
             ConfigurableMain.LOGGER.error("Failed to write \\"<file_name>\\" config file", e);
         }
+    }
+    
+    private void writeField(Field field, Object instance, JsonWriter writer) throws IOException {
+        try {
+            boolean isRef = field.getType().equals(Reference.class);
+            if(isRef) {
+                writeRefField(field, instance, writer);
+            } else {
+                writeNestedField(field, field.get(instance), writer);
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new IOException(e);
+        }
+    }
+    
+    private void writeRefField(Field field, Object instance, JsonWriter writer) throws IOException, ReflectiveOperationException {
+        Reference<?> ref = (Reference<?>) field.get(instance);
+        if(ref.hasComment()) {
+            writer.blockComment(ref.getComment());
+        }
+        writer.name(field.getName());
+        JsonElement elemnt = GSON.toJsonTree(ref, field.getGenericType());
+        GSON.toJson(elemnt, new GsonWriter(writer));
+    }
+    
+    private void writeNestedField(Field field, Object instance, JsonWriter writer) throws IOException, ReflectiveOperationException {
+        try {
+            Field commentField = instance.getClass().getDeclaredField("CONFIGURABLE_COMMENT");
+            String comment = (String) commentField.get(instance);
+            if(comment != null && !comment.isEmpty()) {
+                writer.blockComment(comment);
+            }
+        } catch (NoSuchFieldException ignored) {}
+        writer.name(field.getName());
+        writer.beginObject();
+        Field[] nestedFields = instance.getClass().getDeclaredFields();
+        for(Field nestedField : nestedFields) {
+            if(nestedField.getName().equals("CONFIGURABLE_COMMENT")) continue;
+            
+            nestedField.setAccessible(true);
+            writeField(nestedField, instance, writer);
+        }
+        writer.endObject();
     }
     
     @Override

@@ -84,6 +84,7 @@ public final class Config implements GeneratedConfig {
         %1$spublic final %2$s %3$s = new %2$s();
         
         %1$spublic static class %2$s {
+        <comment>
         <content>
         %1$s}
         """.formatted(
@@ -96,16 +97,18 @@ public final class Config implements GeneratedConfig {
             addElement(contentBuilder, child, validator, neededImports, "%s.%s".formatted(externalParent, element.getKey()), depth + 1);
         }
         container = container.replaceAll("<content>", contentBuilder.toString().replaceAll("\\r?\\n$", ""));
+        container = container.replaceAll("<comment>", "%spublic static final String CONFIGURABLE_COMMENT = \"\"\"\n%s\"\"\".trim();".formatted("\t".repeat(depth), element.comment()));
         builder.append(container);
     }
 
     private void addReference(StringBuilder builder, ConfigurableElement element, StringBuilder validator, Set<String> neededImports, String externalParent, int depth) {
-        String reference = "public final Reference<%s> %s = new Reference<>(\"%s\", %s.class, %s.class, %s);".formatted(
+        String reference = "public final Reference<%s> %s = new Reference<>(\"%s\", %s.class, %s.class, \"\"\"\n%s\"\"\".trim(), %s);".formatted(
                 element.getBoxedType(types),
                 element.getKey(),
                 element.getElementName(),
                 element.getOwnerName(),
                 element.getTypeName(),
+                element.comment(),
                 createConstraintSet(element)
         );
         neededImports.add(element.getFullyQualifiedTypeName(types));

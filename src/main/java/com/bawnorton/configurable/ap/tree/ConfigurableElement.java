@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public record ConfigurableElement(Element element, ConfigurableHolder annotationHolder, List<ConfigurableElement> children) {
+public record ConfigurableElement(Element element, String comment, ConfigurableHolder annotationHolder, List<ConfigurableElement> children) {
     public String getKey() {
         String key = annotationHolder.value();
         if(key.isEmpty()) {

@@ -10,6 +10,7 @@ import java.util.Objects;
 
 public class Reference<T> {
     private final String name;
+    private final String comment;
     private final Class<?> refHolder;
     private final VarHandle varHandle;
     private final ConstraintSet constraints;
@@ -18,7 +19,12 @@ public class Reference<T> {
     private Object memento;
 
     public Reference(String name, Class<?> refHolder, Class<T> refType, ConstraintSet.Builder builder) {
+        this(name, refHolder, refType, "", builder);
+    }
+
+    public Reference(String name, Class<?> refHolder, Class<T> refType, String comment, ConstraintSet.Builder builder) {
         this.name = name;
+        this.comment = comment;
         this.refHolder = refHolder;
         try {
             this.constraints = builder.build(refHolder, refType);
@@ -67,6 +73,14 @@ public class Reference<T> {
                     refHolder.getSimpleName()
             ));
         }
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public boolean hasComment() {
+        return comment != null && !comment.isEmpty();
     }
 
     public void setMemento(Object value) {

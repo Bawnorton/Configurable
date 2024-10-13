@@ -7,6 +7,7 @@ import com.bawnorton.configurable.networking.Networking;
 import com.bawnorton.configurable.platform.Platform;
 import com.bawnorton.configurable.ref.gson.ItemTypeAdapter;
 import com.google.gson.FieldNamingPolicy;
+import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.minecraft.item.Item;
@@ -114,6 +115,10 @@ public final class ConfigurableMain {
 
     public static Map<Class<?>, Object> getTypeAdapters(String configName) {
         return typeAdapters.getOrDefault(configName, Map.of());
+    }
+
+    public static FieldNamingStrategy getFieldNamingStrategy(String configName) {
+        return WRAPPERS.get(configName)
     }
 
     public static Map<String, Map<String, ConfigurableWrapper>> getAllWrappers() {

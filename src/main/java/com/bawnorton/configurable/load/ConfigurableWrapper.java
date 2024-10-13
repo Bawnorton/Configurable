@@ -40,8 +40,6 @@ public final class ConfigurableWrapper {
     }
 
     public boolean serverEnforces() {
-        if(apiImpl == null) return true;
-
         return apiImpl.serverEnforces();
     }
 
@@ -63,16 +61,12 @@ public final class ConfigurableWrapper {
     }
 
     public void loadConfig() {
-        lastLoadedConfig = loader.loadConfig();
-        if(apiImpl != null) {
-            lastLoadedConfig = apiImpl.afterLoad(lastLoadedConfig);
-        }
+        lastLoadedConfig = loader.loadConfig(apiImpl::beforeLoad);
+        lastLoadedConfig = apiImpl.afterLoad(lastLoadedConfig);
     }
 
     public void saveConfig() {
-        if(apiImpl != null) {
-            lastLoadedConfig = apiImpl.beforeSave(lastLoadedConfig);
-        }
+        lastLoadedConfig = apiImpl.beforeSave(lastLoadedConfig);
         loader.saveConfig(lastLoadedConfig);
     }
 
