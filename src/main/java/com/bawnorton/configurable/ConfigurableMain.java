@@ -36,8 +36,6 @@ public final class ConfigurableMain {
             .setPrettyPrinting()
             .create();
 
-    private static final Map<String, Map<Class<?>, Object>> typeAdapters = new HashMap<>();
-
     public static Identifier id(String path) {
         return Identifier.of(MOD_ID, path);
     }
@@ -76,15 +74,13 @@ public final class ConfigurableMain {
                     }
                 }
 
-                registerDefaultTypeAdapters(configName);
-
                 try {
                     ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
+                    WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
                     addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
                     if(settings.hasScreenFactory() && !Platform.isServer()) {
                         addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
                     }
-                    WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
                 } catch (IllegalStateException e) {
                     LOGGER.error("Could not create configurable wrapper for \"%s\"".formatted(configName), e);
                 }
@@ -105,20 +101,12 @@ public final class ConfigurableMain {
         }
     }
 
-    private static void registerDefaultTypeAdapters(String configName) {
-        registerTypeAdapater(configName, Item.class, new ItemTypeAdapter());
+    public static Map<Class<?>, Object> getTypeAdapters(String configName, String sourceSet) {
+        return WRAPPERS.get(configName).get(sourceSet).getTypeAdapters();
     }
 
-    public static <T> void registerTypeAdapater(String configName, Class<T> type, Object typeAdapter) {
-        typeAdapters.computeIfAbsent(configName, k -> new HashMap<>()).put(type, typeAdapter);
-    }
-
-    public static Map<Class<?>, Object> getTypeAdapters(String configName) {
-        return typeAdapters.getOrDefault(configName, Map.of());
-    }
-
-    public static FieldNamingStrategy getFieldNamingStrategy(String configName) {
-        return WRAPPERS.get(configName)
+    public static FieldNamingStrategy getFieldNamingStrategy(String configName, String sourceSet) {
+        return WRAPPERS.get(configName).get(sourceSet).getFieldNamingStrategy();
     }
 
     public static Map<String, Map<String, ConfigurableWrapper>> getAllWrappers() {

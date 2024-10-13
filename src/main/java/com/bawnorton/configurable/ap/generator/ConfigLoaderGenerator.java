@@ -41,7 +41,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;import java.util.function.UnaryOperator;
+import java.util.Set;
+import java.util.function.UnaryOperator;
 
 public final class ConfigLoader implements GeneratedConfigLoader<Config> {
     private static final Path configPath = Platform.getConfigDir()
@@ -54,7 +55,8 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
        GsonBuilder builder = new GsonBuilder()
             .setPrettyPrinting()
             .registerTypeAdapter(Reference.class, new ReferenceSerializer());
-       ConfigurableMain.getTypeAdapters("<name>").forEach(builder::registerTypeHierarchyAdapter);
+       ConfigurableMain.getTypeAdapters("<name>", "<source_set>").forEach(builder::registerTypeHierarchyAdapter);
+       builder.setFieldNamingStrategy(ConfigurableMain.getFieldNamingStrategy("<name>", "<source_set>"));
        return builder.create();
     }
     
@@ -81,7 +83,7 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
                 if(usingLegacyConfig) {
                     ConfigurableMain.LOGGER.info("Migrating legacy config \\"<file_name>\\"");
                     Files.deleteIfExists(legacyConfigPath);
-                    saveConfig(config);
+                    saveConfig(parsed);
                 }
                 
                 ConfigurableMain.LOGGER.info("Successfully loaded config \\"<file_name>\\"");
@@ -232,11 +234,11 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
                 } else {
                     reference.setMemento(refValue);
                 }
-            } catch (ClassCastException e) {
-               ConfigurableMain.LOGGER.error("Field: \\"%s\\" of type \\"%s\\" could not be set.".formatted(keyPath, expected), e);
+            } catch (ClassCastException | IllegalArgumentException e) {
+               ConfigurableMain.LOGGER.warn("Field: \\"%s\\" of type \\"%s\\" could not be set to \\"%s\\". Falling back to default.".formatted(keyPath, expected, value.toString()));
             }
         } catch (IllegalAccessException e) {
-            ConfigurableMain.LOGGER.error("Field: \\"%s\\" could not be set.".formatted(keyPath), e);
+            ConfigurableMain.LOGGER.error("Field: \\"%s\\" could not be set. Falling back to default".formatted(keyPath), e);
         }
     }
 

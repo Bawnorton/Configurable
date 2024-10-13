@@ -6,7 +6,8 @@ import com.google.gson.FieldNamingStrategy;
 import java.util.Map;
 
 public interface ConfigurableApi {
-    ConfigurableApi DEFAULT = new ConfigurableApi() {};
+    ConfigurableApi DEFAULT = new ConfigurableApi() {
+    };
 
     default Map<Class<?>, Object> getTypeAdapters() {
         return Map.of();
@@ -32,6 +33,14 @@ public interface ConfigurableApi {
         return FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES;
     }
 
-    //? if neoforge
-    /*String getConfigName();*/
+    //? if !fabric {
+    /*/^*
+     * The name of the config this API impl belongs to, this is necessary for non-fabric implementations
+     * <br>
+     * <b>THIS DOES NOT SET THE NAME OF THE CONFIG</b>
+     ^/
+    default String getConfigName() {
+        throw new UnsupportedOperationException();
+    }
+    *///?}
 }

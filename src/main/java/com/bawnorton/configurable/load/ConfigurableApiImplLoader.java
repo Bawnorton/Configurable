@@ -21,20 +21,14 @@ public final class ConfigurableApiImplLoader {
         FabricLoader.getInstance().getEntrypointContainers("configurable", ConfigurableApi.class).forEach(container -> {
             String id = container.getProvider().getMetadata().getId();
             try {
-                applyImpl(id, container.getEntrypoint());
+                impls.put(id, container.getEntrypoint());
             } catch (Throwable e) {
                 ConfigurableMain.LOGGER.error("Mod {} provides a broken ConfigurableApi implemenation", id, e);
             }
         });
         //?} elif neoforge {
-        /*serviceLoader.forEach(apiImpl -> applyImpl(apiImpl.getConfigName(), apiImpl));
+        /*serviceLoader.forEach(apiImpl -> impls.put(apiImpl.getConfigName(), apiImpl));
         *///?}
-    }
-
-    private static void applyImpl(String id, ConfigurableApi apiImpl) {
-        Map<Class<?>, Object> adapters = apiImpl.getTypeAdapters();
-        adapters.forEach((type, adapter) -> ConfigurableMain.registerTypeAdapater(id, type, adapter));
-        impls.put(id, apiImpl);
     }
 
     public static ConfigurableApi getImpl(String name) {

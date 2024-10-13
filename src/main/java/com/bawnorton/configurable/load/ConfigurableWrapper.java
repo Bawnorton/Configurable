@@ -4,9 +4,14 @@ import com.bawnorton.configurable.api.ConfigurableApi;
 import com.bawnorton.configurable.generated.GeneratedConfig;
 import com.bawnorton.configurable.generated.GeneratedConfigLoader;
 import com.bawnorton.configurable.generated.GeneratedConfigScreenFactory;
+import com.bawnorton.configurable.ref.gson.ItemTypeAdapter;
+import com.google.gson.FieldNamingStrategy;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.item.Item;
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class ConfigurableWrapper {
     private final ConfigurableApi apiImpl;
@@ -41,6 +46,16 @@ public final class ConfigurableWrapper {
 
     public boolean serverEnforces() {
         return apiImpl.serverEnforces();
+    }
+
+    public FieldNamingStrategy getFieldNamingStrategy() {
+        return apiImpl.defaultFieldNamingStrategy();
+    }
+
+    public Map<Class<?>, Object> getTypeAdapters() {
+        Map<Class<?>, Object> typeAdapters = new HashMap<>(apiImpl.getTypeAdapters());
+        typeAdapters.put(Item.class, new ItemTypeAdapter());
+        return typeAdapters;
     }
 
     public GeneratedConfig getConfig() {
