@@ -1,3 +1,19 @@
+# 2.0.0
+
+- Migrated from json to json5 configs
+  - Legacy configs (json) are loaded, migrated and then saved as json5 so no need to worry about the old format, 
+    it's handled automatically
+- Added default naming
+  - Fields and classes now have their keys defaulted to the "snake_case" of their name
+- Added comment support
+  - Javadoc comments on `@Configurable` elements are converted to comments in the config
+- Added new API methods:
+  - defaultFieldNamingStratgey
+    - Allows the default field to key conversion to be overriden
+  - beforeLoad
+    - Allows the application of datafixing to the raw config string
+- Various fixes 
+
 # 1.3.0
 
 - Add server enforcement and config syncing
