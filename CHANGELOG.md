@@ -1,3 +1,11 @@
+# 2.0.3
+
+- Fix listener method signatures no longer matching the javadoc
+
+# 2.0.2
+
+- Fix listener ap generation to use spec
+
 # 2.0.1
 
 - Fix default naming not applying correctly

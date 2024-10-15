@@ -18,7 +18,7 @@ public class YaclListener extends YaclElement {
 
     @Override
     protected String getSpec(int depth) {
-        return "%s::%s".formatted(
+        return "(option, value) -> %s.%s(value)".formatted(
                 owner.substring(owner.lastIndexOf(".") + 1),
                 methodName
         );

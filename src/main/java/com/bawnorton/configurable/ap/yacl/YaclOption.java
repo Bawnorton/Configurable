@@ -64,7 +64,7 @@ public class YaclOption extends YaclElement {
             spec.append("%1$s.flag(%2$s)\n".formatted("\t".repeat(depth), optionFlags));
         }
         if (!listeners.isEmpty()) {
-            spec.append("%1$s.listeners(%2$s)\n".formatted("\t".repeat(depth), listeners));
+            spec.append("%1$s.listeners(%2$s)\n".formatted("\t".repeat(depth), listeners.getSpec(depth + 1)));
         }
         spec.append("%1$s.build()".formatted("\t".repeat(depth)));
         return spec.toString();
