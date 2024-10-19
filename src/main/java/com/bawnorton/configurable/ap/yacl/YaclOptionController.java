@@ -17,6 +17,10 @@ public abstract class YaclOptionController extends YaclElement {
         }
     }
 
+    public boolean isCustom() {
+        return false;
+    }
+
     @Override
     protected String getSpec(int depth) {
         String controllerSpec = getControllerSpec(depth + 1);
@@ -35,6 +39,32 @@ public abstract class YaclOptionController extends YaclElement {
     }
 
     protected abstract String getControllerSpec(int depth);
+
+    public static class Custom extends YaclOptionController {
+        private final String owner;
+        private final String methodName;
+
+        public Custom(YaclElement valueFormatter, String owner, String methodName) {
+            super(valueFormatter);
+            this.owner = owner;
+            this.methodName = methodName;
+        }
+
+        @Override
+        public boolean isCustom() {
+            return true;
+        }
+
+        @Override
+        protected void addNeededImports(Consumer<String> adder) {
+            adder.accept(owner);
+        }
+
+        @Override
+        protected String getControllerSpec(int depth) {
+            return "%s.%s(option)".formatted(owner, methodName);
+        }
+    }
 
     public static class Bool extends YaclOptionController {
         public Bool(YaclElement valueFormatter) {

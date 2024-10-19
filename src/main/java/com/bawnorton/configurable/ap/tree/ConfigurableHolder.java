@@ -93,6 +93,10 @@ public final class ConfigurableHolder {
         return annotation().yacl().controller();
     }
 
+    public String customController() {
+        return annotation().yacl().customController();
+    }
+
     public String formatter() {
         return annotation().yacl().formatter();
     }

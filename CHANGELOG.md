@@ -1,3 +1,7 @@
+# 2.1.0
+
+- Add custom controller support
+
 # 2.0.3
 
 - Fix listener method signatures no longer matching the javadoc

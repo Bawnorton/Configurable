@@ -237,6 +237,14 @@ public final class YaclScreenFactory {
 
     private @NotNull YaclOptionController getOptionController(ConfigurableElement entry, String externalRef) {
         YaclValueFormatter formatter = entry.getFormatter(types);
+        if(entry.hasCustomController()) {
+            return entry.getCustomController(types, formatter);
+        } else {
+            return getTypedController(entry, externalRef, formatter);
+        }
+    }
+
+    private @NotNull YaclOptionController getTypedController(ConfigurableElement entry, String externalRef, YaclValueFormatter formatter) {
         return switch (entry.getControllerType()) {
             case AUTO -> switch (entry.getTypeKind()) {
                 case BOOLEAN -> new YaclOptionController.TickBox();

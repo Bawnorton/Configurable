@@ -152,6 +152,18 @@ public record ConfigurableElement(Element element, String comment, ConfigurableH
         return annotationHolder.controller();
     }
 
+    public boolean hasCustomController() {
+        return !annotationHolder.customController().isEmpty();
+    }
+
+    public YaclOptionController.Custom getCustomController(Types types, YaclValueFormatter formatter) {
+        String customController = annotationHolder.customController();
+        if(customController.isEmpty()) {
+            throw new IllegalStateException("Cannot find custom controller of: %s".formatted(element));
+        }
+        return getMethodBased(types, (owner, methodName) -> new YaclOptionController.Custom(formatter, owner, methodName), customController);
+    }
+
     public Image image() {
         return annotationHolder.image();
     }

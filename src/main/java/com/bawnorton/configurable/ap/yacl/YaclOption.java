@@ -10,7 +10,7 @@ public class YaclOption extends YaclElement {
     private final YaclElement optionName;
     private final YaclElement optionDescription;
     private final YaclElement optionBinding;
-    private final YaclElement optionController;
+    private final YaclOptionController optionController;
     private final String optionFlags;
     private final YaclListeners listeners;
 
@@ -51,15 +51,18 @@ public class YaclOption extends YaclElement {
         %1$s.name(%3$s)
         %1$s.description(%4$s)
         %1$s.binding(%5$s)
-        %1$s.controller(%6$s)
         """.formatted(
                 "\t".repeat(depth),
                 generic,
                 optionName.getSpec(depth + 1),
                 optionDescription.getSpec(depth + 1),
-                optionBinding.getSpec(depth + 1),
-                optionController.getSpec(depth + 1)
+                optionBinding.getSpec(depth + 1)
         ));
+        if (optionController.isCustom()) {
+            spec.append("%1$s.customController(%2$s)\n".formatted("\t".repeat(depth), optionController.getSpec(depth + 1)));
+        } else {
+            spec.append("%1$s.controller(%2$s)\n".formatted("\t".repeat(depth), optionController.getSpec(depth + 1)));
+        }
         if (!optionFlags.isEmpty()) {
             spec.append("%1$s.flag(%2$s)\n".formatted("\t".repeat(depth), optionFlags));
         }

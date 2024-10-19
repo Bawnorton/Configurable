@@ -31,6 +31,21 @@ public @interface Yacl {
     ControllerType controller() default ControllerType.AUTO;
 
     /**
+     * Sets the method to use for controlling the option<br>
+     * <br>
+     * Name of a method with the following signature:
+     * <pre>
+     * {@code public static Controller<FieldType> name(Option<FieldType> option)}
+     * </pre>
+     * Any other signature will result in a compile time exception.<br>
+     * Also accepts referencing a method outside of the current class:<br>
+     * <pre>
+     * {@code fully.qualified.owner#methodName}
+     * </pre>
+     */
+    String customController() default "";
+
+    /**
      * <i><b>Transitive</b></i><br>
      * @see OptionFlag
      */
