@@ -1,6 +1,11 @@
 package com.bawnorton.configurable.ap.yacl;
 
 import com.bawnorton.configurable.ap.helper.MappingsHelper;
+import com.bawnorton.configurable.ap.helper.MethodHelper;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.function.Consumer;
 
 public abstract class YaclOptionController extends YaclElement {
@@ -15,10 +20,6 @@ public abstract class YaclOptionController extends YaclElement {
         if(valueFormatter != null) {
             valueFormatter.addNeededImports(adder);
         }
-    }
-
-    public boolean isCustom() {
-        return false;
     }
 
     @Override
@@ -43,16 +44,17 @@ public abstract class YaclOptionController extends YaclElement {
     public static class Custom extends YaclOptionController {
         private final String owner;
         private final String methodName;
+        private final boolean builder;
 
-        public Custom(YaclElement valueFormatter, String owner, String methodName) {
-            super(valueFormatter);
+        public Custom(String owner, String methodName, boolean builder) {
+            super(null);
             this.owner = owner;
             this.methodName = methodName;
+            this.builder = builder;
         }
 
-        @Override
-        public boolean isCustom() {
-            return true;
+        public boolean isBuilder() {
+            return builder;
         }
 
         @Override

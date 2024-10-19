@@ -3,6 +3,7 @@ package com.bawnorton.configurable.ap.tree;
 import com.bawnorton.configurable.ControllerType;
 import com.bawnorton.configurable.Image;
 import com.bawnorton.configurable.ap.helper.AnnotationHelper;
+import com.bawnorton.configurable.ap.helper.MethodHelper;
 import com.bawnorton.configurable.ap.yacl.*;
 import com.bawnorton.configurable.ap.yacl.YaclDescriptionImage;
 import com.bawnorton.configurable.ap.yacl.YaclDescriptionText;
@@ -14,6 +15,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -156,12 +158,23 @@ public record ConfigurableElement(Element element, String comment, ConfigurableH
         return !annotationHolder.customController().isEmpty();
     }
 
-    public YaclOptionController.Custom getCustomController(Types types, YaclValueFormatter formatter) {
+    public YaclOptionController.Custom getCustomController(Types types, Elements elements) {
         String customController = annotationHolder.customController();
         if(customController.isEmpty()) {
             throw new IllegalStateException("Cannot find custom controller of: %s".formatted(element));
         }
-        return getMethodBased(types, (owner, methodName) -> new YaclOptionController.Custom(formatter, owner, methodName), customController);
+        return getMethodBased(types, (owner, methodName) -> {
+            TypeElement builder = elements.getTypeElement("dev.isxander.yacl3.api.controller.ControllerBuilder");
+            TypeMirror builderType = builder.asType();
+            TypeMirror returnType = MethodHelper.getMethodReturnType(elements, owner, methodName);
+            boolean isBuilder;
+            if(returnType == null) {
+                isBuilder = false;
+            } else {
+                isBuilder = types.isAssignable(types.erasure(returnType), types.erasure(builderType));
+            }
+            return new YaclOptionController.Custom(owner, methodName, isBuilder);
+        }, customController);
     }
 
     public Image image() {

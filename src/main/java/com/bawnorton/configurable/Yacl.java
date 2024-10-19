@@ -33,9 +33,12 @@ public @interface Yacl {
     /**
      * Sets the method to use for controlling the option<br>
      * <br>
-     * Name of a method with the following signature:
+     * Name of a method with either of the following signatures:
      * <pre>
      * {@code public static Controller<FieldType> name(Option<FieldType> option)}
+     * </pre>
+     * <pre>
+     * {@code public static ControllerBuilder<FieldType> name(Option<FieldType> option)}
      * </pre>
      * Any other signature will result in a compile time exception.<br>
      * Also accepts referencing a method outside of the current class:<br>

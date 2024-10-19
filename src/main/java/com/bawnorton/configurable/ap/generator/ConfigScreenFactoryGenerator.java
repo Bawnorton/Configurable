@@ -238,7 +238,7 @@ public final class YaclScreenFactory {
     private @NotNull YaclOptionController getOptionController(ConfigurableElement entry, String externalRef) {
         YaclValueFormatter formatter = entry.getFormatter(types);
         if(entry.hasCustomController()) {
-            return entry.getCustomController(types, formatter);
+            return entry.getCustomController(types, elements);
         } else {
             return getTypedController(entry, externalRef, formatter);
         }

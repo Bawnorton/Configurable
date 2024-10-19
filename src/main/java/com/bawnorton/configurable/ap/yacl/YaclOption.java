@@ -58,11 +58,8 @@ public class YaclOption extends YaclElement {
                 optionDescription.getSpec(depth + 1),
                 optionBinding.getSpec(depth + 1)
         ));
-        if (optionController.isCustom()) {
-            spec.append("%1$s.customController(%2$s)\n".formatted("\t".repeat(depth), optionController.getSpec(depth + 1)));
-        } else {
-            spec.append("%1$s.controller(%2$s)\n".formatted("\t".repeat(depth), optionController.getSpec(depth + 1)));
-        }
+        String controllerType = optionController instanceof YaclOptionController.Custom customController && !customController.isBuilder() ? "customController" : "controller";
+        spec.append("%1$s.%2$s(%3$s)\n".formatted("\t".repeat(depth), controllerType, optionController.getSpec(depth + 1)));
         if (!optionFlags.isEmpty()) {
             spec.append("%1$s.flag(%2$s)\n".formatted("\t".repeat(depth), optionFlags));
         }
