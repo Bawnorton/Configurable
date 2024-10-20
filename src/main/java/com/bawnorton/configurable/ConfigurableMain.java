@@ -50,7 +50,8 @@ public final class ConfigurableMain {
         Networking.init();
 
         Platform.forEachJar(path -> {
-            List<Path> sourceSetSettings = new ArrayList<>();
+            //? if neoforge {
+            /*List<Path> sourceSetSettings = new ArrayList<>();
             try (ZipFile zipFile = new ZipFile(path.toFile())) {
                 zipFile.stream()
                         .filter(entry -> entry.getName().startsWith("configurable/") && !entry.isDirectory())
@@ -91,7 +92,48 @@ public final class ConfigurableMain {
                     }
                 }
             } catch (IOException ignored) {}
+            *///?} else {
+            Path configurable = path.resolve("configurable");
+            if (!(Files.exists(configurable) && Files.isDirectory(configurable))) return;
 
+            List<Path> sourceSetSettings = new ArrayList<>();
+            try (Stream<Path> stream = Files.list(configurable)) {
+                stream.filter(Files::isRegularFile).forEach(sourceSetSettings::add);
+            } catch (IOException e) {
+                ConfigurableMain.LOGGER.error("Could not find configurable settings", e);
+            }
+
+            for(Path sourceSetSetting : sourceSetSettings) {
+                ConfigurableSettings settings;
+                try {
+                    settings = GSON.fromJson(Files.newBufferedReader(sourceSetSetting), ConfigurableSettings.class);
+                } catch (IOException e) {
+                    LOGGER.error("Could not load configurable settings", e);
+                    return;
+                }
+
+                String configName = settings.name();
+                String sourceSet = settings.sourceSet();
+
+                if(WRAPPERS.containsKey(configName)) {
+                    Map<String, ConfigurableWrapper> wrappers = WRAPPERS.get(configName);
+                    if(wrappers.containsKey(sourceSet)) {
+                        throw new IllegalStateException("Conflicting config name \"%s\" for source set \"%s\" found in \"%s\"".formatted(configName, sourceSet, sourceSetSetting));
+                    }
+                }
+
+                try {
+                    ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
+                    WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
+                    addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
+                    if(settings.hasScreenFactory() && !Platform.isServer()) {
+                        addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
+                    }
+                } catch (IllegalStateException e) {
+                    LOGGER.error("Could not create configurable wrapper for \"%s\"".formatted(configName), e);
+                }
+            }
+            //?}
         });
         WRAPPERS.values().forEach(sourceSetWrappers -> sourceSetWrappers.values().forEach(wrapper -> {
             wrapper.loadConfig();

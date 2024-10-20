@@ -34,13 +34,13 @@ public interface ConfigurableApi {
     }
 
     //? if !fabric {
-    /**
+    /*/^*
      * The name of the config this API impl belongs to, this is necessary for non-fabric implementations
      * <br>
      * <b>THIS DOES NOT SET THE NAME OF THE CONFIG</b>
-     */
+     ^/
     default String getConfigName() {
         throw new UnsupportedOperationException();
     }
-    //?}
+    *///?}
 }
