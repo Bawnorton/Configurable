@@ -3,7 +3,7 @@ package com.bawnorton.configurable.client.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 
 //? if fabric {
-import com.bawnorton.configurable.ConfigurableMain;
+/*import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.load.ConfigurableWrapper;
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
@@ -25,10 +25,10 @@ public abstract class ModMenuMixin {
 
     @Shadow @Final private static List<ModMenuApi> apiImplementations;
     //?} else {
-    /*@Shadow private static Map<String, ConfigScreenFactory<?>> configScreenFactories;
+    /^@Shadow private static Map<String, ConfigScreenFactory<?>> configScreenFactories;
 
     @Shadow private static List<Map<String, ConfigScreenFactory<?>>> delayedScreenFactoryProviders;
-    *///?}
+    ^///?}
 
 
     @Inject(
@@ -59,14 +59,14 @@ public abstract class ModMenuMixin {
             //? if >=1.21 {
             apiImplementations.add(api);
             //?} else {
-            /*delayedScreenFactoryProviders.add(api.getProvidedConfigScreenFactories());
-            *///?}
+            /^delayedScreenFactoryProviders.add(api.getProvidedConfigScreenFactories());
+            ^///?}
         }));
     }
 }
-//?} else {
-/*import com.bawnorton.configurable.client.ConfigurableClient;
+*///?} else {
+import com.bawnorton.configurable.client.ConfigurableClient;
 
 @Mixin(ConfigurableClient.class)
 public abstract class ModMenuMixin {}
-*///?}
+//?}

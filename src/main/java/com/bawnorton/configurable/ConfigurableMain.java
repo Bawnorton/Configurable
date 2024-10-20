@@ -15,8 +15,11 @@ import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +27,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public final class ConfigurableMain {
     public static final String MOD_ID = "configurable";
@@ -45,46 +50,48 @@ public final class ConfigurableMain {
         Networking.init();
 
         Platform.forEachJar(path -> {
-            Path configurable = path.resolve("configurable");
-            if (!(Files.exists(configurable) && Files.isDirectory(configurable))) return;
-
             List<Path> sourceSetSettings = new ArrayList<>();
-            try (Stream<Path> stream = Files.list(configurable)) {
-                stream.filter(Files::isRegularFile).forEach(sourceSetSettings::add);
-            } catch (IOException e) {
-                ConfigurableMain.LOGGER.error("Could not find configurable settings", e);
-            }
+            try (ZipFile zipFile = new ZipFile(path.toFile())) {
+                zipFile.stream()
+                        .filter(entry -> entry.getName().startsWith("configurable/") && !entry.isDirectory())
+                        .forEach(entry -> {
+                            Path filePath = Paths.get(entry.getName());
+                            sourceSetSettings.add(filePath);
+                        });
+                for (Path sourceSetSetting : sourceSetSettings) {
+                    ConfigurableSettings settings;
+                    try {
+                        try (InputStream is = zipFile.getInputStream(zipFile.getEntry(sourceSetSetting.toString()))) {
+                            settings = GSON.fromJson(new InputStreamReader(is), ConfigurableSettings.class);
+                        }
+                    } catch (IOException e) {
+                        LOGGER.error("Could not load configurable settings", e);
+                        return;
+                    }
 
-            for(Path sourceSetSetting : sourceSetSettings) {
-                ConfigurableSettings settings;
-                try {
-                    settings = GSON.fromJson(Files.newBufferedReader(sourceSetSetting), ConfigurableSettings.class);
-                } catch (IOException e) {
-                    LOGGER.error("Could not load configurable settings", e);
-                    return;
-                }
+                    String configName = settings.name();
+                    String sourceSet = settings.sourceSet();
 
-                String configName = settings.name();
-                String sourceSet = settings.sourceSet();
+                    if(WRAPPERS.containsKey(configName)) {
+                        Map<String, ConfigurableWrapper> wrappers = WRAPPERS.get(configName);
+                        if(wrappers.containsKey(sourceSet)) {
+                            throw new IllegalStateException("Conflicting config name \"%s\" for source set \"%s\" found in \"%s\"".formatted(configName, sourceSet, sourceSetSetting));
+                        }
+                    }
 
-                if(WRAPPERS.containsKey(configName)) {
-                    Map<String, ConfigurableWrapper> wrappers = WRAPPERS.get(configName);
-                    if(wrappers.containsKey(sourceSet)) {
-                        throw new IllegalStateException("Conflicting config name \"%s\" for source set \"%s\" found in \"%s\"".formatted(configName, sourceSet, sourceSetSetting));
+                    try {
+                        ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
+                        WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
+                        addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
+                        if(settings.hasScreenFactory() && !Platform.isServer()) {
+                            addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
+                        }
+                    } catch (IllegalStateException e) {
+                        LOGGER.error("Could not create configurable wrapper for \"%s\"".formatted(configName), e);
                     }
                 }
+            } catch (IOException ignored) {}
 
-                try {
-                    ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
-                    WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
-                    addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
-                    if(settings.hasScreenFactory() && !Platform.isServer()) {
-                        addToWrapped(settings::fullyQualifiedScreenFactory, wrapper::setScreenFactory, configName);
-                    }
-                } catch (IllegalStateException e) {
-                    LOGGER.error("Could not create configurable wrapper for \"%s\"".formatted(configName), e);
-                }
-            }
         });
         WRAPPERS.values().forEach(sourceSetWrappers -> sourceSetWrappers.values().forEach(wrapper -> {
             wrapper.loadConfig();

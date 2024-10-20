@@ -97,6 +97,11 @@ public final class ConfigLoader implements GeneratedConfigLoader<Config> {
             try {
                 GsonReader reader = new GsonReader(JsonReader.json5(Files.newBufferedReader(loadingPath)));
                 JsonObject config = GSON.fromJson(reader, JsonObject.class);
+                if(config == null) {
+                    ConfigurableMain.LOGGER.warn("No config \\"<file_name>\\" found, using default");
+                    return new Config();
+                }
+                
                 Config parsed = parseConfig(config, true);
                 
                 if(usingLegacyConfig) {

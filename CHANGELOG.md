@@ -1,3 +1,8 @@
+# 2.1.1
+
+- Use zip reader for more reliable config reading
+- Properly fallback to default when no config is found
+
 # 2.1.0
 
 - Add custom controller support
