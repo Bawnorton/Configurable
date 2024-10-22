@@ -1,3 +1,7 @@
+# 2.1.3
+
+- Fix config failing to be located on windows
+
 # 2.1.1
 
 - Use zip reader for more reliable config reading

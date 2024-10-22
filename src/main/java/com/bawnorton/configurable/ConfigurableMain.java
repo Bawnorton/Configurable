@@ -51,18 +51,20 @@ public final class ConfigurableMain {
 
         Platform.forEachJar(path -> {
             //? if neoforge {
-            /*List<Path> sourceSetSettings = new ArrayList<>();
+            List<String> sourceSetSettings = new ArrayList<>();
             try (ZipFile zipFile = new ZipFile(path.toFile())) {
                 zipFile.stream()
                         .filter(entry -> entry.getName().startsWith("configurable/") && !entry.isDirectory())
-                        .forEach(entry -> {
-                            Path filePath = Paths.get(entry.getName());
-                            sourceSetSettings.add(filePath);
-                        });
-                for (Path sourceSetSetting : sourceSetSettings) {
+                        .forEach(entry -> sourceSetSettings.add(entry.getName()));
+                for (String sourceSetSetting : sourceSetSettings) {
                     ConfigurableSettings settings;
                     try {
-                        try (InputStream is = zipFile.getInputStream(zipFile.getEntry(sourceSetSetting.toString()))) {
+                        ZipEntry entry = zipFile.getEntry(sourceSetSetting);
+                        if(entry == null) {
+                            LOGGER.warn("Could not find configurable setting {} in {}", sourceSetSetting, path);
+                            continue;
+                        }
+                        try (InputStream is = zipFile.getInputStream(entry)) {
                             settings = GSON.fromJson(new InputStreamReader(is), ConfigurableSettings.class);
                         }
                     } catch (IOException e) {
@@ -92,8 +94,8 @@ public final class ConfigurableMain {
                     }
                 }
             } catch (IOException ignored) {}
-            *///?} else {
-            Path configurable = path.resolve("configurable");
+            //?} else {
+            /*Path configurable = path.resolve("configurable");
             if (!(Files.exists(configurable) && Files.isDirectory(configurable))) return;
 
             List<Path> sourceSetSettings = new ArrayList<>();
@@ -133,7 +135,7 @@ public final class ConfigurableMain {
                     LOGGER.error("Could not create configurable wrapper for \"%s\"".formatted(configName), e);
                 }
             }
-            //?}
+            *///?}
         });
         WRAPPERS.values().forEach(sourceSetWrappers -> sourceSetWrappers.values().forEach(wrapper -> {
             wrapper.loadConfig();
