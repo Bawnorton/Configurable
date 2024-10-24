@@ -84,6 +84,8 @@ public final class ConfigurableMain {
 
                     try {
                         ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
+                        if(wrapper.isClientOnly() && Platform.isServer()) return;
+
                         WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
                         addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
                         if(settings.hasScreenFactory() && !Platform.isServer()) {
@@ -126,6 +128,8 @@ public final class ConfigurableMain {
 
                 try {
                     ConfigurableWrapper wrapper = new ConfigurableWrapper(ConfigurableApiImplLoader.getImpl(configName));
+                    if(wrapper.isClientOnly() && Platform.isServer()) return;
+
                     WRAPPERS.computeIfAbsent(configName, k -> new HashMap<>()).put(sourceSet, wrapper);
                     addToWrapped(settings::fullyQualifiedLoader, wrapper::setLoader, configName);
                     if(settings.hasScreenFactory() && !Platform.isServer()) {

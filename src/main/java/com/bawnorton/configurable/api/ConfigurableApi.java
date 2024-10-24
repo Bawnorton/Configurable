@@ -33,6 +33,10 @@ public interface ConfigurableApi {
         return FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES;
     }
 
+    default boolean clientOnly() {
+        return false;
+    }
+
     //? if !fabric {
     /**
      * The name of the config this API impl belongs to, this is necessary for non-fabric implementations

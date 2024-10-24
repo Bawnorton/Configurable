@@ -1,3 +1,7 @@
+# 2.2.0
+
+- Add option to specify if a config should only be loaded on the client
+
 # 2.1.3
 
 - Fix config failing to be located on windows

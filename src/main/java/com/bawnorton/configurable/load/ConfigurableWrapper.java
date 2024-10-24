@@ -75,6 +75,10 @@ public final class ConfigurableWrapper {
         return screenFactory != null;
     }
 
+    public boolean isClientOnly() {
+        return apiImpl.clientOnly();
+    }
+
     public void loadConfig() {
         lastLoadedConfig = loader.loadConfig(apiImpl::beforeLoad);
         lastLoadedConfig = apiImpl.afterLoad(lastLoadedConfig);
