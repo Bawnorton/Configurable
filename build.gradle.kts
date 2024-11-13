@@ -140,7 +140,7 @@ if (loader.isNeoForge) {
         })
         neoForge("net.neoforged:neoforge:${loader.getVersion()}")
 
-        include(modImplementation("org.sinytra.forgified-fabric-api:fabric-networking-api-v1:4.2.2+247fd407d1")!!)
+        modImplementation("org.sinytra.forgified-fabric-api:fabric-networking-api-v1:${property("ffapi_networking")}")
     }
 
     tasks {

@@ -10,9 +10,9 @@ public final class SourceProviders {
 
     public static void registerDefaultSourceProviders() {
         //? if fabric
-        /*registerSourceProvider(FabricSourceProvider::new);*/
+        registerSourceProvider(FabricSourceProvider::new);
         //? if neoforge
-        registerSourceProvider(NeoForgeSourceProvider::new);
+        /*registerSourceProvider(NeoForgeSourceProvider::new);*/
     }
 
     public static void registerSourceProvider(SourceProviderFactory factory) {

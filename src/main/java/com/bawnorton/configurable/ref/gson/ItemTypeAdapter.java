@@ -24,9 +24,13 @@ public class ItemTypeAdapter implements JsonSerializer<Item>, JsonDeserializer<I
             *///?} else {
             Identifier id = Identifier.of(itemName);
             //?}
-            return Registries.ITEM.getOrEmpty(id).orElse(Items.AIR);
+            //? if >1.21.2 {
+            return Registries.ITEM.getOptionalValue(id).orElse(Items.AIR);
+            //?} else {
+            /*return Registries.ITEM.getOrEmpty(id).orElse(Items.AIR);
+            *///?}
         } catch (Exception e) {
-            ConfigurableMain.LOGGER.warn("Failed to parse item from json: \"%s\"".formatted(json));
+            ConfigurableMain.LOGGER.warn("Failed to parse item from json: \"{}\"", json);
             return Items.AIR;
         }
     }

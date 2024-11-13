@@ -1,3 +1,11 @@
+# 2.2.2
+
+- Support 1.21.3
+
+# 2.2.1
+
+- Remove FFAPI inclusion and add dep
+
 # 2.2.0
 
 - Add option to specify if a config should only be loaded on the client

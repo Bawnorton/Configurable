@@ -23,5 +23,10 @@ config = "${mod_id}-client.mixins.json"
 modId = "minecraft"
 type = "required"
 versionRange = "${minecraft_dependency}"
-ordering = "NONE"
-side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "fabric_api"
+type = "required"
+versionRange = "*"
+reason = "This is Forgified Fabric API"
+referralUrl = "https://modrinth.com/mod/forgified-fabric-api"
