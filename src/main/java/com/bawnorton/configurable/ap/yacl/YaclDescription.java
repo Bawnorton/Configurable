@@ -24,9 +24,6 @@ public abstract class YaclDescription extends YaclElement {
 
     @Override
     protected String getSpec(int depth) {
-        if (image == null && text instanceof YaclDescriptionText) {
-            return "OptionDescription.of(%s)".formatted(text.getSpec(depth + 1));
-        }
         StringBuilder spec = new StringBuilder();
         spec.append(getBuilderSpec());
         spec.append("\n%1$s.text(%2$s)".formatted(

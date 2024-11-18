@@ -1,3 +1,7 @@
+# 2.2.3
+
+- Fix yacl descriptioner generating the incorrect signature when an image isn't present
+
 # 2.2.2
 
 - Support 1.21.3
