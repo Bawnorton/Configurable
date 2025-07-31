@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" factoryName="Application" name="Fabric Client 1.21.1" type="Application">
+    <option name="MAIN_CLASS_NAME" value="net.fabricmc.devlaunchinjector.Main"/>
+    <module name="Trimica.1.21.1-fabric.main"/>
+    <option name="PROGRAM_PARAMETERS" value="--username=Bawnorton --uuid=17c06cab-bf05-4ade-a8d6-ed14aaf70545"/>
+    <option name="VM_PARAMETERS" value="-Dfabric.dli.config=/Users/bawnorton/Developer/Minecraft/Modding/Configurable/versions/1.21.1-fabric/.gradle/loom-cache/launch.cfg -Dfabric.dli.env=client -javaagent:/Users/bawnorton/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.5+mixin.0.8.7/22f9eb729e216a091673a574a5906dc1b9027fb3/sponge-mixin-0.15.5+mixin.0.8.7.jar -XX:+AllowEnhancedClassRefinition -Dmixin.hotSwap=true -Dmixin.debug.export=true -XstartOnFirstThread -XstartOnFirstThread -XstartOnFirstThread -XstartOnFirstThread -Dfabric.dli.main=net.fabricmc.loader.impl.launch.knot.KnotClient"/>
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/versions/1.21.1-fabric/../../run/"/>
+    <method v="2">
+      <option enabled="true" name="Make"/>
+    </method>
+    <envs>
+      
+    </envs>
+    <shortenClasspath name="ARGS_FILE"/>
+  <classpathModifications/></configuration>
+</component>

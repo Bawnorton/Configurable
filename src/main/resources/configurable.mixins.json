@@ -1,0 +1,9 @@
+{
+  "package": "com.bawnorton.configurable.mixin",
+  "required": true,
+  "minVersion": "0.8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "compatibilityLevel": "JAVA_17"
+}
