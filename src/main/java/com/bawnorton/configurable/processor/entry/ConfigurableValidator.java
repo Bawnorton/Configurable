@@ -42,7 +42,7 @@ public class ConfigurableValidator {
         this.max = max;
     }
 
-    public static ConfigurableValidator fromConfigurableElement(String name, ConfigurableElement configurableElement, ProcessingEnvironment processingEnv) {
+    public static ConfigurableValidator fromConfigurableElement(String fieldName, ConfigurableElement configurableElement, ProcessingEnvironment processingEnv) {
         Double min = configurableElement.isMinSet() ? configurableElement.getMin() : null;
         Double max = configurableElement.isMaxSet() ? configurableElement.getMax() : null;
         boolean isNumeric = configurableElement.isNumeric();
@@ -124,14 +124,14 @@ public class ConfigurableValidator {
         if(maybeMessageMethod.isEmpty()) {
             if(isNumeric) {
                 if(min != null) {
-                    messageLiteral = "Value for '%s' must be greater than or equal to '%s'".formatted(name, min);
+                    messageLiteral = "Value for '%s' must be greater than or equal to '%s'".formatted(fieldName, min);
                 } else if(max != null) {
-                    messageLiteral = "Value for '%s' must be less than or equal to '%s'".formatted(name, max);
+                    messageLiteral = "Value for '%s' must be less than or equal to '%s'".formatted(fieldName, max);
                 } else {
-                    messageLiteral = "Value for '%s' must be a number".formatted(name);
+                    messageLiteral = "Value for '%s' must be a number".formatted(fieldName);
                 }
             } else {
-                messageLiteral = "Value for '%s' is invalid".formatted(name);
+                messageLiteral = "Value for '%s' is invalid".formatted(fieldName);
             }
             if(fallback) {
                 messageLiteral += ". Resetting to default value: '%s'".formatted(defaultValue);

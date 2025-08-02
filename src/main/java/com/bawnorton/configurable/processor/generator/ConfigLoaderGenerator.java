@@ -63,7 +63,7 @@ public class ConfigLoaderGenerator {
         ));
         FieldSpec.Builder fieldBuilder = FieldSpec.builder(
                 fieldReferenceType,
-                entry.getName(),
+                entry.getReferenceName(),
                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL
         );
         CodeBlock.Builder initalizerBuilder = CodeBlock.builder();

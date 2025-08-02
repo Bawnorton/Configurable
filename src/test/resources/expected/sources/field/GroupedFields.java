@@ -15,15 +15,15 @@ import sources.field.GroupedFields;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<Integer> FIELD = FieldReference.builder(value -> GroupedFields.field = value, () -> GroupedFields.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).group("abc").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD' must be a number. Resetting to default value: '42'").fallback(true).defaultSupplier(() -> 42).build()).build();
+    public static final FieldReference<Integer> abc_def_field2 = FieldReference.builder(value -> GroupedFields.field2 = value, () -> GroupedFields.field2, new GenericHolder(Integer.class), "FIELD2").doesSync(true).group("abc.def").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD2' must be a number. Resetting to default value: '43'").fallback(true).defaultSupplier(() -> 43).build()).build();
 
-    public static final FieldReference<Integer> FIELD2 = FieldReference.builder(value -> GroupedFields.field2 = value, () -> GroupedFields.field2, new GenericHolder(Integer.class), "FIELD2").doesSync(true).group("abc.def").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD2' must be a number. Resetting to default value: '43'").fallback(true).defaultSupplier(() -> 43).build()).build();
+    public static final FieldReference<Integer> abc_def_ghi_field3 = FieldReference.builder(value -> GroupedFields.field3 = value, () -> GroupedFields.field3, new GenericHolder(Integer.class), "FIELD3").doesSync(true).group("abc.def.ghi").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD3' must be a number. Resetting to default value: '44'").fallback(true).defaultSupplier(() -> 44).build()).build();
 
-    public static final FieldReference<Integer> FIELD3 = FieldReference.builder(value -> GroupedFields.field3 = value, () -> GroupedFields.field3, new GenericHolder(Integer.class), "FIELD3").doesSync(true).group("abc.def.ghi").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD3' must be a number. Resetting to default value: '44'").fallback(true).defaultSupplier(() -> 44).build()).build();
+    public static final FieldReference<Integer> abc_def_ghi_jkl_mno_field5 = FieldReference.builder(value -> GroupedFields.field5 = value, () -> GroupedFields.field5, new GenericHolder(Integer.class), "FIELD5").doesSync(true).group("abc.def.ghi.jkl.mno").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD5' must be a number. Resetting to default value: '46'").fallback(true).defaultSupplier(() -> 46).build()).build();
 
-    public static final FieldReference<Integer> FIELD4 = FieldReference.builder(value -> GroupedFields.field4 = value, () -> GroupedFields.field4, new GenericHolder(Integer.class), "FIELD4").doesSync(true).group("abc").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD4' must be a number. Resetting to default value: '45'").fallback(true).defaultSupplier(() -> 45).build()).build();
+    public static final FieldReference<Integer> abc_field = FieldReference.builder(value -> GroupedFields.field = value, () -> GroupedFields.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).group("abc").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD' must be a number. Resetting to default value: '42'").fallback(true).defaultSupplier(() -> 42).build()).build();
 
-    public static final FieldReference<Integer> FIELD5 = FieldReference.builder(value -> GroupedFields.field5 = value, () -> GroupedFields.field5, new GenericHolder(Integer.class), "FIELD5").doesSync(true).group("abc.def.ghi.jkl.mno").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD5' must be a number. Resetting to default value: '46'").fallback(true).defaultSupplier(() -> 46).build()).build();
+    public static final FieldReference<Integer> abc_field4 = FieldReference.builder(value -> GroupedFields.field4 = value, () -> GroupedFields.field4, new GenericHolder(Integer.class), "FIELD4").doesSync(true).group("abc").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD4' must be a number. Resetting to default value: '45'").fallback(true).defaultSupplier(() -> 45).build()).build();
 
     @Override
     public String getName() {
@@ -37,19 +37,19 @@ public final class GeneratedConfigLoader implements ConfigLoader {
 
     @Override
     public void load() {
-        FIELD.load();
-        FIELD2.load();
-        FIELD3.load();
-        FIELD4.load();
-        FIELD5.load();
+        abc_def_field2.load();
+        abc_def_ghi_field3.load();
+        abc_def_ghi_jkl_mno_field5.load();
+        abc_field.load();
+        abc_field4.load();
     }
 
     @Override
     public void save() {
-        FIELD.save();
-        FIELD2.save();
-        FIELD3.save();
-        FIELD4.save();
-        FIELD5.save();
+        abc_def_field2.save();
+        abc_def_ghi_field3.save();
+        abc_def_ghi_jkl_mno_field5.save();
+        abc_field.save();
+        abc_field4.save();
     }
 }

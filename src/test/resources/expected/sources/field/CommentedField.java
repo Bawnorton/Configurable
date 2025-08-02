@@ -15,7 +15,7 @@ import sources.field.CommentedField;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<Integer> FIELD = FieldReference.builder(value -> CommentedField.field = value, () -> CommentedField.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).comment(" A single field annotated with @Configurable.\n"
+    public static final FieldReference<Integer> field = FieldReference.builder(value -> CommentedField.field = value, () -> CommentedField.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).comment(" A single field annotated with @Configurable.\n"
                                                                                                                                                                                                                     + " Default value is 42.\n").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD' must be a number. Resetting to default value: '42'").fallback(true).defaultSupplier(() -> 42).build()).build();
 
     @Override
@@ -30,11 +30,11 @@ public final class GeneratedConfigLoader implements ConfigLoader {
 
     @Override
     public void load() {
-        FIELD.load();
+        field.load();
     }
 
     @Override
     public void save() {
-        FIELD.save();
+        field.save();
     }
 }

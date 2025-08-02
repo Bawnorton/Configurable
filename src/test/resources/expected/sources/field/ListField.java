@@ -16,7 +16,7 @@ import sources.field.ListField;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<List<Integer>> LIST_FIELD = FieldReference.builder(value -> ListField.listField = value, () -> ListField.listField, new GenericHolder(List.class, Integer.class), "LIST_FIELD").doesSync(true).validator(ValidatorReference.<List<Integer>>builder().messageProvider(ignored -> "Value for 'LIST_FIELD' is invalid. Resetting to default value: 'List.of(1, 2, 3, 4, 5)'").fallback(true).defaultSupplier(() -> List.of(1, 2, 3, 4, 5)).build()).build();
+    public static final FieldReference<List<Integer>> listField = FieldReference.builder(value -> ListField.listField = value, () -> ListField.listField, new GenericHolder(List.class, Integer.class), "LIST_FIELD").doesSync(true).validator(ValidatorReference.<List<Integer>>builder().messageProvider(ignored -> "Value for 'LIST_FIELD' is invalid. Resetting to default value: 'List.of(1, 2, 3, 4, 5)'").fallback(true).defaultSupplier(() -> List.of(1, 2, 3, 4, 5)).build()).build();
 
     @Override
     public String getName() {
@@ -30,11 +30,11 @@ public final class GeneratedConfigLoader implements ConfigLoader {
 
     @Override
     public void load() {
-        LIST_FIELD.load();
+        listField.load();
     }
 
     @Override
     public void save() {
-        LIST_FIELD.save();
+        listField.save();
     }
 }

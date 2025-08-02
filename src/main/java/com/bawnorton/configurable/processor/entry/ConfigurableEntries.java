@@ -29,7 +29,8 @@ public class ConfigurableEntries implements Iterable<ConfigurableEntry> {
             if (configurableElement == null) continue;
 
             String configEntryName = configurableElement.getConfigurableName(settings);
-            if (!existingNames.add(configEntryName)) {
+            String referenceFieldName = configurableElement.getGroup().replace("\\.", "_") + "_" + configEntryName;
+            if (!existingNames.add(referenceFieldName)) {
                 processingEnv.getMessager().printError("Duplicate configurable entry name '%s' found in class '%s'. Each entry must have a unique name.".formatted(configEntryName, element.getEnclosingElement().getSimpleName()), element);
                 continue;
             }

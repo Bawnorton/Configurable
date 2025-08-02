@@ -42,6 +42,16 @@ public class ConfigurableEntry {
         return annotatedElement.getSimpleName().toString();
     }
 
+    public String getReferenceName() {
+        String group = getGroup();
+        String name = getFieldName();
+        if (group.isEmpty()) {
+            return name;
+        } else {
+            return "%s_%s".formatted(group.replaceAll("\\.", "_"), name);
+        }
+    }
+
     public boolean doesSync() {
         return sync;
     }

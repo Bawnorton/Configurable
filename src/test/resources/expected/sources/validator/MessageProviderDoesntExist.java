@@ -15,7 +15,7 @@ import sources.validator.MessageProviderDoesntExist;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<Integer> FIELD = FieldReference.builder(value -> MessageProviderDoesntExist.field = value, () -> MessageProviderDoesntExist.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "nonExistentMessageProvider").fallback(true).defaultSupplier(() -> 42).build()).build();
+    public static final FieldReference<Integer> field = FieldReference.builder(value -> MessageProviderDoesntExist.field = value, () -> MessageProviderDoesntExist.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "nonExistentMessageProvider").fallback(true).defaultSupplier(() -> 42).build()).build();
 
     @Override
     public String getName() {
@@ -29,11 +29,11 @@ public final class GeneratedConfigLoader implements ConfigLoader {
 
     @Override
     public void load() {
-        FIELD.load();
+        field.load();
     }
 
     @Override
     public void save() {
-        FIELD.save();
+        field.save();
     }
 }
