@@ -2,11 +2,19 @@ package com.bawnorton.configurable.io;
 
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.reference.FieldReference;
-import com.bawnorton.configurable.util.GenericHolder;
+import com.bawnorton.configurable.reference.validator.FieldValidator;
+import com.bawnorton.configurable.util.GenericType;
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.file.FileNotFoundAction;
+import com.electronwill.nightconfig.core.io.IndentStyle;
+import com.electronwill.nightconfig.core.io.ParsingException;
+import com.electronwill.nightconfig.core.io.WritingException;
+import com.electronwill.nightconfig.core.io.WritingMode;
+import com.electronwill.nightconfig.toml.TomlFormat;
+import com.electronwill.nightconfig.toml.TomlParser;
+import com.electronwill.nightconfig.toml.TomlWriter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.moandjiezana.toml.Toml;
-import com.moandjiezana.toml.TomlWriter;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.JsonWriter;
 import org.quiltmc.parsers.json.gson.GsonReader;
@@ -47,6 +55,21 @@ public class SaveLoader {
             case JSON -> loadJson();
             case TOML -> loadToml();
         }
+
+        toBeLoaded.clear();
+    }
+
+    public void save() {
+        if (toBeSaved.isEmpty()) return;
+
+        toBeSaved.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
+
+        switch (fileType) {
+            case JSON -> saveJson();
+            case TOML -> saveToml();
+        }
+
+        toBeSaved.clear();
     }
 
     private void loadJson() {
@@ -59,12 +82,13 @@ public class SaveLoader {
                     continue;
                 }
 
-                Object value = Interpreter.interpret(element, ref.genericHolder());
+                Object value = Interpreter.interpret(element, ref.genericType());
                 if (value == null) {
                     handleInvalidValue(ref, null);
                     continue;
                 }
-                if (!ref.validator().fieldValidator().isValid(value)) {
+                FieldValidator<Object> validator = ref.validator().fieldValidator();
+                if (validator != null && !validator.isValid(value)) {
                     handleInvalidValue(ref, value);
                     continue;
                 }
@@ -78,7 +102,7 @@ public class SaveLoader {
 
     private JsonElement extractFieldFromJsonTree(JsonElement current, String group, String name) {
         JsonElement node = current;
-        if (!group.isBlank()) {
+        if (group != null) {
             for (String part : group.split("\\.")) {
                 node = node.getAsJsonObject().get(part);
                 if (node == null || !node.isJsonObject()) return null;
@@ -92,24 +116,25 @@ public class SaveLoader {
     }
 
     private void loadToml() {
-        Toml toml = new Toml();
         try {
-            toml.read(Files.newBufferedReader(configPath));
+            TomlParser tomlParser = new TomlParser();
+            CommentedConfig parsed = tomlParser.parse(configPath, FileNotFoundAction.CREATE_EMPTY);
             for (FieldReference<Object> ref : toBeLoaded) {
-                GenericHolder expectedType = ref.genericHolder();
-                String coordinate = ref.group().isBlank() ? ref.name() : "%s.%s".formatted(ref.group(), ref.name());
-                Object value = Interpreter.interpret(toml, coordinate, expectedType);
+                GenericType expectedType = ref.genericType();
+                String coordinate = ref.group() == null ? ref.name() : "%s.%s".formatted(ref.group(), ref.name());
+                Object value = Interpreter.interpret(parsed, coordinate, expectedType);
                 if (value == null) {
                     handleMissingValue(ref);
                     continue;
                 }
-                if (!ref.validator().fieldValidator().isValid(value)) {
+                FieldValidator<Object> validator = ref.validator().fieldValidator();
+                if (validator != null && !validator.isValid(value)) {
                     handleInvalidValue(ref, value);
                     continue;
                 }
                 ref.set(value);
             }
-        } catch (IOException e) {
+        } catch (ParsingException | ClassCastException e) {
             ConfigurableMain.LOGGER.error("Failed to load TOML config from '{}'", configPath.getFileName(), e);
         }
     }
@@ -131,23 +156,21 @@ public class SaveLoader {
         }
     }
 
-    public void save() {
-        if (toBeSaved.isEmpty()) return;
-
-        toBeSaved.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
-
-        switch (fileType) {
-            case JSON -> saveJson();
-            case TOML -> saveToml();
-        }
-    }
-
     private void saveJson() {
+        if (!Files.exists(configPath)) {
+            try {
+                Files.createDirectories(configPath.getParent());
+                Files.createFile(configPath);
+            } catch (IOException e) {
+                ConfigurableMain.LOGGER.error("Failed to create JSON config file '{}'", configPath.getFileName(), e);
+                return;
+            }
+        }
         try (JsonWriter writer = JsonWriter.json5(configPath)) {
             writer.beginObject();
             String currentGroup = null;
             for (FieldReference<Object> ref : toBeSaved) {
-                if(!ref.comment().isBlank()) {
+                if(ref.comment() != null) {
                     writer.comment(ref.comment());
                 }
                 currentGroup = changeGroupPath(writer, ref.group(), currentGroup);
@@ -187,6 +210,7 @@ public class SaveLoader {
                 case String str -> writer.value(str);
                 case Number n -> writer.value(n);
                 case Boolean b -> writer.value(b);
+                case Character c -> writer.value(String.valueOf(c));
                 default -> throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName());
             }
         }
@@ -236,11 +260,23 @@ public class SaveLoader {
     }
 
     private void saveToml() {
-        TomlWriter tomlWriter = new TomlWriter();
-//        try {
-//            //TODO
-//        } catch (IOException e) {
-//            ConfigurableMain.LOGGER.error("Failed to save TOML config to '{}'", configPath.getFileName(), e);
-//        }
+        try {
+            TomlWriter tomlWriter = new TomlWriter();
+            tomlWriter.setIndent(IndentStyle.TABS);
+            CommentedConfig config = TomlFormat.newConfig();
+            for (FieldReference<Object> ref : toBeSaved) {
+                String path = ref.group() == null ? ref.name() : "%s.%s".formatted(ref.group(), ref.name());
+                if (ref.comment() != null) {
+                    config.setComment(path, ref.comment());
+                }
+                Object value = Interpreter.safeForToml(ref.get());
+                if (value != null) {
+                    config.set(path, value);
+                }
+            }
+            tomlWriter.write(config.unmodifiable(), configPath, WritingMode.REPLACE);
+        } catch (WritingException e) {
+            ConfigurableMain.LOGGER.error("Failed to save TOML config to '{}'", configPath.getFileName(), e);
+        }
     }
 }

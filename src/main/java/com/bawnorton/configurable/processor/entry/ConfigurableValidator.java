@@ -9,6 +9,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -55,22 +56,41 @@ public class ConfigurableValidator {
             processingEnv.getMessager().printError("Maximum value '%s' for '%s' is less than minimum value '%s'".formatted(max, configurableElement.getElementName(), min), annotatedElement);
             return null;
         }
-        String defaultValue = configurableElement.getDefaultValue();
+        String defaultValue = configurableElement.getRightHandSide();
         if (isNumeric) {
-            double asDouble;
-            try {
-                asDouble = Double.parseDouble(defaultValue);
-            } catch (NumberFormatException e) {
-                processingEnv.getMessager().printError("Default value '%s' for '%s' is not a valid number".formatted(defaultValue, configurableElement.getElementName()), annotatedElement);
-                return null;
+            if (defaultValue.equals("null")) {
+                TypeMirror fieldType = annotatedElement.asType();
+                if (fieldType.getKind().isPrimitive()) {
+                    processingEnv.getMessager().printError("Default value for '%s' cannot be null because it is a primitive type".formatted(configurableElement.getElementName()), annotatedElement);
+                    return null;
+                }
+            } else {
+                String asLower = defaultValue.toLowerCase();
+                if (asLower.endsWith("d") || asLower.endsWith("f") || asLower.endsWith("l")) {
+                    asLower = asLower.substring(0, asLower.length() - 1);
+                }
+                double asDouble;
+                try {
+                    asDouble = Double.parseDouble(asLower);
+                } catch (NumberFormatException e) {
+                    processingEnv.getMessager().printError("Default value '%s' for '%s' is not a valid number".formatted(defaultValue, configurableElement.getElementName()), annotatedElement);
+                    return null;
+                }
+                if (min != null && asDouble < min) {
+                    processingEnv.getMessager().printError("Default value '%s' for '%s' is less than the minimum value of '%s'".formatted(defaultValue, configurableElement.getElementName(), min), annotatedElement);
+                    return null;
+                }
+                if (max != null && asDouble > max) {
+                    processingEnv.getMessager().printError("Default value '%s' for '%s' is greater than the maximum value of '%s'".formatted(defaultValue, configurableElement.getElementName(), max), annotatedElement);
+                    return null;
+                }
             }
-            if (min != null && asDouble < min) {
-                processingEnv.getMessager().printError("Default value '%s' for '%s' is less than the minimum value of '%s'".formatted(defaultValue, configurableElement.getElementName(), min), annotatedElement);
-                return null;
-            }
-            if (max != null && asDouble > max) {
-                processingEnv.getMessager().printError("Default value '%s' for '%s' is greater than the maximum value of '%s'".formatted(defaultValue, configurableElement.getElementName(), max), annotatedElement);
-                return null;
+        } else {
+            TypeMirror fieldType = annotatedElement.asType();
+            if (fieldType instanceof ArrayType arrayType) {
+                TypeMirror componentType = arrayType.getComponentType();
+                String componentTypeName = processingEnv.getTypeUtils().erasure(componentType).toString();
+                defaultValue = "new %s[]%s".formatted(componentTypeName, defaultValue);
             }
         }
 

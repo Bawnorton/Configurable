@@ -6,6 +6,7 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
+import java.io.InputStream;
 
 public class ConfigurableTestHelper {
     public static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableTestHelper.class);
@@ -13,7 +14,11 @@ public class ConfigurableTestHelper {
     private static final String LOADER = /*? if fabric {*/ "Fabric" /*?} elif neoforge {*/ /*"NeoForge" *//*?}*/;
 
     public static void logModule() {
-        LOGGER.info(() -> "%s %s".formatted(LOADER, VERSION));
+        LOGGER.info(ConfigurableTestHelper::getModuleName);
+    }
+
+    public static String getModuleName() {
+        return "%s-%s".formatted(VERSION, LOADER.toLowerCase());
     }
 
     public static Pair<JavaFileObject, JavaFileObject> getSourceAndExpected(String resourceName) {

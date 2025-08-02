@@ -11,7 +11,7 @@ import com.google.testing.compile.JavaFileObjects;
 import javax.tools.JavaFileObject;
 
 public abstract class BaseTest {
-    protected static void testCompilationSuccess(String resourceName) {
+    protected static Compilation testCompilationSuccess(String resourceName) {
         Compiler compiler = CompilationHelper.newCompiler();
 
         Pair<JavaFileObject, JavaFileObject> sourceAndExpected = ConfigurableTestHelper.getSourceAndExpected(resourceName);
@@ -22,6 +22,7 @@ public abstract class BaseTest {
 
         JavaFileObject expectedFile = sourceAndExpected.second();
         CompilationSubject.assertThat(compilation).generatedSourceFile(ConfigurableTestHelper.getConfigLoaderName()).hasSourceEquivalentTo(expectedFile);
+        return compilation;
     }
 
     protected static void testCompilationFailure(String resourceName) {

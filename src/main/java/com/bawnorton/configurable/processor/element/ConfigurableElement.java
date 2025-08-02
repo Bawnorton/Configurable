@@ -19,16 +19,16 @@ public class ConfigurableElement {
     private final Element annotatedElement;
     private final String elementName;
     private final boolean isNumeric;
-    private final String defaultValue;
+    private final String rightHandSide;
     private final String comment;
     private final Configurable configurable;
     private final AnnotationMirror validatorMirror;
 
-    public ConfigurableElement(Element annotatedElement, String elementName, boolean isNumeric, String defaultValue, String comment, Configurable configurable, AnnotationMirror validatorMirror) {
+    public ConfigurableElement(Element annotatedElement, String elementName, boolean isNumeric, String rightHandSide, String comment, Configurable configurable, AnnotationMirror validatorMirror) {
         this.annotatedElement = annotatedElement;
         this.elementName = elementName;
         this.isNumeric = isNumeric;
-        this.defaultValue = defaultValue;
+        this.rightHandSide = rightHandSide;
         this.comment = comment;
         this.configurable = configurable;
         this.validatorMirror = validatorMirror;
@@ -91,8 +91,8 @@ public class ConfigurableElement {
         return settings.namingPolicy().format(configurable.value());
     }
 
-    public String getDefaultValue() {
-        return defaultValue;
+    public String getRightHandSide() {
+        return rightHandSide;
     }
 
     public String getGroup() {

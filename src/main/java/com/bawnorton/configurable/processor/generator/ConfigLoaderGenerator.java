@@ -7,7 +7,7 @@ import com.bawnorton.configurable.processor.entry.ConfigurableValidator;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
-import com.bawnorton.configurable.util.GenericHolder;
+import com.bawnorton.configurable.util.GenericType;
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.CodeBlock;
@@ -69,19 +69,7 @@ public class ConfigLoaderGenerator {
         CodeBlock.Builder initalizerBuilder = CodeBlock.builder();
         TypeName enclosingClass = TypeName.get(entry.getEnclosingClassTypeMirror());
         CodeBlock.Builder genericHolderBuilder = CodeBlock.builder();
-        genericHolderBuilder.add("new $T(", GenericHolder.class);
-        if(fieldType instanceof DeclaredType declaredType) {
-            genericHolderBuilder.add("$T.class", processingEnv.getTypeUtils().erasure(declaredType));
-            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-            if (!typeArguments.isEmpty()) {
-                for (TypeMirror typeArgument : typeArguments) {
-                    genericHolderBuilder.add(", $T.class", typeArgument);
-                }
-            }
-        } else {
-            genericHolderBuilder.add("$T.class", fieldType);
-        }
-        genericHolderBuilder.add(")");
+        writeGenericHolder(fieldType, genericHolderBuilder);
         initalizerBuilder.add(
                 "$1T.builder(value -> $2T.$3L = value, () -> $2T.$3L, $4L, $5S)",
                 FieldReference.class,
@@ -139,6 +127,25 @@ public class ConfigLoaderGenerator {
         fieldBuilder.initializer(initalizerBuilder.build());
         FieldSpec field = fieldBuilder.build();
         fields.add(field);
+    }
+
+    private void writeGenericHolder(TypeMirror type, CodeBlock.Builder builder) {
+        builder.add("new $T(", GenericType.class);
+
+        if (type instanceof DeclaredType declaredType) {
+            builder.add("$T.class", processingEnv.getTypeUtils().erasure(declaredType));
+
+            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+            if (!typeArguments.isEmpty()) {
+                for (TypeMirror typeArgument : typeArguments) {
+                    builder.add(", ");
+                    writeGenericHolder(typeArgument, builder);
+                }
+            }
+            builder.add(")");
+        } else {
+            builder.add("$T.class)", type);
+        }
     }
 
     public JavaFile generate() {

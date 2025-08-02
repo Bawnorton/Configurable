@@ -1,0 +1,18 @@
+BYTE_FIELD = 127
+DOUBLE_FIELD = 3.14
+# A simple field comment
+#
+FIELD = 42
+INT_ARRAY_FIELD = [1, 2, 3, 4, 5]
+SHORT_FIELD = 32767
+CHAR_FIELD = "A"
+LONG_FIELD = 123456789
+STRING_FIELD = "Hello, World!"
+INTEGER_LIST_FIELD = [1, 2, 3, 4, 5]
+FLOAT_FIELD = 2.718
+NESTED_LIST_FIELD = [[1, 2], [3, 4]]
+BOOLEAN_FIELD = true
+CUSTOM_NAME = 100
+LIST_OF_STRING_ARRAYS_FIELD = [["a", "b"], ["c", "d"]]
+STRING_ARRAY_FIELD = ["one", "two", "three"]
+STRING_LIST_FIELD = ["one", "two", "three"]

@@ -3,8 +3,8 @@ package com.bawnorton.configurable;
 import com.bawnorton.configurable.io.FileType;
 import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.platform.Platform;
-import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.service.ConfigLoader;
+import org.jetbrains.annotations.TestOnly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
@@ -40,6 +40,11 @@ public class ConfigurableMain {
             throw new IllegalStateException("Configs are not being loading");
         }
         return currentSaveLoader;
+    }
+
+    @TestOnly
+    public static void setCurrentSaveLoader(SaveLoader loader) {
+        currentSaveLoader = loader;
     }
 
     public static SaveLoader getSaveLoader(String name) {
