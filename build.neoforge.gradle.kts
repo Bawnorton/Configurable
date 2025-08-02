@@ -12,19 +12,7 @@ plugins {
 }
 
 repositories {
-    fun strictMaven(url: String, alias: String, vararg groups: String) = exclusiveContent {
-        forRepository { maven(url) { name = alias } }
-        filter { groups.forEach(::includeGroup) }
-    }
-
-    maven("https://maven.quiltmc.org/repository/release/")
-    maven("https://maven.blamejared.com/")
-    maven("https://maven.shedaniel.me/")
-    maven("https://thedarkcolour.github.io/KotlinForForge/")
-    maven("https://maven.parchmentmc.org")
-
-    strictMaven("https://www.cursemaven.com", "Curseforge", "curse.maven")
-    strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
+    mavenCentral()
 }
 
 val minecraft: String by project
@@ -33,6 +21,7 @@ base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 
 dependencies {
     implementation("com.google.auto.service:auto-service-annotations:1.0")
+    implementation("com.palantir.javapoet:javapoet:0.7.0")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -108,6 +97,10 @@ tasks {
 
     test {
         useJUnitPlatform()
+        outputs.upToDateWhen { false }
+        jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
+        jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
+        jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
     }
 }
 

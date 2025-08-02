@@ -14,18 +14,7 @@ plugins {
 }
 
 repositories {
-    fun strictMaven(url: String, alias: String, vararg groups: String) = exclusiveContent {
-        forRepository { maven(url) { name = alias } }
-        filter { groups.forEach(::includeGroup) }
-    }
-
-    maven("https://maven.quiltmc.org/repository/release/")
-    maven("https://maven.blamejared.com/")
-    maven("https://maven.shedaniel.me/")
-    maven("https://maven.parchmentmc.org")
-
-    strictMaven("https://www.cursemaven.com", "Curseforge", "curse.maven")
-    strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
+    mavenCentral()
 }
 
 val minecraft: String by project
@@ -45,6 +34,7 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
 
     implementation("com.google.auto.service:auto-service-annotations:1.0")
+    implementation("com.palantir.javapoet:javapoet:0.7.0")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -61,13 +51,14 @@ loom {
     accessWidenerPath.set(rootProject.file("src/main/resources/$minecraft.accesswidener"))
 
     runConfigs.all {
-        ideConfigGenerated(true)
-        runDir = "../../run"
-        appendProjectPathToConfigName = false
+        ideConfigGenerated(false)
     }
 
     runConfigs["client"].apply {
+        ideConfigGenerated(true)
+        runDir = "../../run"
         programArgs("--username=Bawnorton", "--uuid=17c06cab-bf05-4ade-a8d6-ed14aaf70545")
+        appendProjectPathToConfigName = false
         name = "Fabric Client $minecraft"
     }
 
@@ -102,6 +93,10 @@ tasks {
 
     test {
         useJUnitPlatform()
+        outputs.upToDateWhen { false }
+        jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
+        jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
+        jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
     }
 }
 

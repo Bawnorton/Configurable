@@ -1,6 +1,8 @@
+package sources.field;
+
 import com.bawnorton.configurable.Configurable;
 
-public class SingleField {
+public class CommentedField {
     /**
      * A single field annotated with @Configurable.
      * Default value is 42.
