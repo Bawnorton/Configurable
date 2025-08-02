@@ -7,6 +7,7 @@ import com.bawnorton.configurable.processor.entry.ConfigurableValidator;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
+import com.bawnorton.configurable.util.GenericHolder;
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.CodeBlock;
@@ -18,6 +19,7 @@ import com.palantir.javapoet.TypeSpec;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -66,11 +68,27 @@ public class ConfigLoaderGenerator {
         );
         CodeBlock.Builder initalizerBuilder = CodeBlock.builder();
         TypeName enclosingClass = TypeName.get(entry.getEnclosingClassTypeMirror());
+        CodeBlock.Builder genericHolderBuilder = CodeBlock.builder();
+        genericHolderBuilder.add("new $T(", GenericHolder.class);
+        if(fieldType instanceof DeclaredType declaredType) {
+            genericHolderBuilder.add("$T.class", processingEnv.getTypeUtils().erasure(declaredType));
+            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+            if (!typeArguments.isEmpty()) {
+                for (TypeMirror typeArgument : typeArguments) {
+                    genericHolderBuilder.add(", $T.class", typeArgument);
+                }
+            }
+        } else {
+            genericHolderBuilder.add("$T.class", fieldType);
+        }
+        genericHolderBuilder.add(")");
         initalizerBuilder.add(
-                "$1T.builder(value -> $2T.$3L = value, () -> $2T.$3L)",
+                "$1T.builder(value -> $2T.$3L = value, () -> $2T.$3L, $4L, $5S)",
                 FieldReference.class,
                 enclosingClass,
-                entry.getFieldName()
+                entry.getFieldName(),
+                genericHolderBuilder.build(),
+                entry.getName()
         );
         if (entry.doesSync()) {
             initalizerBuilder.add(".doesSync(true)");
@@ -117,7 +135,7 @@ public class ConfigLoaderGenerator {
         }
         validatorBuilder.add(".build()");
         initalizerBuilder.add(".validator($L)", validatorBuilder.build());
-        initalizerBuilder.add(".build($S)", entry.getName());
+        initalizerBuilder.add(".build()");
         fieldBuilder.initializer(initalizerBuilder.build());
         FieldSpec field = fieldBuilder.build();
         fields.add(field);

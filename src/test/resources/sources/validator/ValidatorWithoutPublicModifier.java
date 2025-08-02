@@ -8,6 +8,6 @@ public class ValidatorWithoutPublicModifier {
     public static int field = 42;
 
     private static boolean privateValidator(int value) { // should be public
-        return value > 0;
+        return true;
     }
 }

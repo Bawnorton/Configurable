@@ -15,6 +15,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven("https://maven.quiltmc.org/repository/release/")
 }
 
 val minecraft: String by project
@@ -35,6 +36,9 @@ dependencies {
 
     implementation("com.google.auto.service:auto-service-annotations:1.0")
     implementation("com.palantir.javapoet:javapoet:0.7.0")
+    implementation("org.quiltmc.parsers:json:0.3.1")
+    implementation("org.quiltmc.parsers:gson:0.3.1")
+    implementation("com.moandjiezana.toml:toml4j:0.7.2")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")

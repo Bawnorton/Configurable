@@ -85,7 +85,10 @@ public class ConfigurableElement {
     }
 
     public String getConfigurableName(ConfigurableSettings settings) {
-        return settings.namingPolicy().format(elementName);
+        if(configurable.value().isEmpty()) {
+            return settings.namingPolicy().format(elementName);
+        }
+        return settings.namingPolicy().format(configurable.value());
     }
 
     public String getDefaultValue() {

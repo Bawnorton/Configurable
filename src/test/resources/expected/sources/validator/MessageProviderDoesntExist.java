@@ -7,7 +7,7 @@ import com.bawnorton.configurable.service.ConfigLoader;
 import com.bawnorton.configurable.util.GenericHolder;
 import com.google.auto.service.AutoService;
 import javax.annotation.processing.Generated;
-import sources.field.CommentedField;
+import sources.validator.MessageProviderDoesntExist;
 
 /**
  * Generated config loader for "test-project".
@@ -15,8 +15,7 @@ import sources.field.CommentedField;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<Integer> FIELD = FieldReference.builder(value -> CommentedField.field = value, () -> CommentedField.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).comment(" A single field annotated with @Configurable.\n"
-                                                                                                                                                                                                                    + " Default value is 42.\n").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD' must be a number. Resetting to default value: '42'").fallback(true).defaultSupplier(() -> 42).build()).build();
+    public static final FieldReference<Integer> FIELD = FieldReference.builder(value -> MessageProviderDoesntExist.field = value, () -> MessageProviderDoesntExist.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "nonExistentMessageProvider").fallback(true).defaultSupplier(() -> 42).build()).build();
 
     @Override
     public String getName() {

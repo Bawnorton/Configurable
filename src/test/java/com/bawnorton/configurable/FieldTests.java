@@ -1,27 +1,30 @@
 package com.bawnorton.configurable;
 
-import com.bawnorton.configurable.helper.CompilationHelper;
 import com.bawnorton.configurable.helper.ConfigurableTestHelper;
-import com.bawnorton.configurable.util.Pair;
-import com.google.testing.compile.Compilation;
-import com.google.testing.compile.CompilationSubject;
-import com.google.testing.compile.Compiler;
-import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
 
-public class FieldTests {
+public class FieldTests extends BaseTest {
     @Test
     public void testCommentedField() {
         ConfigurableTestHelper.logModule();
-        Compiler compiler = CompilationHelper.newCompiler();
+        testCompilationSuccess("sources/field/CommentedField.java");
+    }
 
-        Pair<JavaFileObject, JavaFileObject> sourceAndExpected = ConfigurableTestHelper.getSourceAndExpected("sources/field/CommentedField.java");
-        JavaFileObject sourceFile = sourceAndExpected.first();
-        Compilation compilation = compiler.compile(sourceFile);
-        CompilationHelper.logDiagnostics(compilation);
-        CompilationSubject.assertThat(compilation).succeededWithoutWarnings();
+    @Test
+    public void testDuplicateField() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/field/DuplicateField.java");
+    }
 
-        JavaFileObject expectedFile = sourceAndExpected.second();
-        CompilationSubject.assertThat(compilation).generatedSourceFile(ConfigurableTestHelper.getConfigLoaderName()).hasSourceEquivalentTo(expectedFile);
+    @Test
+    public void testGroupedFields() {
+        ConfigurableTestHelper.logModule();
+        testCompilationSuccess("sources/field/GroupedFields.java");
+    }
+
+    @Test
+    public void testListField() {
+        ConfigurableTestHelper.logModule();
+        testCompilationSuccess("sources/field/ListField.java");
     }
 }

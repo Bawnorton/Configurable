@@ -1,36 +1,91 @@
 package com.bawnorton.configurable;
 
-import com.bawnorton.configurable.helper.CompilationHelper;
 import com.bawnorton.configurable.helper.ConfigurableTestHelper;
-import com.bawnorton.configurable.util.Pair;
-import com.google.common.io.Resources;
-import com.google.testing.compile.Compilation;
-import com.google.testing.compile.CompilationSubject;
-import com.google.testing.compile.Compiler;
-import com.google.testing.compile.JavaFileObjects;
-import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
 
-public class ValidatorTests {
+public class ValidatorTests extends BaseTest {
     @Test
     public void testCustomValidator() {
         ConfigurableTestHelper.logModule();
-        Compiler compiler = CompilationHelper.newCompiler();
-
-        Pair<JavaFileObject, JavaFileObject> sourceAndExpected = ConfigurableTestHelper.getSourceAndExpected("sources/validator/CustomValidator.java");
-        JavaFileObject sourceFile = sourceAndExpected.first();
-        Compilation compilation = compiler.compile(sourceFile);
-        CompilationHelper.logDiagnostics(compilation);
-        CompilationSubject.assertThat(compilation).succeededWithoutWarnings();
-
-        JavaFileObject expectedFile = sourceAndExpected.second();
-        CompilationSubject.assertThat(compilation).generatedSourceFile(ConfigurableTestHelper.getConfigLoaderName()).hasSourceEquivalentTo(expectedFile);
+        testCompilationSuccess("sources/validator/CustomValidator.java");
     }
 
     @Test
-    public void testMissingValidator() {
+    public void testCustomMessageProvider() {
+        ConfigurableTestHelper.logModule();
+        testCompilationSuccess("sources/validator/CustomMessageProvider.java");
+    }
+
+    @Test
+    public void testDefaultValueGreaterThanBounds() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/DefaultValueGreaterThanBounds.java");
+    }
+
+    @Test
+    public void testDefaultValueSmallerThanBounds() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/DefaultValueSmallerThanBounds.java");
+    }
+
+    @Test
+    public void testMessageProviderDoesntExist() {
+        ConfigurableTestHelper.logModule();
+        testCompilationSuccess("sources/validator/MessageProviderDoesntExist.java");
+    }
+
+    @Test
+    public void testMessageProviderWithMoreThanOneParameter() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/MessageProviderWithMoreThanOneParameter.java");
+    }
+
+    @Test
+    public void testMessageProviderWithoutPublicModifier() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/MessageProviderWithoutPublicModifier.java");
+    }
+
+    @Test
+    public void testMessageProviderWithoutStaticModifier() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/MessageProviderWithoutStaticModifier.java");
+    }
+
+    @Test
+    public void testMessageProviderWithWrongParameterType() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/MessageProviderWithWrongParameterType.java");
+    }
+
+    @Test
+    public void testMessageProviderWithWrongReturnType() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/MessageProviderWithWrongReturnType.java");
+    }
+
+    @Test
+    public void testMinAndMaxConflict() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/MinAndMaxConflict.java");
+    }
+
+    @Test
+    public void testNonNumericWithNumericBounds() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/NonNumericWithNumericBounds.java");
+    }
+
+    @Test
+    public void testValidatorDoesntExist() {
         ConfigurableTestHelper.logModule();
         testCompilationFailure("sources/validator/ValidatorDoesntExist.java");
+    }
+
+    @Test
+    public void testValidatorWithMoreThanOneParameter() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/validator/ValidatorWithMoreThanOneParameter.java");
     }
 
     @Test
@@ -55,13 +110,5 @@ public class ValidatorTests {
     public void testValidatorWithWrongReturnType() {
         ConfigurableTestHelper.logModule();
         testCompilationFailure("sources/validator/ValidatorWithWrongReturnType.java");
-    }
-
-    private static void testCompilationFailure(String resourceName) {
-        Compiler compiler = CompilationHelper.newCompiler();
-        JavaFileObject sourceFile = JavaFileObjects.forResource(Resources.getResource(resourceName));
-        Compilation compilation = compiler.compile(sourceFile);
-        CompilationHelper.logDiagnostics(compilation);
-        CompilationSubject.assertThat(compilation).failed();
     }
 }

@@ -1,9 +1,13 @@
 package com.bawnorton.configurable.processor.entry;
 
+import com.bawnorton.configurable.Configurable;
 import com.bawnorton.configurable.processor.ConfigurableSettings;
 import com.bawnorton.configurable.processor.element.ConfigurableElement;
+import com.bawnorton.configurable.processor.util.AnnotationHelper;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.tools.Diagnostic;
 import org.jetbrains.annotations.NotNull;
 import java.util.HashSet;
 import java.util.Iterator;

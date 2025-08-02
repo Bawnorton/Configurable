@@ -2,10 +2,11 @@ package com.bawnorton.configurable.reference;
 
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.reference.validator.ValidatorReference;
+import com.bawnorton.configurable.util.GenericHolder;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, String name, String group, String comment, boolean doesSync, ValidatorReference<T> validator) {
+public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, GenericHolder genericHolder, String name, String group, String comment, boolean doesSync, ValidatorReference<T> validator) {
     public void set(T value) {
         setter.accept(value);
     }
@@ -22,22 +23,26 @@ public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, String n
         ConfigurableMain.getCurrentSaveLoader().markToBeSaved(this);
     }
 
-    public static <T> Builder<T> builder(Consumer<T> setter, Supplier<T> getter) {
-        return new Builder<>(setter, getter);
+    public static <T> Builder<T> builder(Consumer<T> setter, Supplier<T> getter, GenericHolder genericHolder, String name) {
+        return new Builder<>(setter, getter, genericHolder, name);
     }
 
     public static class Builder<T> {
         private final Consumer<T> setter;
         private final Supplier<T> getter;
+        private final GenericHolder genericHolder;
+        private final String name;
 
         private String group = null;
         private String comment = null;
         private boolean doesSync = false;
         private ValidatorReference<T> validator = null;
 
-        public Builder(Consumer<T> setter, Supplier<T> getter) {
+        public Builder(Consumer<T> setter, Supplier<T> getter, GenericHolder genericHolder, String name) {
             this.setter = setter;
             this.getter = getter;
+            this.genericHolder = genericHolder;
+            this.name = name;
         }
 
         public Builder<T> group(String group) {
@@ -60,8 +65,8 @@ public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, String n
             return this;
         }
 
-        public FieldReference<T> build(String name) {
-            return new FieldReference<>(setter, getter, name, group, comment, doesSync, validator);
+        public FieldReference<T> build() {
+            return new FieldReference<>(setter, getter, genericHolder, name, group, comment, doesSync, validator);
         }
     }
 }

@@ -6,8 +6,9 @@ import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
 import com.bawnorton.configurable.util.GenericHolder;
 import com.google.auto.service.AutoService;
+import java.util.List;
 import javax.annotation.processing.Generated;
-import sources.field.CommentedField;
+import sources.field.ListField;
 
 /**
  * Generated config loader for "test-project".
@@ -15,8 +16,7 @@ import sources.field.CommentedField;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<Integer> FIELD = FieldReference.builder(value -> CommentedField.field = value, () -> CommentedField.field, new GenericHolder(Integer.class), "FIELD").doesSync(true).comment(" A single field annotated with @Configurable.\n"
-                                                                                                                                                                                                                    + " Default value is 42.\n").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD' must be a number. Resetting to default value: '42'").fallback(true).defaultSupplier(() -> 42).build()).build();
+    public static final FieldReference<List<Integer>> LIST_FIELD = FieldReference.builder(value -> ListField.listField = value, () -> ListField.listField, new GenericHolder(List.class, Integer.class), "LIST_FIELD").doesSync(true).validator(ValidatorReference.<List<Integer>>builder().messageProvider(ignored -> "Value for 'LIST_FIELD' is invalid. Resetting to default value: 'List.of(1, 2, 3, 4, 5)'").fallback(true).defaultSupplier(() -> List.of(1, 2, 3, 4, 5)).build()).build();
 
     @Override
     public String getName() {
@@ -30,11 +30,11 @@ public final class GeneratedConfigLoader implements ConfigLoader {
 
     @Override
     public void load() {
-        FIELD.load();
+        LIST_FIELD.load();
     }
 
     @Override
     public void save() {
-        FIELD.save();
+        LIST_FIELD.save();
     }
 }

@@ -42,13 +42,17 @@ public class ConfigurableValidator {
         this.max = max;
     }
 
-    public static ConfigurableValidator fromConfigurableElement(ConfigurableElement configurableElement, ProcessingEnvironment processingEnv) {
+    public static ConfigurableValidator fromConfigurableElement(String name, ConfigurableElement configurableElement, ProcessingEnvironment processingEnv) {
         Double min = configurableElement.isMinSet() ? configurableElement.getMin() : null;
         Double max = configurableElement.isMaxSet() ? configurableElement.getMax() : null;
         boolean isNumeric = configurableElement.isNumeric();
         Element annotatedElement = configurableElement.getAnnotatedElement();
         if (!isNumeric && (min != null || max != null)) {
             processingEnv.getMessager().printError("Min and max values can only be set for numeric fields, but %s is not numeric".formatted(configurableElement.getElementName()), annotatedElement);
+            return null;
+        }
+        if (max != null && min != null && max < min) {
+            processingEnv.getMessager().printError("Maximum value '%s' for '%s' is less than minimum value '%s'".formatted(max, configurableElement.getElementName(), min), annotatedElement);
             return null;
         }
         String defaultValue = configurableElement.getDefaultValue();
@@ -90,7 +94,7 @@ public class ConfigurableValidator {
             TypeMirror actualReturnType = reference.returnType();
             TypeMirror expectedReturnType = processingEnv.getTypeUtils().getPrimitiveType(TypeKind.BOOLEAN);
             if (!processingEnv.getTypeUtils().isAssignable(actualReturnType, expectedReturnType)) {
-                processingEnv.getMessager().printError("Return fileType of method '%s' must be boolean, but found '%s'".formatted(validatorMethod, actualReturnType), reference.methodElement());
+                processingEnv.getMessager().printError("Return type of method '%s' must be boolean, but found '%s'".formatted(validatorMethod, actualReturnType), reference.methodElement());
                 return null;
             }
 
@@ -108,7 +112,7 @@ public class ConfigurableValidator {
             }
             if (!processingEnv.getTypeUtils().isSameType(actualParameterType, expectedParameterType)) {
                 VariableElement problemElement = reference.methodElement().getParameters().getFirst();
-                processingEnv.getMessager().printError("Method '%s' must accept a parameter of fileType '%s', but found '%s'".formatted(validatorMethod, expectedParameterType, actualParameterType), problemElement);
+                processingEnv.getMessager().printError("Method '%s' must accept a parameter of type '%s', but found '%s'".formatted(validatorMethod, expectedParameterType, actualParameterType), problemElement);
                 return null;
             }
         }
@@ -120,14 +124,14 @@ public class ConfigurableValidator {
         if(maybeMessageMethod.isEmpty()) {
             if(isNumeric) {
                 if(min != null) {
-                    messageLiteral = "Value for '%s' must be greater than or equal to '%s'".formatted(configurableElement.getElementName(), min);
+                    messageLiteral = "Value for '%s' must be greater than or equal to '%s'".formatted(name, min);
                 } else if(max != null) {
-                    messageLiteral = "Value for '%s' must be less than or equal to '%s'".formatted(configurableElement.getElementName(), max);
+                    messageLiteral = "Value for '%s' must be less than or equal to '%s'".formatted(name, max);
                 } else {
-                    messageLiteral = "Value for '%s' must be a number".formatted(configurableElement.getElementName());
+                    messageLiteral = "Value for '%s' must be a number".formatted(name);
                 }
             } else {
-                messageLiteral = "Value for '%s' is invalid".formatted(configurableElement.getElementName());
+                messageLiteral = "Value for '%s' is invalid".formatted(name);
             }
             if(fallback) {
                 messageLiteral += ". Resetting to default value: '%s'".formatted(defaultValue);
@@ -146,7 +150,7 @@ public class ConfigurableValidator {
                         .asType();
 
                 if (!processingEnv.getTypeUtils().isAssignable(messageReturnType, expectedMessageReturnType)) {
-                    processingEnv.getMessager().printError("Return fileType of method '%s' must be String, but found '%s'".formatted(maybeMessageMethod, messageReturnType), messageReference.methodElement());
+                    processingEnv.getMessager().printError("Return type of method '%s' must be String, but found '%s'".formatted(maybeMessageMethod, messageReturnType), messageReference.methodElement());
                     return null;
                 }
 
@@ -164,7 +168,7 @@ public class ConfigurableValidator {
                 }
                 if (!processingEnv.getTypeUtils().isSameType(messageParameterType, expectedParameterType)) {
                     Element problemElement = messageReference.methodElement().getParameters().getFirst();
-                    processingEnv.getMessager().printError("Message method '%s' must accept a parameter of fileType '%s', but found '%s'".formatted(maybeMessageMethod, expectedParameterType, messageParameterType), problemElement);
+                    processingEnv.getMessager().printError("Message method '%s' must accept a parameter of type '%s', but found '%s'".formatted(maybeMessageMethod, expectedParameterType, messageParameterType), problemElement);
                     return null;
                 }
             }

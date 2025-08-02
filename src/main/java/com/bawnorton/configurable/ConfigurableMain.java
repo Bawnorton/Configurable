@@ -1,5 +1,6 @@
 package com.bawnorton.configurable;
 
+import com.bawnorton.configurable.io.FileType;
 import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.platform.Platform;
 import com.bawnorton.configurable.reference.FieldReference;
@@ -23,7 +24,8 @@ public class ConfigurableMain {
         saveLoaders = new HashMap<>();
         CONFIG_LOADERS.forEach(loader -> {
             LOGGER.info("Loading '{}'", loader.getName());
-            currentSaveLoader = new SaveLoader(Platform.getConfigDir().resolve(loader.getName()), loader.getFileType());
+            FileType fileType = loader.getFileType();
+            currentSaveLoader = new SaveLoader(Platform.getConfigDir().resolve("%s.%s".formatted(loader.getName(), fileType)), fileType);
             loader.load();
             currentSaveLoader.load();
             loader.save();

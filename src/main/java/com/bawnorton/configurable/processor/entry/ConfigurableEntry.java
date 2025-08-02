@@ -1,7 +1,6 @@
 package com.bawnorton.configurable.processor.entry;
 
 import com.bawnorton.configurable.processor.element.ConfigurableElement;
-import com.bawnorton.configurable.reference.FieldReference;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.PrimitiveType;
@@ -29,7 +28,7 @@ public class ConfigurableEntry {
         String group = element.getGroup();
         boolean sync = element.doesSync();
         String comment = element.getComment();
-        ConfigurableValidator validator = ConfigurableValidator.fromConfigurableElement(element, processingEnv);
+        ConfigurableValidator validator = ConfigurableValidator.fromConfigurableElement(name, element, processingEnv);
         if (validator == null) return null;
 
         return new ConfigurableEntry(element.getAnnotatedElement(), name, group, comment, sync, validator);

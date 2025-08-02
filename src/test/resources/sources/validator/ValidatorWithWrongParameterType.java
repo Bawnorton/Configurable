@@ -8,6 +8,6 @@ public class ValidatorWithWrongParameterType {
     public static int field = 42;
 
     public static boolean wrongParameterValidator(int value) { // should be Integer
-        return value > 0;
+        return true;
     }
 }
