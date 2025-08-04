@@ -1,9 +1,8 @@
 package com.bawnorton.configurable.networking;
 
 //? if fabric {
-import com.bawnorton.configurable.ConfigurableLoader;
+/*import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.service.ConfigLoader;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -13,8 +12,6 @@ import net.minecraft.server.level.ServerPlayer;
 public class Networking {
     public static void init() {
         PayloadTypeRegistry.playS2C().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
-
-        ClientPlayNetworking.registerGlobalReceiver(SyncConfigPayload.TYPE, Networking::handleSyncConfigPayload);
 
         ServerPlayerEvents.JOIN.register(player -> {
             for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
@@ -27,15 +24,10 @@ public class Networking {
     public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
         ServerPlayNetworking.send(player, payload);
     }
-
-    private static void handleSyncConfigPayload(SyncConfigPayload payload, ClientPlayNetworking.Context context) {
-        ConfigLoader configLoader = ConfigurableLoader.getConfigLoader(payload.name());
-        payload.applyToConfigLoader(configLoader);
-    }
 }
-//?} else {
+*///?} else {
 
-/*import com.bawnorton.configurable.ConfigurableLoader;
+import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.service.ConfigLoader;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -54,7 +46,7 @@ public class Networking {
 
     @SubscribeEvent
     public static void registerPackets(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar("1");
+        PayloadRegistrar registrar = event.registrar("1").optional();
         registrar.playToClient(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC, Networking::handleSyncConfigPayload);
     }
 
@@ -78,4 +70,4 @@ public class Networking {
     }
 }
 
-*///?}
+//?}

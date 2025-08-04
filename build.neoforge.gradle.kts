@@ -24,9 +24,10 @@ base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 
 dependencies {
     jarJar(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
+    jarJar(implementation("org.quiltmc.parsers:json:0.3.1")!!)
+    jarJar(implementation("org.quiltmc.parsers:gson:0.3.1")!!)
+
     implementation("com.palantir.javapoet:javapoet:0.7.0")
-    implementation("org.quiltmc.parsers:json:0.3.1")
-    implementation("org.quiltmc.parsers:gson:0.3.1")
     implementation("com.electronwill.night-config:toml:3.8.2")
     implementation("org.slf4j:slf4j-api:2.0.9")
 
