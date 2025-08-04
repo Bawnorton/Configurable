@@ -1,60 +1,61 @@
 package sources.serialisation;
 
 import com.bawnorton.configurable.Configurable;
+import com.bawnorton.configurable.Validator;
 import java.util.List;
 
 public class BasicSerialisation {
     /**
      * A simple field comment
      */
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static int field = 42;
 
-    @Configurable("customName")
+    @Configurable(value = "customName", validator = @Validator(fallback = false))
     public static int customField = 100;
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static boolean booleanField = true;
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static String stringField = "Hello, World!";
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static double doubleField = 3.14;
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static long longField = 123456789L;
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static float floatField = 2.718f;
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static char charField = 'A';
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static byte byteField = 127;
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static short shortField = 32767;
 
     @Configurable
     public static Integer nullableField = null;
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static int[] intArrayField = {1, 2, 3, 4, 5};
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static String[] stringArrayField = {"one", "two", "three"};
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static List<Integer> integerListField = List.of(1, 2, 3, 4, 5);
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static List<String> stringListField = List.of("one", "two", "three");
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static List<List<Integer>> nestedListField = List.of(List.of(1, 2), List.of(3, 4));
 
-    @Configurable
+    @Configurable(validator = @Validator(fallback = false))
     public static List<String[]> listOfStringArraysField = List.of(new String[]{"a", "b"}, new String[]{"c", "d"});
 }

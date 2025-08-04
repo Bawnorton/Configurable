@@ -1,6 +1,7 @@
 package com.bawnorton.configurable.processor.generator;
 
 import com.bawnorton.configurable.io.FileType;
+import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.processor.ConfigurableSettings;
 import com.bawnorton.configurable.processor.entry.ConfigurableEntry;
 import com.bawnorton.configurable.processor.entry.ConfigurableValidator;
@@ -9,13 +10,7 @@ import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
 import com.bawnorton.configurable.util.GenericType;
 import com.google.auto.service.AutoService;
-import com.palantir.javapoet.AnnotationSpec;
-import com.palantir.javapoet.CodeBlock;
-import com.palantir.javapoet.FieldSpec;
-import com.palantir.javapoet.JavaFile;
-import com.palantir.javapoet.MethodSpec;
-import com.palantir.javapoet.TypeName;
-import com.palantir.javapoet.TypeSpec;
+import com.palantir.javapoet.*;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -40,15 +35,15 @@ public class ConfigLoaderGenerator {
         this.fileType = settings.fileType();
         this.packageName = "com.bawnorton.configurable.generated.%s".formatted(formatForPackage(settings.name()));
         this.typeSpecBuilder = TypeSpec.classBuilder("GeneratedConfigLoader")
-                                       .addSuperinterface(ConfigLoader.class)
-                                       .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                                       .addAnnotation(AnnotationSpec.builder(Generated.class)
-                                                                    .addMember("value", "$S", ConfigLoaderGenerator.class.getCanonicalName())
-                                                                    .build())
-                                       .addAnnotation(AnnotationSpec.builder(AutoService.class)
-                                                                    .addMember("value", "$T.class", ConfigLoader.class)
-                                                                    .build())
-                                       .addJavadoc("Generated config loader for $S.", settings.name());
+                .addSuperinterface(ConfigLoader.class)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addAnnotation(AnnotationSpec.builder(Generated.class)
+                        .addMember("value", "$S", ConfigLoaderGenerator.class.getCanonicalName())
+                        .build())
+                .addAnnotation(AnnotationSpec.builder(AutoService.class)
+                        .addMember("value", "$T.class", ConfigLoader.class)
+                        .build())
+                .addJavadoc("Generated config loader for $S.", settings.name());
     }
 
     private static String formatForPackage(String name) {
@@ -149,24 +144,6 @@ public class ConfigLoaderGenerator {
     }
 
     public JavaFile generate() {
-        MethodSpec.Builder loadBuilder = MethodSpec.methodBuilder("load")
-                .addModifiers(Modifier.PUBLIC)
-                .returns(void.class)
-                .addAnnotation(Override.class);
-
-        MethodSpec.Builder saveBuilder = MethodSpec.methodBuilder("save")
-                .addModifiers(Modifier.PUBLIC)
-                .returns(void.class)
-                .addAnnotation(Override.class);
-
-        fields.sort(Comparator.comparing(FieldSpec::name));
-        for (FieldSpec field : fields) {
-            typeSpecBuilder.addField(field);
-
-            loadBuilder.addStatement("$L.load()", field.name());
-            saveBuilder.addStatement("$L.save()", field.name());
-        }
-
         typeSpecBuilder.addMethod(MethodSpec.methodBuilder("getName")
                 .addModifiers(Modifier.PUBLIC)
                 .returns(String.class)
@@ -181,13 +158,60 @@ public class ConfigLoaderGenerator {
                 .addStatement("return $T.$L", FileType.class, fileType.name())
                 .build());
 
-        typeSpecBuilder.addMethod(loadBuilder.build());
-        typeSpecBuilder.addMethod(saveBuilder.build());
+        typeSpecBuilder.addMethod(MethodSpec.methodBuilder("load")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(SaveLoader.class, "saveLoader")
+                .returns(void.class)
+                .addAnnotation(Override.class)
+                .addStatement("saveLoader.load(getFields())")
+                .build());
+
+        typeSpecBuilder.addMethod(MethodSpec.methodBuilder("save")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(SaveLoader.class, "saveLoader")
+                .returns(void.class)
+                .addAnnotation(Override.class)
+                .addStatement("saveLoader.save(getFields())")
+                .build());
+
+        MethodSpec.Builder getFieldsBuilder = MethodSpec.methodBuilder("getFields")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(ParameterizedTypeName.get(
+                        ClassName.get(List.class),
+                        ParameterizedTypeName.get(
+                                ClassName.get(FieldReference.class),
+                                WildcardTypeName.subtypeOf(Object.class)
+                        )
+                ))
+                .addAnnotation(Override.class);
+
+        getFieldsBuilder.addStatement(
+                "$T<$T<$T>> fields = new $T<>()",
+                List.class,
+                FieldReference.class,
+                WildcardTypeName.subtypeOf(Object.class),
+                ArrayList.class
+        );
+
+        fields.sort(Comparator.comparing(FieldSpec::name));
+        for (FieldSpec field : fields) {
+            typeSpecBuilder.addField(field);
+
+            getFieldsBuilder.addStatement("fields.add($L)", field.name());
+        }
+
+        getFieldsBuilder.addStatement("fields.sort($T.comparing(ref -> $S.formatted(ref.group(), ref.name())))",
+                Comparator.class,
+                "%s.%s"
+        );
+        getFieldsBuilder.addStatement("return fields");
+
+        typeSpecBuilder.addMethod(getFieldsBuilder.build());
 
         TypeSpec typeSpec = typeSpecBuilder.build();
         return JavaFile.builder(packageName, typeSpec)
-                       .skipJavaLangImports(true)
-                       .build();
+                .skipJavaLangImports(true)
+                .build();
     }
 
     public boolean isEmpty() {

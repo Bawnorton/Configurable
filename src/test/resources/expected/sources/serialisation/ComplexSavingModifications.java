@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.processing.Generated;
-import sources.validator.CustomMessageProvider;
+import sources.serialisation.ComplexSavingModifications;
 
 /**
  * Generated config loader for "test-project".
@@ -19,11 +19,7 @@ import sources.validator.CustomMessageProvider;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<Integer> field = FieldReference.builder(value -> CustomMessageProvider.field = value, () -> CustomMessageProvider.field, new GenericType(Integer.class), "FIELD").doesSync(true).validator(ValidatorReference.<Integer>builder().messageProvider(CustomMessageProvider::simpleMessageProvider).fallback(true).defaultSupplier(() -> 42).build()).build();
-
-    public static final FieldReference<Integer> fieldWithInteger = FieldReference.builder(value -> CustomMessageProvider.fieldWithInteger = value, () -> CustomMessageProvider.fieldWithInteger, new GenericType(Integer.class), "FIELD_WITH_INTEGER").doesSync(true).validator(ValidatorReference.<Integer>builder().messageProvider(CustomMessageProvider::simpleMessageProvider).fallback(true).defaultSupplier(() -> 42).build()).build();
-
-    public static final FieldReference<Integer> fieldWithLiteralMessage = FieldReference.builder(value -> CustomMessageProvider.fieldWithLiteralMessage = value, () -> CustomMessageProvider.fieldWithLiteralMessage, new GenericType(Integer.class), "FIELD_WITH_LITERAL_MESSAGE").doesSync(true).validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "a literal message").fallback(true).defaultSupplier(() -> 42).build()).build();
+    public static final FieldReference<List<List<String[]>>> field = FieldReference.builder(value -> ComplexSavingModifications.field = value, () -> ComplexSavingModifications.field, new GenericType(List.class, new GenericType(List.class, new GenericType(String[].class))), "FIELD").doesSync(true).validator(ValidatorReference.<List<List<String[]>>>builder().messageProvider(ignored -> "Value for 'FIELD' is invalid. Resetting to default value: 'List.of(List.of(new String[]{\"a\", \"b\"}, new String[]{\"c\", \"d\"}), List.of(new String[]{\"e\", \"f\"}, new String[]{\"g\", \"h\"}))'").fallback(true).defaultSupplier(() -> List.of(List.of(new String[]{"a", "b"}, new String[]{"c", "d"}), List.of(new String[]{"e", "f"}, new String[]{"g", "h"}))).build()).build();
 
     @Override
     public String getName() {
@@ -49,8 +45,6 @@ public final class GeneratedConfigLoader implements ConfigLoader {
     public List<FieldReference<?>> getFields() {
         List<FieldReference<?>> fields = new ArrayList<>();
         fields.add(field);
-        fields.add(fieldWithInteger);
-        fields.add(fieldWithLiteralMessage);
         fields.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
         return fields;
     }

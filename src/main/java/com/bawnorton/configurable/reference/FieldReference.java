@@ -1,6 +1,5 @@
 package com.bawnorton.configurable.reference;
 
-import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.util.GenericType;
 import java.util.function.Consumer;
@@ -15,12 +14,8 @@ public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, GenericT
         return getter.get();
     }
 
-    public void load() {
-        ConfigurableMain.getCurrentSaveLoader().markToBeLoaded(this);
-    }
-
-    public void save() {
-        ConfigurableMain.getCurrentSaveLoader().markToBeSaved(this);
+    public String fullName() {
+        return group == null ? name : "%s.%s".formatted(group, name);
     }
 
     public static <T> Builder<T> builder(Consumer<T> setter, Supplier<T> getter, GenericType genericType, String name) {

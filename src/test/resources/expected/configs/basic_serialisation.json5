@@ -1,0 +1,58 @@
+{
+	BOOLEAN_FIELD: true,
+	BYTE_FIELD: 127,
+	CHAR_FIELD: "A",
+	CUSTOM_NAME: 100,
+	DOUBLE_FIELD: 3.14,
+	// A simple field comment
+	FIELD: 42,
+	FLOAT_FIELD: 2.718,
+	INTEGER_LIST_FIELD: [
+		1,
+		2,
+		3,
+		4,
+		5
+	],
+	INT_ARRAY_FIELD: [
+		1,
+		2,
+		3,
+		4,
+		5
+	],
+	LIST_OF_STRING_ARRAYS_FIELD: [
+		[
+			"a",
+			"b"
+		],
+		[
+			"c",
+			"d"
+		]
+	],
+	LONG_FIELD: 123456789,
+	NESTED_LIST_FIELD: [
+		[
+			1,
+			2
+		],
+		[
+			3,
+			4
+		]
+	],
+	NULLABLE_FIELD: null,
+	SHORT_FIELD: 32767,
+	STRING_ARRAY_FIELD: [
+		"one",
+		"two",
+		"three"
+	],
+	STRING_FIELD: "Hello, World!",
+	STRING_LIST_FIELD: [
+		"one",
+		"two",
+		"three"
+	]
+}

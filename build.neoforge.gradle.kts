@@ -1,5 +1,7 @@
+import configurable.utils.applyMixinDebugSettings
+import configurable.utils.deps
+import configurable.utils.mod
 import dev.kikugie.fletching_table.annotation.MixinEnvironment
-import configurable.utils.*
 
 plugins {
     kotlin("jvm")
@@ -106,6 +108,13 @@ tasks {
         jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
         jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
         jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
+    }
+}
+
+sourceSets { // Thanks neo, you're the best
+    test {
+        compileClasspath += sourceSets.main.get().compileClasspath
+        runtimeClasspath += sourceSets.main.get().runtimeClasspath
     }
 }
 

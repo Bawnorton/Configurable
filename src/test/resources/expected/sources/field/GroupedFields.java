@@ -1,11 +1,15 @@
 package com.bawnorton.configurable.generated.test_project;
 
 import com.bawnorton.configurable.io.FileType;
+import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
 import com.bawnorton.configurable.util.GenericType;
 import com.google.auto.service.AutoService;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import javax.annotation.processing.Generated;
 import sources.field.GroupedFields;
 
@@ -36,20 +40,24 @@ public final class GeneratedConfigLoader implements ConfigLoader {
     }
 
     @Override
-    public void load() {
-        abc_def_field2.load();
-        abc_def_ghi_field3.load();
-        abc_def_ghi_jkl_mno_field5.load();
-        abc_field.load();
-        abc_field4.load();
+    public void load(SaveLoader saveLoader) {
+        saveLoader.load(getFields());
     }
 
     @Override
-    public void save() {
-        abc_def_field2.save();
-        abc_def_ghi_field3.save();
-        abc_def_ghi_jkl_mno_field5.save();
-        abc_field.save();
-        abc_field4.save();
+    public void save(SaveLoader saveLoader) {
+        saveLoader.save(getFields());
+    }
+
+    @Override
+    public List<FieldReference<?>> getFields() {
+        List<FieldReference<?>> fields = new ArrayList<>();
+        fields.add(abc_def_field2);
+        fields.add(abc_def_ghi_field3);
+        fields.add(abc_def_ghi_jkl_mno_field5);
+        fields.add(abc_field);
+        fields.add(abc_field4);
+        fields.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
+        return fields;
     }
 }

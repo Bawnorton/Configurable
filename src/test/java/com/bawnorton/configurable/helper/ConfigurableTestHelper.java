@@ -7,6 +7,8 @@ import javax.tools.JavaFileObject;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Path;
 
 public class ConfigurableTestHelper {
     public static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableTestHelper.class);

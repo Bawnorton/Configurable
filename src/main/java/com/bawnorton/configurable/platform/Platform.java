@@ -11,7 +11,7 @@ public final class Platform {
     }
 }
 
-//?} elif neoforge {
+//?} else {
 /*import net.neoforged.fml.loading.FMLPaths;
 
 public final class Platform {

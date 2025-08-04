@@ -4,11 +4,13 @@ import com.bawnorton.configurable.util.GenericType;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Interpreter {
+public class SerialisationHelper {
     public static Object interpret(JsonElement element, GenericType genericHolder) {
         if (element == null || element.isJsonNull()) {
             return null;
@@ -146,7 +148,7 @@ public class Interpreter {
         }
     }
 
-    private static Object interpret(Object item, GenericType genericHolder) {
+    public static Object interpret(Object item, GenericType genericHolder) {
         if (item == null) return null;
 
         Class<?> expectedType = genericHolder.type();
@@ -206,6 +208,132 @@ public class Interpreter {
                     return interpretedList;
                 } else {
                     throw new IllegalArgumentException("Unsupported generic type: %s".formatted(expectedType.getName()));
+                }
+            } else {
+                throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");
+            }
+        }
+    }
+
+    public static void encode(ByteBuf byteBuf, Object value, GenericType genericHolder) {
+        if (value == null) {
+            ByteBufCodecs.VAR_INT.encode(byteBuf, -1);
+            return;
+        } else {
+            ByteBufCodecs.VAR_INT.encode(byteBuf, 0);
+        }
+
+        Class<?> type = genericHolder.type();
+        if (genericHolder.isRaw()) {
+            if (type == String.class) {
+                ByteBufCodecs.STRING_UTF8.encode(byteBuf, (String) value);
+            } else if (type == Integer.class || type == int.class) {
+                ByteBufCodecs.VAR_INT.encode(byteBuf, (Integer) value);
+            } else if (type == Long.class || type == long.class) {
+                ByteBufCodecs.VAR_LONG.encode(byteBuf, (Long) value);
+            } else if (type == Double.class || type == double.class) {
+                ByteBufCodecs.DOUBLE.encode(byteBuf, (Double) value);
+            } else if (type == Boolean.class || type == boolean.class) {
+                ByteBufCodecs.BOOL.encode(byteBuf, (Boolean) value);
+            } else if (type == Float.class || type == float.class) {
+                ByteBufCodecs.FLOAT.encode(byteBuf, (Float) value);
+            } else if (type == Byte.class || type == byte.class) {
+                ByteBufCodecs.BYTE.encode(byteBuf, (Byte) value);
+            } else if (type == Short.class || type == short.class) {
+                ByteBufCodecs.SHORT.encode(byteBuf, (Short) value);
+            } else if (type == Character.class || type == char.class) {
+                ByteBufCodecs.VAR_INT.encode(byteBuf, (int) (Character) value);
+            } else if (type.isEnum()) {
+                ByteBufCodecs.STRING_UTF8.encode(byteBuf, ((Enum<?>) value).name());
+            } else if (type.isArray()) {
+                Class<?> componentType = type.getComponentType();
+                int length = Array.getLength(value);
+                ByteBufCodecs.VAR_INT.encode(byteBuf, length);
+                for (int i = 0; i < length; i++) {
+                    Object item = Array.get(value, i);
+                    encode(byteBuf, item, new GenericType(componentType));
+                }
+            } else {
+                throw new IllegalArgumentException("Unsupported type: %s".formatted(type.getName()));
+            }
+        } else {
+            GenericType[] genericTypes = genericHolder.genericTypes();
+            if (genericTypes.length == 1) {
+                GenericType genericType = genericTypes[0];
+                if (List.class.isAssignableFrom(type)) {
+                    List<?> list = (List<?>) value;
+                    ByteBufCodecs.VAR_INT.encode(byteBuf, list.size());
+                    for (Object item : list) {
+                        encode(byteBuf, item, genericType);
+                    }
+                } else {
+                    throw new IllegalArgumentException("Unsupported generic type: %s".formatted(type.getName()));
+                }
+            } else {
+                throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");
+            }
+        }
+    }
+
+    public static Object interpet(ByteBuf byteBuf, GenericType genericHolder) {
+        int nullCheck = ByteBufCodecs.VAR_INT.decode(byteBuf);
+        if (nullCheck == -1) {
+            return null; // Represents a null value
+        } else if (nullCheck != 0) {
+            throw new IllegalArgumentException("Expected a null check value of -1 or 0, but got: %d".formatted(nullCheck));
+        }
+
+        Class<?> type = genericHolder.type();
+        if (genericHolder.isRaw()) {
+            if (type == String.class) {
+                return ByteBufCodecs.STRING_UTF8.decode(byteBuf);
+            } else if (type == Integer.class || type == int.class) {
+                return ByteBufCodecs.VAR_INT.decode(byteBuf);
+            } else if (type == Long.class || type == long.class) {
+                return ByteBufCodecs.VAR_LONG.decode(byteBuf);
+            } else if (type == Double.class || type == double.class) {
+                return ByteBufCodecs.DOUBLE.decode(byteBuf);
+            } else if (type == Boolean.class || type == boolean.class) {
+                return ByteBufCodecs.BOOL.decode(byteBuf);
+            } else if (type == Float.class || type == float.class) {
+                return ByteBufCodecs.FLOAT.decode(byteBuf);
+            } else if (type == Byte.class || type == byte.class) {
+                return ByteBufCodecs.BYTE.decode(byteBuf);
+            } else if (type == Short.class || type == short.class) {
+                return ByteBufCodecs.SHORT.decode(byteBuf);
+            } else if (type == Character.class || type == char.class) {
+                int value = ByteBufCodecs.VAR_INT.decode(byteBuf);
+                return (char) value;
+            } else if (type.isEnum()) {
+                String enumName = ByteBufCodecs.STRING_UTF8.decode(byteBuf);
+                //noinspection unchecked,rawtypes
+                return Enum.valueOf((Class<Enum>) type, enumName);
+            } else if (type.isArray()) {
+                int length = ByteBufCodecs.VAR_INT.decode(byteBuf);
+                Class<?> componentType = type.getComponentType();
+                Object array = Array.newInstance(componentType, length);
+                for (int i = 0; i < length; i++) {
+                    Object item = interpet(byteBuf, new GenericType(componentType));
+                    Array.set(array, i, item);
+                }
+                return array;
+            } else {
+                throw new IllegalArgumentException("Unsupported type: %s".formatted(type.getName()));
+            }
+        } else {
+            GenericType[] genericTypes = genericHolder.genericTypes();
+            if (genericTypes.length == 1) {
+                GenericType genericType = genericTypes[0];
+                if (List.class.isAssignableFrom(type)) {
+                    int size = ByteBufCodecs.VAR_INT.decode(byteBuf);
+                    List<Object> list = new ArrayList<>(size);
+                    for (int i = 0; i < size; i++) {
+                        Object item = interpet(byteBuf, genericType);
+                        list.add(item);
+                    }
+                    return list;
+                } else {
+                    throw new IllegalArgumentException("Unsupported generic type: %s".formatted(type.getName()));
                 }
             } else {
                 throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");

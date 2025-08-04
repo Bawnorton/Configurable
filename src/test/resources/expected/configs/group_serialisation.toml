@@ -1,0 +1,14 @@
+DOUBLE_VALUE = 3.14
+ANOTHER_STRING_VALUE = "another test"
+
+[abc]
+	INT_VALUE = 1
+	STRING_VALUE = "test"
+	BOOLEAN_VALUE = true
+
+	[abc.nested]
+		NESTED_INT_VALUE = 42
+		NESTED_STRING_VALUE = "nested test"
+
+			[abc.nested.deep.value]
+				DEEP_NESTED_STRING_VALUE = "deep nested test"

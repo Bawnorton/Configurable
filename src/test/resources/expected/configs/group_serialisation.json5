@@ -1,0 +1,18 @@
+{
+	abc: {
+		BOOLEAN_VALUE: true,
+		INT_VALUE: 1,
+		STRING_VALUE: "test",
+		nested: {
+			NESTED_INT_VALUE: 42,
+			NESTED_STRING_VALUE: "nested test",
+			deep: {
+				value: {
+					DEEP_NESTED_STRING_VALUE: "deep nested test"
+				}
+			}
+		}
+	},
+	ANOTHER_STRING_VALUE: "another test",
+	DOUBLE_VALUE: 3.14
+}

@@ -1,11 +1,15 @@
 package com.bawnorton.configurable.generated.test_project;
 
 import com.bawnorton.configurable.io.FileType;
+import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
 import com.bawnorton.configurable.util.GenericType;
 import com.google.auto.service.AutoService;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import javax.annotation.processing.Generated;
 import sources.validator.MessageProviderDoesntExist;
 
@@ -28,12 +32,20 @@ public final class GeneratedConfigLoader implements ConfigLoader {
     }
 
     @Override
-    public void load() {
-        field.load();
+    public void load(SaveLoader saveLoader) {
+        saveLoader.load(getFields());
     }
 
     @Override
-    public void save() {
-        field.save();
+    public void save(SaveLoader saveLoader) {
+        saveLoader.save(getFields());
+    }
+
+    @Override
+    public List<FieldReference<?>> getFields() {
+        List<FieldReference<?>> fields = new ArrayList<>();
+        fields.add(field);
+        fields.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
+        return fields;
     }
 }

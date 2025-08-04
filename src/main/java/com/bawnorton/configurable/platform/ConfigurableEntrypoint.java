@@ -13,7 +13,7 @@ public class ConfigurableEntrypoint implements ModInitializer {
         ConfigurableMain.init();
     }
 }
-//?} elif neoforge {
+//?} else {
 /*import net.neoforged.fml.common.Mod;
 
 @Mod(ConfigurableMain.MOD_ID)

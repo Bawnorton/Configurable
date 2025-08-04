@@ -22,67 +22,57 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 public class SaveLoader {
     private final Path configPath;
     private final FileType fileType;
-    private final List<FieldReference<Object>> toBeSaved = new ArrayList<>();
-    private final List<FieldReference<Object>> toBeLoaded = new ArrayList<>();
 
     public SaveLoader(Path configPath, FileType fileType) {
         this.configPath = configPath;
         this.fileType = fileType;
     }
-
+    
     @SuppressWarnings("unchecked")
-    public void markToBeLoaded(FieldReference<?> reference) {
-        toBeLoaded.add((FieldReference<Object>) reference);
-    }
+    public void load(List<FieldReference<?>> references) {
+        if(!Files.exists(configPath) || references.isEmpty()) return;
 
-    @SuppressWarnings("unchecked")
-    public void markToBeSaved(FieldReference<?> reference) {
-        toBeSaved.add((FieldReference<Object>) reference);
-    }
-
-    public void load() {
-        if(!Files.exists(configPath) || toBeLoaded.isEmpty()) return;
+        List<FieldReference<Object>> castedReferences = references.stream()
+                .map(ref -> (FieldReference<Object>) ref)
+                .toList();
 
         switch (fileType) {
-            case JSON -> loadJson();
-            case TOML -> loadToml();
+            case JSON -> loadJson(castedReferences);
+            case TOML -> loadToml(castedReferences);
         }
-
-        toBeLoaded.clear();
     }
 
-    public void save() {
-        if (toBeSaved.isEmpty()) return;
+    @SuppressWarnings("unchecked")
+    public void save(List<FieldReference<?>> references) {
+        if (references.isEmpty()) return;
 
-        toBeSaved.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
+        List<FieldReference<Object>> castedReferences = references.stream()
+                .map(ref -> (FieldReference<Object>) ref)
+                .toList();
 
         switch (fileType) {
-            case JSON -> saveJson();
-            case TOML -> saveToml();
+            case JSON -> saveJson(castedReferences);
+            case TOML -> saveToml(castedReferences);
         }
-
-        toBeSaved.clear();
     }
 
-    private void loadJson() {
+    private void loadJson(List<FieldReference<Object>> references) {
         try (GsonReader reader = new GsonReader(JsonReader.json5(configPath))) {
             JsonElement tree = JsonParser.parseReader(reader);
-            for (FieldReference<Object> ref : toBeLoaded) {
+            for (FieldReference<Object> ref : references) {
                 JsonElement element = extractFieldFromJsonTree(tree, ref.group(), ref.name());
                 if (element == null) {
                     handleMissingValue(ref);
                     continue;
                 }
 
-                Object value = Interpreter.interpret(element, ref.genericType());
+                Object value = SerialisationHelper.interpret(element, ref.genericType());
                 if (value == null) {
                     handleInvalidValue(ref, null);
                     continue;
@@ -115,14 +105,14 @@ public class SaveLoader {
         return leaf;
     }
 
-    private void loadToml() {
+    private void loadToml(List<FieldReference<Object>> references) {
         try {
             TomlParser tomlParser = new TomlParser();
             CommentedConfig parsed = tomlParser.parse(configPath, FileNotFoundAction.CREATE_EMPTY);
-            for (FieldReference<Object> ref : toBeLoaded) {
+            for (FieldReference<Object> ref : references) {
                 GenericType expectedType = ref.genericType();
                 String coordinate = ref.group() == null ? ref.name() : "%s.%s".formatted(ref.group(), ref.name());
-                Object value = Interpreter.interpret(parsed, coordinate, expectedType);
+                Object value = SerialisationHelper.interpret(parsed, coordinate, expectedType);
                 if (value == null) {
                     handleMissingValue(ref);
                     continue;
@@ -156,7 +146,7 @@ public class SaveLoader {
         }
     }
 
-    private void saveJson() {
+    private void saveJson(List<FieldReference<Object>> references) {
         if (!Files.exists(configPath)) {
             try {
                 Files.createDirectories(configPath.getParent());
@@ -169,7 +159,7 @@ public class SaveLoader {
         try (JsonWriter writer = JsonWriter.json5(configPath)) {
             writer.beginObject();
             String currentGroup = null;
-            for (FieldReference<Object> ref : toBeSaved) {
+            for (FieldReference<Object> ref : references) {
                 if(ref.comment() != null) {
                     writer.comment(ref.comment());
                 }
@@ -228,28 +218,17 @@ public class SaveLoader {
         } else if (currentGroup != null) {
             String[] currentParts = currentGroup.split("\\.");
             String[] newParts = newGroup.split("\\.");
-            String needToOpen = null;
-            int minLength = Math.min(currentParts.length, newParts.length);
-            for (int i = 0; i < minLength; i++) {
-                if (!currentParts[i].equals(newParts[i])) {
-                    for (int j = currentParts.length - 1; j >= i; j--) {
-                        writer.endObject();
-                    }
-                    needToOpen = newGroup.substring(newParts[i].length() + 1);
-                    break;
-                }
+            int common = 0;
+            while (common < currentParts.length && common < newParts.length && currentParts[common].equals(newParts[common])) {
+                common++;
             }
-            for (int i = minLength; i < currentParts.length; i++) {
+            for (int i = currentParts.length - 1; i >= common; i--) {
                 writer.endObject();
             }
-            if (needToOpen != null) {
-                String[] parts = needToOpen.split("\\.");
-                for (String part : parts) {
-                    writer.name(part).beginObject();
-                }
-                return newGroup;
+            for (int i = common; i < newParts.length; i++) {
+                writer.name(newParts[i]).beginObject();
             }
-            return currentGroup;
+            return newGroup;
         } else {
             String[] parts = newGroup.split("\\.");
             for (String part : parts) {
@@ -259,17 +238,17 @@ public class SaveLoader {
         }
     }
 
-    private void saveToml() {
+    private void saveToml(List<FieldReference<Object>> references) {
         try {
             TomlWriter tomlWriter = new TomlWriter();
             tomlWriter.setIndent(IndentStyle.TABS);
             CommentedConfig config = TomlFormat.newConfig();
-            for (FieldReference<Object> ref : toBeSaved) {
+            for (FieldReference<Object> ref : references) {
                 String path = ref.group() == null ? ref.name() : "%s.%s".formatted(ref.group(), ref.name());
                 if (ref.comment() != null) {
-                    config.setComment(path, ref.comment());
+                    config.setComment(path, " %s".formatted(ref.comment()));
                 }
-                Object value = Interpreter.safeForToml(ref.get());
+                Object value = SerialisationHelper.safeForToml(ref.get());
                 if (value != null) {
                     config.set(path, value);
                 }
