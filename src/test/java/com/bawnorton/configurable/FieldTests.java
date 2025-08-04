@@ -27,4 +27,22 @@ public class FieldTests extends BaseTest {
         ConfigurableTestHelper.logModule();
         testCompilationSuccess("sources/field/ListField.java");
     }
+
+    @Test
+    public void testPrivateField() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/field/PrivateField.java");
+    }
+
+    @Test
+    public void testFieldWithoutStaticModifier() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/field/FieldWithoutStaticModifier.java");
+    }
+
+    @Test
+    public void testFinalField() {
+        ConfigurableTestHelper.logModule();
+        testCompilationFailure("sources/field/FinalField.java");
+    }
 }

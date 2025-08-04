@@ -1,6 +1,5 @@
 package com.bawnorton.configurable.processor;
 
-import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.io.FileType;
 import org.jetbrains.annotations.NotNull;
 import java.util.Locale;

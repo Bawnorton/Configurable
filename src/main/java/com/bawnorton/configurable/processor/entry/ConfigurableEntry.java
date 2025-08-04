@@ -29,7 +29,8 @@ public class ConfigurableEntry {
         boolean sync = element.doesSync();
         String comment = element.getComment();
         comment = comment == null ? null : comment.strip();
-        ConfigurableValidator validator = ConfigurableValidator.fromConfigurableElement(name, element, processingEnv);
+        String fullName = group == null || group.isEmpty() ? name : "%s.%s".formatted(group, name);
+        ConfigurableValidator validator = ConfigurableValidator.fromConfigurableElement(fullName, element, processingEnv);
         if (validator == null) return null;
 
         return new ConfigurableEntry(element.getAnnotatedElement(), name, group, comment, sync, validator);

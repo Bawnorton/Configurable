@@ -1,7 +1,6 @@
 package com.bawnorton.configurable.networking;
 
 import com.bawnorton.configurable.ConfigurableMain;
-import com.bawnorton.configurable.api.impl.ConfigurableApiImpl;
 import com.bawnorton.configurable.io.SerialisationHelper;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.service.ConfigLoader;

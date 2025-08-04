@@ -96,6 +96,22 @@ public class ConfigLoaderGenerator {
                     enclosingClass,
                     validator.getValidatorMethod().getName()
             );
+        } else if (validator.hasMax() && validator.hasMin()) {
+            validatorBuilder.add(
+                    ".fieldValidator(value -> value <= $L && value >= $L)",
+                    validator.getMax(),
+                    validator.getMin()
+            );
+        } else if (validator.hasMax()) {
+            validatorBuilder.add(
+                    ".fieldValidator(value -> value <= $L)",
+                    validator.getMax()
+            );
+        } else if (validator.hasMin()) {
+            validatorBuilder.add(
+                    ".fieldValidator(value -> value >= $L)",
+                    validator.getMin()
+            );
         }
         if (validator.hasMessageMethod()) {
             validatorBuilder.add(

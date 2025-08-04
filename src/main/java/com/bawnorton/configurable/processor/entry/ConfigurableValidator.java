@@ -2,9 +2,9 @@ package com.bawnorton.configurable.processor.entry;
 
 import com.bawnorton.configurable.processor.element.ConfigurableElement;
 import com.bawnorton.configurable.processor.util.AnnotationHelper;
-import com.bawnorton.configurable.util.Either;
 import com.bawnorton.configurable.processor.util.MethodHelper;
 import com.bawnorton.configurable.processor.util.MethodReference;
+import com.bawnorton.configurable.util.Either;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -43,7 +43,7 @@ public class ConfigurableValidator {
         this.max = max;
     }
 
-    public static ConfigurableValidator fromConfigurableElement(String fieldName, ConfigurableElement configurableElement, ProcessingEnvironment processingEnv) {
+    public static ConfigurableValidator fromConfigurableElement(String fullName, ConfigurableElement configurableElement, ProcessingEnvironment processingEnv) {
         Double min = configurableElement.isMinSet() ? configurableElement.getMin() : null;
         Double max = configurableElement.isMaxSet() ? configurableElement.getMax() : null;
         boolean isNumeric = configurableElement.isNumeric();
@@ -98,6 +98,11 @@ public class ConfigurableValidator {
         String validatorMethod = configurableElement.getValidatorReference();
         MethodReference reference = null;
         if(!validatorMethod.isEmpty()) {
+            if (min != null || max != null) {
+                processingEnv.getMessager().printWarning("Min and max values are set for '%s', but a validator method is also specified. The validator method will be used instead of min/max validation.".formatted(fullName), annotatedElement);
+                return null;
+            }
+
             Either<MethodReference, String> maybeReference = MethodHelper.getReference(classElement, validatorMethod, processingEnv);
             reference = validateMethodReference(maybeReference, processingEnv, validatorMethod, message -> {
                 AnnotationMirror validatorMirror = configurableElement.getValidatorMirror();
@@ -142,16 +147,20 @@ public class ConfigurableValidator {
         String messageLiteral = null;
         MethodReference messageReference = null;
         if(maybeMessageMethod.isEmpty()) {
-            if(isNumeric) {
-                if(min != null) {
-                    messageLiteral = "Value for '%s' must be greater than or equal to '%s'".formatted(fieldName, min);
-                } else if(max != null) {
-                    messageLiteral = "Value for '%s' must be less than or equal to '%s'".formatted(fieldName, max);
+            if (reference == null) {
+                if(isNumeric) {
+                    if(min != null) {
+                        messageLiteral = "Value for '%s' must be greater than or equal to '%s'".formatted(fullName, min);
+                    } else if(max != null) {
+                        messageLiteral = "Value for '%s' must be less than or equal to '%s'".formatted(fullName, max);
+                    } else {
+                        messageLiteral = "Value for '%s' must be a number".formatted(fullName);
+                    }
                 } else {
-                    messageLiteral = "Value for '%s' must be a number".formatted(fieldName);
+                    messageLiteral = "Value for '%s' is invalid".formatted(fullName);
                 }
             } else {
-                messageLiteral = "Value for '%s' is invalid".formatted(fieldName);
+                messageLiteral = "Value for '%s' does not adhere to its validator: '%s'".formatted(fullName, reference.getName());
             }
             if(fallback) {
                 messageLiteral += ". Resetting to default value: '%s'".formatted(defaultValue);
@@ -226,6 +235,22 @@ public class ConfigurableValidator {
 
     public @Nullable MethodReference getValidatorMethod() {
         return validatorMethod;
+    }
+
+    public boolean hasMin() {
+        return min != null;
+    }
+
+    public @Nullable Double getMin() {
+        return min;
+    }
+
+    public boolean hasMax() {
+        return max != null;
+    }
+
+    public @Nullable Double getMax() {
+        return max;
     }
 
     public boolean hasMessageMethod() {

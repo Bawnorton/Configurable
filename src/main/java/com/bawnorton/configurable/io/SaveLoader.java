@@ -72,7 +72,15 @@ public class SaveLoader {
                     continue;
                 }
 
-                Object value = SerialisationHelper.interpret(element, ref.genericType());
+                Object value;
+                try {
+                    value = SerialisationHelper.interpret(element, ref.genericType());
+                } catch (Exception e) {
+                    ConfigurableMain.LOGGER.error("Failed to interpret value for JSON field '{}'", ref.fullName());
+                    ConfigurableMain.LOGGER.debug("Exception details:", e);
+                    handleInvalidValue(ref, null);
+                    continue;
+                }
                 if (value == null) {
                     handleInvalidValue(ref, null);
                     continue;
@@ -112,7 +120,15 @@ public class SaveLoader {
             for (FieldReference<Object> ref : references) {
                 GenericType expectedType = ref.genericType();
                 String coordinate = ref.group() == null ? ref.name() : "%s.%s".formatted(ref.group(), ref.name());
-                Object value = SerialisationHelper.interpret(parsed, coordinate, expectedType);
+                Object value;
+                try {
+                    value = SerialisationHelper.interpret(parsed, coordinate, expectedType);
+                } catch (Exception e) {
+                    ConfigurableMain.LOGGER.error("Failed to interpret value for TOML field '{}'", ref.fullName());
+                    ConfigurableMain.LOGGER.debug("Exception details:", e);
+                    handleInvalidValue(ref, null);
+                    continue;
+                }
                 if (value == null) {
                     handleMissingValue(ref);
                     continue;
@@ -131,17 +147,20 @@ public class SaveLoader {
 
     private void handleMissingValue(FieldReference<Object> ref) {
         if(ref.validator().fallback()) {
+            ConfigurableMain.LOGGER.warn(ref.validator().messageProvider().getMessage(null));
             ref.set(ref.validator().defaultSupplier().get());
         } else {
-            throw new IllegalConfigException(configPath.getFileName().toString(), "Field '%s' in group '%s' was expected but was not found.".formatted(ref.name(), ref.group()));
+            String message = "Field '%s' was expected but was not found.".formatted(ref.fullName());
+            throw new IllegalConfigException(configPath.getFileName().toString(), message);
         }
     }
 
     private void handleInvalidValue(FieldReference<Object> ref, Object value) {
+        String message = ref.validator().messageProvider().getMessage(value);
         if (ref.validator().fallback()) {
+            ConfigurableMain.LOGGER.warn(message);
             ref.set(ref.validator().defaultSupplier().get());
         } else {
-            String message = ref.validator().messageProvider().getMessage(value);
             throw new IllegalConfigException(configPath.getFileName().toString(), message);
         }
     }

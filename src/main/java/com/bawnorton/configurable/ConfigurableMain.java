@@ -1,6 +1,5 @@
 package com.bawnorton.configurable;
 
-import com.bawnorton.configurable.io.FileType;
 import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.networking.Networking;
 import com.bawnorton.configurable.networking.SyncConfigPayload;

@@ -31,6 +31,8 @@ public class ConfigurableProcessor extends AbstractProcessor {
         if (settings == null) return true;
 
         ConfigurableEntries entries = ConfigurableEntries.fromElements(elements, settings, processingEnv);
+        if (entries == null) return true;
+
         ConfigLoaderGenerator generator = new ConfigLoaderGenerator(processingEnv, settings);
         for(ConfigurableEntry entry : entries) {
             generator.addEntry(entry);
