@@ -63,4 +63,22 @@ public abstract class BaseTest {
             throw new AssertionError("Failed to compare file contents", e);
         }
     }
+
+    static {
+        URL resource = Resources.getResource("configurable.properties");
+        Path targetPath = Path.of(System.getProperty("user.dir"), "configurable.properties");
+        try {
+            Files.createDirectories(targetPath.getParent());
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    Files.deleteIfExists(targetPath);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to delete configurable.properties on shutdown", e);
+                }
+            }));
+            Files.copy(resource.openStream(), targetPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to copy configurable.properties to build resources", e);
+        }
+    }
 }

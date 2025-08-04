@@ -37,6 +37,25 @@ public @interface Configurable {
      */
     boolean sync() default true;
 
+    /**
+     * Method reference for a listener that will be called when the config element is set to a new value.<br><br>
+     * The method must be public, static, accept a parameter of the type of the annotated field and a boolean parameter indicating whether it is set from a sync or not, and return nothing.<br>
+     * The method reference should be in the format {@code package.to.ClassName#methodName}.<br>
+     * If the method is in the same class, you can omit the class reference: {@code methodName}.<br><br>
+     * Example usage:
+     * <pre>
+     * {@code @Configurable(onSet = "logOnSet")
+     * public static int myField = 42;
+     *
+     * public static void logOnSet(int value, boolean fromSync) {
+     *    LOGGER.info("myField was set to " + value + " (sync: " + fromSync + ")");
+     * }}
+     * </pre>
+     * Defaults to an empty string, which means no listener will be called.
+     * @apiNote This method is only called when the reference is set, which happens when the config is loaded or synced.<br>
+     */
+    String onSet() default "";
+
 
     /**
      * This is used to determine if the value parsed from the config file is valid<br>

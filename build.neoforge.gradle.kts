@@ -23,7 +23,7 @@ val loader: String by project
 base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 
 dependencies {
-    implementation("com.google.auto.service:auto-service-annotations:1.0")
+    jarJar(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
     implementation("com.palantir.javapoet:javapoet:0.7.0")
     implementation("org.quiltmc.parsers:json:0.3.1")
     implementation("org.quiltmc.parsers:gson:0.3.1")

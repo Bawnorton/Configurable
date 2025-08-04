@@ -1,5 +1,6 @@
 package com.bawnorton.configurable.networking;
 
+import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.io.SerialisationHelper;
 import com.bawnorton.configurable.reference.FieldReference;
@@ -39,7 +40,7 @@ public record SyncConfigPayload(String name, List<FieldReference<?>> fieldRefere
 
     private static SyncConfigPayload decode(ByteBuf byteBuf) {
         String name = ByteBufCodecs.STRING_UTF8.decode(byteBuf);
-        ConfigLoader configLoader = ConfigurableMain.getConfigLoader(name);
+        ConfigLoader configLoader = ConfigurableLoader.getConfigLoader(name);
         List<FieldReference<?>> expectedFields = configLoader.getFields()
                 .stream()
                 .filter(FieldReference::doesSync)
@@ -101,7 +102,7 @@ public record SyncConfigPayload(String name, List<FieldReference<?>> fieldRefere
             if (matchingField == null) {
                 throw new IllegalArgumentException("Field '%s' not found in config loader '%s'".formatted(fieldName, configLoader.getName()));
             }
-            matchingField.set(fieldReference.get());
+            matchingField.set(fieldReference.get(), true);
         }
     }
 }

@@ -6,7 +6,12 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeMirror;
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class MethodHelper {
     public static Either<MethodReference, String> getReference(Element enclosingClass, String methodReference, ProcessingEnvironment processingEnv) {
@@ -36,5 +41,46 @@ public class MethodHelper {
             return Either.right("Class '%s' not found".formatted(className));
         }
         return getLocalMethodReference(typeElement, methodName);
+    }
+
+
+    public static @Nullable MethodReference validateMethodReference(Either<MethodReference, String> maybeReference, ProcessingEnvironment processingEnv, String validatorMethod, Consumer<String> errorConsumer) {
+        if (maybeReference.isRight()) {
+            String errorMessage = maybeReference.getRight();
+            errorConsumer.accept(errorMessage);
+            return null;
+        }
+
+        MethodReference reference = maybeReference.getLeft();
+        if (!reference.isPublic()) {
+            processingEnv.getMessager().printError("Method '%s' must be public".formatted(validatorMethod), reference.methodElement());
+            return null;
+        }
+        if (!reference.isStatic()) {
+            processingEnv.getMessager().printError("Method '%s' must be static".formatted(validatorMethod), reference.methodElement());
+            return null;
+        }
+        return reference;
+    }
+
+    public static boolean validateParameters(Element annotatedElement, String methodName, MethodReference methodReference, ProcessingEnvironment processingEnv) {
+        List<TypeMirror> parameterTypes = methodReference.parameterTypes();
+        if (parameterTypes.size() != 1) {
+            VariableElement problemElement = methodReference.methodElement().getParameters().get(1);
+            processingEnv.getMessager().printError("Method '%s' must have exactly one parameter, but found %d".formatted(methodName, parameterTypes.size()), problemElement);
+            return false;
+        }
+
+        TypeMirror actualParameterType = parameterTypes.getFirst();
+        TypeMirror expectedParameterType = annotatedElement.asType();
+        if (expectedParameterType.getKind().isPrimitive()) {
+            expectedParameterType = processingEnv.getTypeUtils().boxedClass((PrimitiveType) expectedParameterType).asType();
+        }
+        if (!processingEnv.getTypeUtils().isSameType(actualParameterType, expectedParameterType)) {
+            VariableElement problemElement = methodReference.methodElement().getParameters().getFirst();
+            processingEnv.getMessager().printError("Method '%s' must accept a parameter of type '%s', but found '%s'".formatted(methodName, expectedParameterType, actualParameterType), problemElement);
+            return false;
+        }
+        return true;
     }
 }

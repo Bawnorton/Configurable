@@ -5,6 +5,7 @@ import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.processor.ConfigurableSettings;
 import com.bawnorton.configurable.processor.entry.ConfigurableEntry;
 import com.bawnorton.configurable.processor.entry.ConfigurableValidator;
+import com.bawnorton.configurable.processor.util.MethodReference;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
@@ -82,6 +83,13 @@ public class ConfigLoaderGenerator {
         if (entry.hasGroup()) {
             initalizerBuilder.add(".group($S)", entry.getGroup());
         }
+        if (entry.hasOnSetMethod()) {
+            MethodReference onSetMethod = entry.getOnSetMethod();
+            initalizerBuilder.add(".onSet($T::$L)",
+                    onSetMethod.enclosingClass(),
+                    onSetMethod.getName()
+            );
+        }
 
         ConfigurableValidator validator = entry.getValidator();
         CodeBlock.Builder validatorBuilder = CodeBlock.builder();
@@ -91,10 +99,11 @@ public class ConfigLoaderGenerator {
                 fieldType
         );
         if (validator.hasValidatorMethod()) {
+            MethodReference validatorMethod = validator.getValidatorMethod();
             validatorBuilder.add(
                     ".fieldValidator($T::$L)",
-                    enclosingClass,
-                    validator.getValidatorMethod().getName()
+                    validatorMethod.enclosingClass(),
+                    validatorMethod.getName()
             );
         } else if (validator.hasMax() && validator.hasMin()) {
             validatorBuilder.add(
@@ -114,10 +123,11 @@ public class ConfigLoaderGenerator {
             );
         }
         if (validator.hasMessageMethod()) {
+            MethodReference messageMethod = validator.getMessageMethod();
             validatorBuilder.add(
                     ".messageProvider($T::$L)",
-                    enclosingClass,
-                    validator.getMessageMethod().getName()
+                    messageMethod.enclosingClass(),
+                    messageMethod.getName()
             );
         } else {
             validatorBuilder.add(

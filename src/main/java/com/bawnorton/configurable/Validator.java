@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 public @interface Validator {
     /**
      * Method reference for a custom validator<br><br>
-     * The method must be public, static, accept a single parameter of the fileType of the annotated field, and return a boolean.<br>
+     * The method must be public, static, accept a single parameter of the type of the annotated field, and return a boolean.<br>
      * The method reference should be in the format {@code package.to.ClassName#methodName}.<br>
      * If the method is in the same class, you can omit the class reference: {@code methodName}.<br><br>
      * Example usage:
@@ -35,7 +35,7 @@ public @interface Validator {
     /**
      * Custom error message to be used if the validation fails and {@code fallback} is set to false.<br><br>
      * If a more complex message is needed, you can pass a method reference to a custom message provider.<br>
-     * The method must be public, static, accept a single parameter of the fileType of the annotated field, and return a String.<br>
+     * The method must be public, static, accept a single parameter of the type of the annotated field, and return a String.<br>
      * The method reference should be in the format
      * {@code package.to.ClassName#methodName}.<br>
      * If the method is in the same class, you can omit the class reference: {@code methodName}.<br><br>
@@ -61,14 +61,14 @@ public @interface Validator {
 
     /**
      * Minimum value for the field.<br>
-     * If the field is a non-numeric fileType, this will fail to compile.<br>
+     * If the field is a non-numeric type, this will fail to compile.<br>
      * Must be less than or equal to {@code max()}.
      */
     double min() default Double.MIN_VALUE;
 
     /**
      * Maximum value for the field.<br>
-     * If the field is a non-numeric fileType, this will fail to compile.<br>
+     * If the field is a non-numeric type, this will fail to compile.<br>
      * Must be greater than or equal to {@code min()}.
      */
     double max() default Double.MAX_VALUE;

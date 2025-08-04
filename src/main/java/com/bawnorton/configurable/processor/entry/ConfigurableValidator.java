@@ -96,7 +96,7 @@ public class ConfigurableValidator {
 
         Element classElement = annotatedElement.getEnclosingElement();
         String validatorMethod = configurableElement.getValidatorReference();
-        MethodReference reference = null;
+        MethodReference validatorReference = null;
         if(!validatorMethod.isEmpty()) {
             if (min != null || max != null) {
                 processingEnv.getMessager().printWarning("Min and max values are set for '%s', but a validator method is also specified. The validator method will be used instead of min/max validation.".formatted(fullName), annotatedElement);
@@ -104,7 +104,7 @@ public class ConfigurableValidator {
             }
 
             Either<MethodReference, String> maybeReference = MethodHelper.getReference(classElement, validatorMethod, processingEnv);
-            reference = validateMethodReference(maybeReference, processingEnv, validatorMethod, message -> {
+            validatorReference = MethodHelper.validateMethodReference(maybeReference, processingEnv, validatorMethod, message -> {
                 AnnotationMirror validatorMirror = configurableElement.getValidatorMirror();
                 processingEnv.getMessager().printMessage(
                         Diagnostic.Kind.ERROR,
@@ -114,32 +114,16 @@ public class ConfigurableValidator {
                         AnnotationHelper.getAnnotationValue(validatorMirror, "value")
                 );
             });
-            if (reference == null) return null;
+            if (validatorReference == null) return null;
 
-            TypeMirror actualReturnType = reference.returnType();
+            TypeMirror actualReturnType = validatorReference.returnType();
             TypeMirror expectedReturnType = processingEnv.getTypeUtils().getPrimitiveType(TypeKind.BOOLEAN);
             if (!processingEnv.getTypeUtils().isAssignable(actualReturnType, expectedReturnType)) {
-                processingEnv.getMessager().printError("Return type of method '%s' must be boolean, but found '%s'".formatted(validatorMethod, actualReturnType), reference.methodElement());
+                processingEnv.getMessager().printError("Return type of method '%s' must be boolean, but found '%s'".formatted(validatorMethod, actualReturnType), validatorReference.methodElement());
                 return null;
             }
 
-            List<TypeMirror> parameterTypes = reference.parameterTypes();
-            if (parameterTypes.size() != 1) {
-                VariableElement problemElement = reference.methodElement().getParameters().get(1);
-                processingEnv.getMessager().printError("Method '%s' must have exactly one parameter, but found %d".formatted(validatorMethod, parameterTypes.size()), problemElement);
-                return null;
-            }
-
-            TypeMirror actualParameterType = parameterTypes.getFirst();
-            TypeMirror expectedParameterType = annotatedElement.asType();
-            if (expectedParameterType.getKind().isPrimitive()) {
-                expectedParameterType = processingEnv.getTypeUtils().boxedClass((PrimitiveType) expectedParameterType).asType();
-            }
-            if (!processingEnv.getTypeUtils().isSameType(actualParameterType, expectedParameterType)) {
-                VariableElement problemElement = reference.methodElement().getParameters().getFirst();
-                processingEnv.getMessager().printError("Method '%s' must accept a parameter of type '%s', but found '%s'".formatted(validatorMethod, expectedParameterType, actualParameterType), problemElement);
-                return null;
-            }
+            if (!MethodHelper.validateParameters(annotatedElement, validatorMethod, validatorReference, processingEnv)) return null;
         }
 
         String maybeMessageMethod = configurableElement.getFailureMessageReference();
@@ -147,7 +131,7 @@ public class ConfigurableValidator {
         String messageLiteral = null;
         MethodReference messageReference = null;
         if(maybeMessageMethod.isEmpty()) {
-            if (reference == null) {
+            if (validatorReference == null) {
                 if(isNumeric) {
                     if(min != null) {
                         messageLiteral = "Value for '%s' must be greater than or equal to '%s'".formatted(fullName, min);
@@ -160,7 +144,7 @@ public class ConfigurableValidator {
                     messageLiteral = "Value for '%s' is invalid".formatted(fullName);
                 }
             } else {
-                messageLiteral = "Value for '%s' does not adhere to its validator: '%s'".formatted(fullName, reference.getName());
+                messageLiteral = "Value for '%s' does not adhere to its validator: '%s'".formatted(fullName, validatorReference.getName());
             }
             if(fallback) {
                 messageLiteral += ". Resetting to default value: '%s'".formatted(defaultValue);
@@ -170,7 +154,7 @@ public class ConfigurableValidator {
             if (maybeMessageMethodReference.isRight()) { // not a valid method reference so treat it as a literal
                 messageLiteral = maybeMessageMethod;
             } else {
-                messageReference = validateMethodReference(maybeMessageMethodReference, processingEnv, maybeMessageMethod, message -> {});
+                messageReference = MethodHelper.validateMethodReference(maybeMessageMethodReference, processingEnv, maybeMessageMethod, message -> {});
                 if (messageReference == null) return null;
 
                 TypeMirror messageReturnType = messageReference.returnType();
@@ -183,46 +167,11 @@ public class ConfigurableValidator {
                     return null;
                 }
 
-                List<TypeMirror> messageParameterTypes = messageReference.parameterTypes();
-                if (messageParameterTypes.size() != 1) {
-                    Element problemElement = messageReference.methodElement().getParameters().get(1);
-                    processingEnv.getMessager().printError("Method '%s' must have exactly one parameter, but found %d".formatted(maybeMessageMethod, messageParameterTypes.size()), problemElement);
-                    return null;
-                }
-
-                TypeMirror messageParameterType = messageParameterTypes.getFirst();
-                TypeMirror expectedParameterType = annotatedElement.asType();
-                if (expectedParameterType.getKind().isPrimitive()) {
-                    expectedParameterType = processingEnv.getTypeUtils().boxedClass((PrimitiveType) expectedParameterType).asType();
-                }
-                if (!processingEnv.getTypeUtils().isSameType(messageParameterType, expectedParameterType)) {
-                    Element problemElement = messageReference.methodElement().getParameters().getFirst();
-                    processingEnv.getMessager().printError("Message method '%s' must accept a parameter of type '%s', but found '%s'".formatted(maybeMessageMethod, expectedParameterType, messageParameterType), problemElement);
-                    return null;
-                }
+                if (!MethodHelper.validateParameters(annotatedElement, maybeMessageMethod, messageReference, processingEnv)) return null;
             }
         }
 
-        return new ConfigurableValidator(fallback, defaultValue, reference, messageReference, messageLiteral, min, max);
-    }
-
-    private static @Nullable MethodReference validateMethodReference(Either<MethodReference, String> maybeReference, ProcessingEnvironment processingEnv, String validatorMethod, Consumer<String> errorConsumer) {
-        if (maybeReference.isRight()) {
-            String errorMessage = maybeReference.getRight();
-            errorConsumer.accept(errorMessage);
-            return null;
-        }
-
-        MethodReference reference = maybeReference.getLeft();
-        if (!reference.isPublic()) {
-            processingEnv.getMessager().printError("Method '%s' must be public".formatted(validatorMethod), reference.methodElement());
-            return null;
-        }
-        if (!reference.isStatic()) {
-            processingEnv.getMessager().printError("Method '%s' must be static".formatted(validatorMethod), reference.methodElement());
-            return null;
-        }
-        return reference;
+        return new ConfigurableValidator(fallback, defaultValue, validatorReference, messageReference, messageLiteral, min, max);
     }
 
     public boolean doesFallback() {

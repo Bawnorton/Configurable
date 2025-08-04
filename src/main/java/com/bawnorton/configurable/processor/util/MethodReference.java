@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Set;
 
 public record MethodReference(ExecutableElement methodElement) {
+    public TypeMirror enclosingClass() {
+        return methodElement.getEnclosingElement().asType();
+    }
+
     public String getName() {
         return methodElement.getSimpleName().toString();
     }

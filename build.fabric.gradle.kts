@@ -34,7 +34,7 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:0.16.14")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
 
-    implementation("com.google.auto.service:auto-service-annotations:1.0")
+    include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
     implementation("com.palantir.javapoet:javapoet:0.7.0")
     implementation("org.quiltmc.parsers:json:0.3.1")
     implementation("org.quiltmc.parsers:gson:0.3.1")

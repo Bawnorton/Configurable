@@ -1,9 +1,10 @@
 package com.bawnorton.configurable.networking;
 
 //? if fabric {
-import com.bawnorton.configurable.ConfigurableMain;
+import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.service.ConfigLoader;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -11,9 +12,16 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class Networking {
     public static void init() {
-        PayloadTypeRegistry.playC2S().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
 
         ClientPlayNetworking.registerGlobalReceiver(SyncConfigPayload.TYPE, Networking::handleSyncConfigPayload);
+
+        ServerPlayerEvents.JOIN.register(player -> {
+            for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
+                SyncConfigPayload payload = new SyncConfigPayload(loader.getName(), loader.getFields());
+                send(player, payload);
+            }
+        });
     }
 
     public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
@@ -21,18 +29,20 @@ public class Networking {
     }
 
     private static void handleSyncConfigPayload(SyncConfigPayload payload, ClientPlayNetworking.Context context) {
-        ConfigLoader configLoader = ConfigurableMain.getConfigLoader(payload.name());
+        ConfigLoader configLoader = ConfigurableLoader.getConfigLoader(payload.name());
         payload.applyToConfigLoader(configLoader);
     }
 }
 //?} else {
 
-/*import com.bawnorton.configurable.ConfigurableMain;
+/*import com.bawnorton.configurable.ConfigurableLoader;
+import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.service.ConfigLoader;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -48,12 +58,22 @@ public class Networking {
         registrar.playToClient(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC, Networking::handleSyncConfigPayload);
     }
 
+    @SubscribeEvent
+    public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        for (ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
+            SyncConfigPayload payload = new SyncConfigPayload(loader.getName(), loader.getFields());
+            send(player, payload);
+        }
+    }
+
     public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
         PacketDistributor.sendToPlayer(player, payload);
     }
 
     private static void handleSyncConfigPayload(SyncConfigPayload payload, IPayloadContext context) {
-        ConfigLoader configLoader = ConfigurableMain.getConfigLoader(payload.name());
+        ConfigLoader configLoader = ConfigurableLoader.getConfigLoader(payload.name());
         payload.applyToConfigLoader(configLoader);
     }
 }

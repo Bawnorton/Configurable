@@ -44,6 +44,14 @@ public record ConfigurableSettings(String name, FileType fileType, NamingPolicy 
         return enumValue;
     }
 
+    public Properties toProperties() {
+        Properties properties = new Properties();
+        properties.setProperty("name", name);
+        properties.setProperty("type", fileType.name());
+        properties.setProperty("naming_policy", namingPolicy.name());
+        return properties;
+    }
+
     public enum NamingPolicy {
         IDENTITY(UnaryOperator.identity()),
         UPPER_CASE_WITH_UNDERSCORES(s -> separateCamelCase(s, '_').toUpperCase(Locale.ENGLISH)),

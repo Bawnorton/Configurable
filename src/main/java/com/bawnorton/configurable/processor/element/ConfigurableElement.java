@@ -22,15 +22,17 @@ public class ConfigurableElement {
     private final String rightHandSide;
     private final String comment;
     private final Configurable configurable;
+    private final AnnotationMirror configurableMirror;
     private final AnnotationMirror validatorMirror;
 
-    public ConfigurableElement(Element annotatedElement, String elementName, boolean isNumeric, String rightHandSide, String comment, Configurable configurable, AnnotationMirror validatorMirror) {
+    public ConfigurableElement(Element annotatedElement, String elementName, boolean isNumeric, String rightHandSide, String comment, Configurable configurable, AnnotationMirror configurableMirror, AnnotationMirror validatorMirror) {
         this.annotatedElement = annotatedElement;
         this.elementName = elementName;
         this.isNumeric = isNumeric;
         this.rightHandSide = rightHandSide;
         this.comment = comment;
         this.configurable = configurable;
+        this.configurableMirror = configurableMirror;
         this.validatorMirror = validatorMirror;
     }
 
@@ -72,6 +74,7 @@ public class ConfigurableElement {
                 defaultValue,
                 comment,
                 configurable,
+                configurableMirror,
                 validatorMirror
         );
     }
@@ -103,8 +106,16 @@ public class ConfigurableElement {
         return comment;
     }
 
+    public String getOnSetReference() {
+        return configurable.onSet();
+    }
+
     public boolean doesSync() {
         return configurable.sync();
+    }
+
+    public AnnotationMirror getConfigurableMirror() {
+        return configurableMirror;
     }
 
     public AnnotationMirror getValidatorMirror() {

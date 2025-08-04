@@ -26,7 +26,7 @@ public class NetworkingTests extends BaseTest {
         ConfigLoader instance = getLoaderFromCompilation(compilation);
         Path root = Path.of(System.getProperty("user.dir")).getParent().getParent();
         Path configDir = root.resolve("test-output/%s/".formatted(ConfigurableTestHelper.getModuleName()));
-        ConfigurableMain.registerConfigLoader(configDir, instance);
+        ConfigurableLoader.registerConfigLoader(configDir, instance);
 
         List<FieldReference<?>> fields = instance.getFields();
         List<FieldReference<?>> preSyncFields = new ArrayList<>();

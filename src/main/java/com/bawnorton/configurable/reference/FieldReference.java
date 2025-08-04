@@ -5,9 +5,16 @@ import com.bawnorton.configurable.util.GenericType;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, GenericType genericType, String name, String group, String comment, boolean doesSync, ValidatorReference<T> validator) {
+public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, GenericType genericType, String name, String group, String comment, boolean doesSync, OnSet<T> onSet, ValidatorReference<T> validator) {
     public void set(T value) {
+        set(value, false);
+    }
+
+    public void set(T value, boolean fromSync) {
         setter.accept(value);
+        if (onSet != null) {
+            onSet.onSet(value, fromSync);
+        }
     }
 
     public T get() {
@@ -31,6 +38,7 @@ public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, GenericT
         private String group = null;
         private String comment = null;
         private boolean doesSync = false;
+        private OnSet<T> onSet = null;
         private ValidatorReference<T> validator = null;
 
         public Builder(Consumer<T> setter, Supplier<T> getter, GenericType genericType, String name) {
@@ -55,13 +63,18 @@ public record FieldReference<T>(Consumer<T> setter, Supplier<T> getter, GenericT
             return this;
         }
 
+        public Builder<T> onSet(OnSet<T> onSet) {
+            this.onSet = onSet;
+            return this;
+        }
+
         public Builder<T> validator(ValidatorReference<T> validator) {
             this.validator = validator;
             return this;
         }
 
         public FieldReference<T> build() {
-            return new FieldReference<>(setter, getter, genericType, name, group, comment, doesSync, validator);
+            return new FieldReference<>(setter, getter, genericType, name, group, comment, doesSync, onSet, validator);
         }
     }
 }
