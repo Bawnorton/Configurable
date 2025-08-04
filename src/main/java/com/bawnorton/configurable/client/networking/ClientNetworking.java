@@ -5,7 +5,7 @@ import com.bawnorton.configurable.networking.SyncConfigPayload;
 import com.bawnorton.configurable.service.ConfigLoader;
 
 //? if fabric {
-/*import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public class ClientNetworking {
     public static void init() {
@@ -17,9 +17,9 @@ public class ClientNetworking {
         payload.applyToConfigLoader(configLoader);
     }
 }
-*///?} else {
-public class ClientNetworking {
+//?} else {
+/*public class ClientNetworking {
     public static void init() {
     }
 }
-//?}
+*///?}
