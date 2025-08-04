@@ -140,17 +140,20 @@ publishMods {
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add(loader)
 
+    val compatibleVersionString = mod("compatible_versions")!!
+    val compatibleVersions = compatibleVersionString.split(",").map { it.trim() }
+
     modrinth {
         projectId = property("publishing.modrinth") as String
         accessToken = mrToken
-        minecraftVersions.add(minecraft)
+        minecraftVersions.addAll(compatibleVersions)
         requires("fabric-api")
     }
 
     curseforge {
         projectId = property("publishing.curseforge") as String
         accessToken = cfToken
-        minecraftVersions.add(minecraft)
+        minecraftVersions.addAll(compatibleVersions)
         requires("fabric-api")
     }
 }
