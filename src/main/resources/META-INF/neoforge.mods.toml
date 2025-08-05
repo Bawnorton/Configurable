@@ -5,6 +5,7 @@ license = "${mod_license}"
 
 [[mods]]
     modId = "${mod_id}"
+    logoFile = "assets/${mod_id}/icon.png"
     version = "${mod_version}"
     displayName = "${mod_name}"
     description = '''${mod_description}'''

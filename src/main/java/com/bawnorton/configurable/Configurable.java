@@ -47,7 +47,7 @@ public @interface Configurable {
      * {@code @Configurable(onSet = "logOnSet")
      * public static int myField = 42;
      *
-     * public static void logOnSet(int value, boolean fromSync) {
+     * public static void logOnSet(Integer value, boolean fromSync) {
      *    LOGGER.info("myField was set to " + value + " (sync: " + fromSync + ")");
      * }}
      * </pre>
