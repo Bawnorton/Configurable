@@ -1,3 +1,7 @@
+# 3.1.0
+
+- Fix saving incorrect configs in production
+
 # 3.0.2
 
 - Include nightconfig in fabric jar
