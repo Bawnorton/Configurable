@@ -4,7 +4,6 @@ import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.processor.ConfigurableSettings;
 import com.bawnorton.configurable.service.ConfigLoader;
 import com.bawnorton.configurable.util.Pair;
-import joptsimple.internal.Reflection;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -16,15 +15,18 @@ import java.net.URI;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 
 @ApiStatus.Internal
 public class ConfigurableApiImpl {
     public static void saveChanges(ServerLevel level, boolean sync) {
         ConfigLoader configLoader = getCallersConfigLoader();
         ConfigurableLoader.saveChanges(configLoader, level, sync);
+    }
+
+    public static void loadFromDisk(ServerLevel level, boolean sync) {
+        ConfigLoader configLoader = getCallersConfigLoader();
+        ConfigurableLoader.loadFromDisk(configLoader, level, sync);
     }
 
     /**
@@ -98,8 +100,8 @@ public class ConfigurableApiImpl {
 
 
     private static @Nullable InputStream configFileFromJarResource(URL resource) throws IOException {
-        if (resource == null || !"jar".equals(resource.getProtocol())) {
-            return configFileFromDev(resource);
+        if (resource == null || !resource.getPath().contains("!")) {
+            return findConfigFile(resource);
         }
 
         String path = resource.toString();
@@ -109,7 +111,7 @@ public class ConfigurableApiImpl {
         return resourceUrl.openStream();
     }
 
-    private static @Nullable InputStream configFileFromDev(@Nullable URL resource) throws IOException {
+    private static @Nullable InputStream findConfigFile(@Nullable URL resource) throws IOException {
         ClassLoader classLoader = ConfigurableApiImpl.class.getClassLoader();
         Enumeration<URL> resources = classLoader.getResources("META-INF/configurable.properties");
         if (resource == null) {

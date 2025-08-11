@@ -11,4 +11,12 @@ public interface ConfigurableApi {
     static void saveChanges() {
         saveChanges(null, false);
     }
+
+    static void loadFromDisk(ServerLevel level, boolean sync) {
+        ConfigurableApiImpl.loadFromDisk(level, sync);
+    }
+
+    static void loadFromDisk() {
+        loadFromDisk(null, false);
+    }
 }

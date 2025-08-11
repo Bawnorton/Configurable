@@ -67,12 +67,23 @@ public class ConfigurableLoader {
 
     public static void saveChanges(ConfigLoader configLoader, ServerLevel level, boolean sync) {
         configLoader.save(getSaveLoader(configLoader.getName()));
+        if(sync) {
+            sync(configLoader, level);
+        }
+    }
+
+    public static void loadFromDisk(ConfigLoader configLoader, ServerLevel level, boolean sync) {
+        configLoader.load(getSaveLoader(configLoader.getName()));
         if (sync) {
-            if (level != null) {
-                level.players().forEach(player -> Networking.send(player, new SyncConfigPayload(configLoader.getName(), configLoader.getFields())));
-            } else {
-                LOGGER.warn("Sync requested without a valid world. Changes will not be synced.");
-            }
+            sync(configLoader, level);
+        }
+    }
+
+    private static void sync(ConfigLoader configLoader, ServerLevel level) {
+        if (level != null) {
+            level.players().forEach(player -> Networking.send(player, new SyncConfigPayload(configLoader.getName(), configLoader.getFields())));
+        } else {
+            LOGGER.warn("Sync requested without a valid world. Changes will not be synced.");
         }
     }
 }
