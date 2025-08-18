@@ -3,7 +3,6 @@ package com.bawnorton.configurable.networking;
 //? if fabric {
 import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.service.ConfigLoader;
-import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -12,13 +11,13 @@ import net.minecraft.server.level.ServerPlayer;
 public class Networking {
     public static void init() {
         PayloadTypeRegistry.playS2C().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
+    }
 
-        ServerPlayerEvents.JOIN.register(player -> {
-            for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
-                SyncConfigPayload payload = new SyncConfigPayload(loader.getName(), loader.getFields());
-                send(player, payload);
-            }
-        });
+    public static void syncConfigs(ServerPlayer player) {
+        for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
+            SyncConfigPayload payload = new SyncConfigPayload(loader.getName(), loader.getFields());
+            send(player, payload);
+        }
     }
 
     public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
@@ -34,7 +33,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -50,11 +48,8 @@ public class Networking {
         registrar.playToClient(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC, Networking::handleSyncConfigPayload);
     }
 
-    @SubscribeEvent
-    public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
-
-        for (ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
+    public static void syncConfigs(ServerPlayer player) {
+        for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
             SyncConfigPayload payload = new SyncConfigPayload(loader.getName(), loader.getFields());
             send(player, payload);
         }

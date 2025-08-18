@@ -66,7 +66,7 @@ public record SyncConfigPayload(String name, List<FieldReference<?>> fieldRefere
             newFieldReferences.add(
                     FieldReference.builder(
                                     ignored -> {
-                                        throw new UnsupportedOperationException("Field '%s' is, read-only".formatted(fullName));
+                                        throw new UnsupportedOperationException("Field '%s' is read-only".formatted(fullName));
                                     },
                                     () -> value,
                                     fieldReference.genericType(),
