@@ -37,8 +37,8 @@ dependencies {
     include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
     include(implementation("org.quiltmc.parsers:json:0.3.1")!!)
     include(implementation("org.quiltmc.parsers:gson:0.3.1")!!)
-    include(implementation("com.electronwill.night-config:toml:3.8.2")!!)
-    include(implementation("com.electronwill.night-config:core:3.8.2")!!)
+    include(implementation("com.electronwill.night-config:toml:3.8.3")!!)
+    include(implementation("com.electronwill.night-config:core:3.8.3")!!)
 
     implementation("com.palantir.javapoet:javapoet:0.7.0")
 

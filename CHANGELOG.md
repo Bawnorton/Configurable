@@ -1,3 +1,7 @@
+# 3.2.3
+
+- Update night config
+
 # 3.2.2
 
 - No longer rely on events for syncing configs on world join
