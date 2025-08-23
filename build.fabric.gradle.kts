@@ -16,6 +16,7 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://maven.quiltmc.org/repository/release/")
+    maven("https://maven.parchmentmc.org")
 }
 
 val minecraft: String by project
