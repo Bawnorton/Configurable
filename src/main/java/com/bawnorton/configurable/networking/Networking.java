@@ -56,7 +56,9 @@ public class Networking {
     }
 
     public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
-        PacketDistributor.sendToPlayer(player, payload);
+        if(player.connection.hasChannel(payload)) {
+            PacketDistributor.sendToPlayer(player, payload);
+        }
     }
 
     private static void handleSyncConfigPayload(SyncConfigPayload payload, IPayloadContext context) {

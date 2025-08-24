@@ -1,3 +1,7 @@
+# 3.2.4
+
+- Neo: Only send packet to connections that have remote channel 
+
 # 3.2.3
 
 - Update night config
