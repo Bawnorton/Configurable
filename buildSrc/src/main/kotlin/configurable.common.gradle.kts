@@ -32,7 +32,8 @@ tasks {
             "mod_version" to mod("version"),
             "mod_description" to mod("description"),
             "mod_license" to mod("license"),
-            "minecraft_version" to compatibleVersions.first(),
+            "minecraft_version" to minecraft,
+            "minecraft_dependency" to compatibleVersions.first(),
             "pack_format" to 71
         )
 
