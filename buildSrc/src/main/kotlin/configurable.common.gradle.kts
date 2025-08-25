@@ -23,13 +23,16 @@ tasks {
             awExclude || atExclude
         }
 
+        val compatibleVersionString = mod("compatible_versions")!!
+        val compatibleVersions = compatibleVersionString.split(",").map { it.trim() }
+
         val props = mapOf(
             "mod_id" to mod("id"),
             "mod_name" to mod("name"),
             "mod_version" to mod("version"),
             "mod_description" to mod("description"),
             "mod_license" to mod("license"),
-            "minecraft_version" to minecraft,
+            "minecraft_version" to compatibleVersions.first(),
             "pack_format" to 71
         )
 

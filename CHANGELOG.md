@@ -1,3 +1,7 @@
+# 3.2.5
+
+- Correct fmj/nmt mc version population for dep range to be based on compatible versions rather than build version
+
 # 3.2.4
 
 - Neo: Only send packet to connections that have remote channel 
