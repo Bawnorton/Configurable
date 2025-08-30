@@ -40,6 +40,9 @@ public record SyncConfigPayload(String name, List<FieldReference<?>> fieldRefere
 
     private static SyncConfigPayload decode(ByteBuf byteBuf) {
         String name = ByteBufCodecs.STRING_UTF8.decode(byteBuf);
+        if(!ConfigurableLoader.isConfigLoaderPresent(name)) {
+            return new SyncConfigPayload(name, List.of());
+        }
         ConfigLoader configLoader = ConfigurableLoader.getConfigLoader(name);
         List<FieldReference<?>> expectedFields = configLoader.getFields()
                 .stream()
@@ -47,7 +50,7 @@ public record SyncConfigPayload(String name, List<FieldReference<?>> fieldRefere
                 .toList();
         int size = ByteBufCodecs.VAR_INT.decode(byteBuf);
         if (size != expectedFields.size()) {
-            throw new IllegalArgumentException("Expected %d fields, but got %d".formatted(expectedFields.size(), size));
+            throw new IllegalArgumentException("Expected %d fields, but got %d. There is likely a server-client version mismatch for '%s'".formatted(expectedFields.size(), size, name));
         }
         //noinspection unchecked
         Map<String, FieldReference<Object>> fieldMap = expectedFields.stream()
@@ -66,7 +69,7 @@ public record SyncConfigPayload(String name, List<FieldReference<?>> fieldRefere
             newFieldReferences.add(
                     FieldReference.builder(
                                     ignored -> {
-                                        throw new UnsupportedOperationException("Field '%s' is read-only".formatted(fullName));
+                                        throw new UnsupportedOperationException("Synthetic networking field reference '%s' for '%s' is read-only".formatted(fullName, name));
                                     },
                                     () -> value,
                                     fieldReference.genericType(),
@@ -99,10 +102,9 @@ public record SyncConfigPayload(String name, List<FieldReference<?>> fieldRefere
         for (FieldReference<?> fieldReference : fieldReferences) {
             String fieldName = fieldReference.fullName();
             FieldReference<Object> matchingField = fieldMap.get(fieldName);
-            if (matchingField == null) {
-                throw new IllegalArgumentException("Field '%s' not found in config loader '%s'".formatted(fieldName, configLoader.getName()));
+            if (matchingField != null) {
+                matchingField.set(fieldReference.get(), true);
             }
-            matchingField.set(fieldReference.get(), true);
         }
     }
 }

@@ -53,6 +53,10 @@ public class ConfigurableLoader {
         saveLoaders.put(instance.getName(), saveLoader);
     }
 
+    public static boolean isConfigLoaderPresent(String name) {
+        return configLoaders.containsKey(name);
+    }
+
     public static ConfigLoader getConfigLoader(String name) {
         ConfigLoader loader = configLoaders.get(name);
         if (loader == null) {

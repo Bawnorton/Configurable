@@ -1,3 +1,8 @@
+# 3.2.6
+
+- Fix reliance on client-side config being present (#18)
+- Add LICENSE
+
 # 3.2.5
 
 - Correct fmj/nmt mc version population for dep range to be based on compatible versions rather than build version
