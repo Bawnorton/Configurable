@@ -1,3 +1,7 @@
+# 3.2.7
+
+- Handle sideness myself as api implementation is not sufficient for handling client-server mismatches (Neruina/#152)
+
 # 3.2.6
 
 - Fix reliance on client-side config being present (#18)
