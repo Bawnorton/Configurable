@@ -3,7 +3,7 @@ package com.bawnorton.configurable.platform;
 import com.bawnorton.configurable.client.ConfigurableClient;
 
 //? if fabric {
-import dev.kikugie.fletching_table.annotation.fabric.Entrypoint;
+/*import dev.kikugie.fletching_table.annotation.fabric.Entrypoint;
 import net.fabricmc.api.ClientModInitializer;
 
 @Entrypoint
@@ -13,8 +13,8 @@ public class ConfigurableClientEntrypoint implements ClientModInitializer {
         ConfigurableClient.init();
     }
 }
-//?} else {
-/*import com.bawnorton.configurable.ConfigurableMain;
+*///?} else {
+import com.bawnorton.configurable.ConfigurableMain;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
 
@@ -24,4 +24,4 @@ public class ConfigurableClientEntrypoint {
         ConfigurableClient.init();
     }
 }
-*///?}
+//?}

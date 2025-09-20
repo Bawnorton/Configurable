@@ -3,7 +3,7 @@ package com.bawnorton.configurable.platform;
 import java.nio.file.Path;
 
 //? if fabric {
-import net.fabricmc.loader.api.FabricLoader;
+/*import net.fabricmc.loader.api.FabricLoader;
 
 public final class Platform {
     public static Path getConfigDir() {
@@ -11,12 +11,12 @@ public final class Platform {
     }
 }
 
-//?} else {
-/*import net.neoforged.fml.loading.FMLPaths;
+*///?} else {
+import net.neoforged.fml.loading.FMLPaths;
 
 public final class Platform {
     public static Path getConfigDir() {
         return FMLPaths.CONFIGDIR.get();
     }
 }
-*///?}
+//?}

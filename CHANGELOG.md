@@ -1,3 +1,7 @@
+# 3.2.8
+
+- Client now tells server what configs it has so server can make better decisions on what to send (#19)
+
 # 3.2.7
 
 - Handle sideness myself as api implementation is not sufficient for handling client-server mismatches (Neruina/#152)
