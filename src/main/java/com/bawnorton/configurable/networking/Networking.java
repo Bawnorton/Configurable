@@ -78,6 +78,7 @@ public class Networking {
         registrar.playToClient(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC, Networking::handleSyncConfigPayload);
         registrar.playToServer(HandshakePaylod.TYPE, HandshakePaylod.STREAM_CODEC, Networking::handleHandshake);
     }
+
     @SubscribeEvent
     public static void onPlayerJoined(PlayerEvent.PlayerLoggedInEvent event) {
         syncConfigs((ServerPlayer) event.getEntity());

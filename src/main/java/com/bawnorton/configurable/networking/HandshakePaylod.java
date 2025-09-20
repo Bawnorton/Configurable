@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public record HandshakePaylod(Set<String> configs) implements CustomPacketPayload {
-    public static final ResourceLocation ID = ConfigurableMain.rl("sync_config_payload");
+    public static final ResourceLocation ID = ConfigurableMain.rl("handshake");
     public static final CustomPacketPayload.Type<HandshakePaylod> TYPE = new Type<>(ID);
     public static final StreamCodec<ByteBuf, HandshakePaylod> STREAM_CODEC = ByteBufCodecs.collection(HashSet::new, ByteBufCodecs.STRING_UTF8)
         .map(HandshakePaylod::new, payload -> new HashSet<>(payload.configs()));

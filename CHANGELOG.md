@@ -1,3 +1,7 @@
+# 3.2.9
+
+- Fix typo in handshake packet id (#21)
+
 # 3.2.8
 
 - Client now tells server what configs it has so server can make better decisions on what to send (#19)
