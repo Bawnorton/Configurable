@@ -1,7 +1,7 @@
 package com.bawnorton.configurable.client.networking;
 
 //? if fabric {
-/*import com.bawnorton.configurable.ConfigurableLoader;
+import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.networking.HandshakePaylod;
 import com.bawnorton.configurable.networking.SyncConfigPayload;
 import com.bawnorton.configurable.service.ConfigLoader;
@@ -33,9 +33,9 @@ public class ClientNetworking {
         ClientPlayNetworking.send(payload);
     }
 }
-*///?} else {
-public class ClientNetworking {
+//?} else {
+/*public class ClientNetworking {
     public static void init() {
     }
 }
-//?}
+*///?}

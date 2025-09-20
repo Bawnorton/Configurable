@@ -1,7 +1,7 @@
 package com.bawnorton.configurable.networking;
 
 //? if fabric {
-/*import com.bawnorton.configurable.ConfigurableLoader;
+import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.service.ConfigLoader;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -47,9 +47,9 @@ public class Networking {
         ServerPlayNetworking.send(player, payload);
     }
 }
-*///?} else {
+//?} else {
 
-import com.bawnorton.configurable.ConfigurableLoader;
+/*import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.service.ConfigLoader;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -116,4 +116,4 @@ public class Networking {
     }
 }
 
-//?}
+*///?}
