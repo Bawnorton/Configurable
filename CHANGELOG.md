@@ -1,3 +1,7 @@
+# 3.2.10
+
+- Add support for 1.21.9/10
+
 # 3.2.9
 
 - Fix typo in handshake packet id (#21)

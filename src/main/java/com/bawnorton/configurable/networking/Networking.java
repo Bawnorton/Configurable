@@ -24,16 +24,16 @@ public class Networking {
 
         ServerPlayNetworking.registerGlobalReceiver(HandshakePaylod.TYPE, Networking::handleHandshake);
 
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clientConfigs.remove(handler.player.getGameProfile().getId()));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clientConfigs.remove(getPlayerId(handler.getPlayer())));
     }
 
     private static void handleHandshake(HandshakePaylod handshakePaylod, ServerPlayNetworking.Context context) {
-        clientConfigs.put(context.player().getGameProfile().getId(), handshakePaylod.configs());
+        clientConfigs.put(getPlayerId(context.player()), handshakePaylod.configs());
         syncConfigs(context.player());
     }
 
     public static void syncConfigs(ServerPlayer player) {
-        Set<String> configs = clientConfigs.getOrDefault(player.getGameProfile().getId(), Set.of());
+        Set<String> configs = clientConfigs.getOrDefault(getPlayerId(player), Set.of());
         if(configs.isEmpty()) return;
 
         for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
@@ -42,6 +42,14 @@ public class Networking {
             }
         }
     }
+
+		private static UUID getPlayerId(ServerPlayer player) {
+			//? if >=1.21.10 {
+			return player.getGameProfile().id();
+			//?} else {
+			/*return player.getGameProfile().getId();
+			*///?}
+		}
 
     public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
         ServerPlayNetworking.send(player, payload);
@@ -54,6 +62,7 @@ import com.bawnorton.configurable.ConfigurableMain;
 import com.bawnorton.configurable.service.ConfigLoader;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -86,11 +95,11 @@ public class Networking {
 
     @SubscribeEvent
     public static void onPlayerLeft(PlayerEvent.PlayerLoggedOutEvent event) {
-        clientConfigs.remove(event.getEntity().getGameProfile().getId());
+        clientConfigs.remove(getPlayerId(event.getEntity()));
     }
 
     private static void handleHandshake(HandshakePaylod handshakePaylod, IPayloadContext context) {
-        clientConfigs.put(context.player().getGameProfile().getId(), handshakePaylod.configs());
+        clientConfigs.put(getPlayerId(context.player()), handshakePaylod.configs());
         syncConfigs((ServerPlayer) context.player());
     }
 
@@ -100,7 +109,7 @@ public class Networking {
     }
 
     public static void syncConfigs(ServerPlayer player) {
-        Set<String> configs = clientConfigs.getOrDefault(player.getGameProfile().getId(), Set.of());
+        Set<String> configs = clientConfigs.getOrDefault(getPlayerId(player), Set.of());
         if(configs.isEmpty()) return;
 
         for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
@@ -109,6 +118,14 @@ public class Networking {
             }
         }
     }
+
+		private static UUID getPlayerId(Player player) {
+				//? if >=1.21.10 {
+				return player.getGameProfile().id();
+				//?} else {
+				/^return player.getGameProfile().getId();
+				^///?}
+		}
 
     public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
         if(player.connection.hasChannel(payload)) {
