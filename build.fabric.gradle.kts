@@ -32,7 +32,7 @@ dependencies {
         }
     })
 
-    modImplementation("net.fabricmc:fabric-loader:0.16.14")
+    modImplementation("net.fabricmc:fabric-loader:0.17.3")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
 
     include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
@@ -57,6 +57,14 @@ java {
 loom {
     accessWidenerPath.set(rootProject.file("src/main/resources/$minecraft.accesswidener"))
 
+    fabricApi {
+        configureDataGeneration {
+            createRunConfiguration = true
+            client = true
+            modId = mod("id")!!
+        }
+    }
+
     runConfigs.all {
         ideConfigGenerated(false)
     }
@@ -69,6 +77,10 @@ loom {
         name = "Fabric Client $minecraft"
     }
 
+    runConfigs["datagen"].apply {
+        name = "Fabric Data Generation $minecraft"
+    }
+
     afterEvaluate {
         runConfigs.configureEach {
             applyMixinDebugSettings(::vmArg, ::property)
@@ -77,6 +89,10 @@ loom {
 }
 
 fletchingTable {
+    fabric {
+        entrypointMappings.put("fabric-datagen", "net.fabricmc.fabric.api.datagen.v1.FabricDataGeneratorEntrypoint")
+    }
+
     mixins.register("main") {
         mixin("default", "configurable.mixins.json")
         mixin("client", "configurable.client.mixins.json") {
@@ -96,6 +112,14 @@ tasks {
     processResources {
         exclude("META-INF/neoforge.mods.toml")
         exclude { it.name.endsWith("-accesstransformer.cfg") }
+    }
+
+    remapJar {
+        dependsOn("runDatagen")
+    }
+
+    named<Jar>("sourcesJar") {
+        dependsOn("runDatagen")
     }
 
     test {

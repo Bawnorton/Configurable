@@ -33,8 +33,7 @@ tasks {
             "mod_description" to mod("description"),
             "mod_license" to mod("license"),
             "minecraft_version" to minecraft,
-            "minecraft_dependency" to compatibleVersions.first(),
-            "pack_format" to 71
+            "minecraft_dependency" to compatibleVersions.first()
         )
 
         inputs.properties(props)

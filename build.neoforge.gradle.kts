@@ -49,6 +49,12 @@ neoForge {
     validateAccessTransformers = true
     accessTransformers.from(rootProject.file("src/main/resources/$minecraft-accesstransformer.cfg"))
 
+    mods {
+        register(mod("id")!!) {
+            sourceSet(sourceSets["main"])
+        }
+    }
+
     deps("parchment") {
         parchment {
             val (mc, version) = it.split(':')
@@ -68,6 +74,19 @@ neoForge {
 
             programArgument("--username=Bawnorton")
             programArgument("--uuid=17c06cab-bf05-4ade-a8d6-ed14aaf70545")
+        }
+
+        register("data") {
+            disableIdeRun()
+            if (stonecutter.eval(minecraft, ">1.21.1")) {
+                serverData()
+            } else {
+                data()
+            }
+            programArguments.addAll(
+                "--mod", "${mod("id")}",
+                "--output", project.file("src/main/generated").toString()
+            )
         }
     }
 
@@ -99,6 +118,10 @@ tasks {
         dependsOn("build")
     }
 
+    build {
+        dependsOn("runData")
+    }
+
     processResources {
         exclude("fabric.mod.json", "configurable.fabric.mixins.json")
         exclude { it.name.endsWith(".accesswidener") }
@@ -113,7 +136,7 @@ tasks {
     }
 }
 
-sourceSets { // Thanks neo, you're the best
+sourceSets {
     test {
         compileClasspath += sourceSets.main.get().compileClasspath
         runtimeClasspath += sourceSets.main.get().runtimeClasspath
