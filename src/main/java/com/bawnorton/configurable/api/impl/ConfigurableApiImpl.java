@@ -122,7 +122,7 @@ public class ConfigurableApiImpl {
                 }
             }
         } else {
-            String path = resource.toString();
+            String path = resource.getPath();
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 String urlPath = url.getPath();

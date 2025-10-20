@@ -1,3 +1,7 @@
+# 3.2.12
+
+- Fix automatic config finder
+
 # 3.2.11
 
 - Fix pack.mcmeta for 1.21.9+
