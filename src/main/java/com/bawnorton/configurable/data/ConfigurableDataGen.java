@@ -62,7 +62,7 @@ import net.neoforged.neoforge.data.event.GatherDataEvent;
 @EventBusSubscriber(modid = ConfigurableMain.MOD_ID)
 public final class ConfigurableDataGen {
 	@SubscribeEvent
-	//? if >=1.21.8 {
+	//? if >=1.21.5 {
 	public static void gatherServerData(GatherDataEvent.Server event) {
 		DataGenerator gen = event.getGenerator();
 	//?} else {

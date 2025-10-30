@@ -1,3 +1,7 @@
+# 3.3.0
+
+- Add 1.21.5/6 artifacts
+
 # 3.2.12
 
 - Fix automatic config finder
