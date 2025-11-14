@@ -15,3 +15,4 @@ CUSTOM_NAME = 100
 LIST_OF_STRING_ARRAYS_FIELD = [["a", "b"], ["c", "d"]]
 STRING_ARRAY_FIELD = ["one", "two", "three"]
 STRING_LIST_FIELD = ["one", "two", "three"]
+ENUM_FIELD = "MONDAY"

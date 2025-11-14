@@ -1,16 +1,16 @@
 package com.bawnorton.configurable.io;
 
 public enum FileType {
-    JSON("json5"),
-    TOML("toml");
+	JSON("json5"),
+	TOML("toml");
 
-    private final String extension;
+	private final String extension;
 
-    FileType(String extension) {
-        this.extension = extension;
-    }
+	FileType(String extension) {
+		this.extension = extension;
+	}
 
-    public String getExtension() {
-        return extension;
-    }
+	public String getExtension() {
+		return extension;
+	}
 }

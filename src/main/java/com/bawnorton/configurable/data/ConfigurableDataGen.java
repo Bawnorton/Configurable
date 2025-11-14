@@ -1,6 +1,7 @@
 package com.bawnorton.configurable.data;
 
 //? if fabric {
+
 import dev.kikugie.fletching_table.annotation.fabric.Entrypoint;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;

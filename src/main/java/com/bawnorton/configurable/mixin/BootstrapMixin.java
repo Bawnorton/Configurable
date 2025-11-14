@@ -11,14 +11,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @MixinEnvironment
 @Mixin(Bootstrap.class)
 public abstract class BootstrapMixin {
-    @Inject(
-            method = "bootStrap",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Ljava/time/Instant;now()Ljava/time/Instant;"
-            )
-    )
-    private static void asEarlyAsFeasibleForReferencingMCClasses(CallbackInfo ci) {
-        ConfigurableLoader.init();
-    }
+	@Inject(
+			method = "bootStrap",
+			at = @At(
+					value = "INVOKE",
+					target = "Ljava/time/Instant;now()Ljava/time/Instant;"
+			)
+	)
+	private static void asEarlyAsFeasibleForReferencingMCClasses(CallbackInfo ci) {
+		ConfigurableLoader.init();
+	}
 }

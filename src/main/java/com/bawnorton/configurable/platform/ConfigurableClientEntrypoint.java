@@ -8,10 +8,10 @@ import net.fabricmc.api.ClientModInitializer;
 
 @Entrypoint
 public class ConfigurableClientEntrypoint implements ClientModInitializer {
-    @Override
-    public void onInitializeClient() {
-        ConfigurableClient.init();
-    }
+	@Override
+	public void onInitializeClient() {
+		ConfigurableClient.init();
+	}
 }
 //?} else {
 /*import com.bawnorton.configurable.ConfigurableMain;

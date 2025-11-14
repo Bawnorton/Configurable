@@ -4,6 +4,7 @@
 	CHAR_FIELD: "A",
 	CUSTOM_NAME: 100,
 	DOUBLE_FIELD: 3.14,
+	ENUM_FIELD: "MONDAY",
 	// A simple field comment
 	FIELD: 42,
 	FLOAT_FIELD: 2.718,

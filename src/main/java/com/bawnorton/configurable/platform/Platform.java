@@ -6,9 +6,9 @@ import java.nio.file.Path;
 import net.fabricmc.loader.api.FabricLoader;
 
 public final class Platform {
-    public static Path getConfigDir() {
-        return FabricLoader.getInstance().getConfigDir();
-    }
+	public static Path getConfigDir() {
+		return FabricLoader.getInstance().getConfigDir();
+	}
 }
 
 //?} else {

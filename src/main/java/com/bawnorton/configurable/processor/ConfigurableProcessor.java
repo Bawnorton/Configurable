@@ -6,6 +6,7 @@ import com.bawnorton.configurable.processor.entry.ConfigurableEntry;
 import com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator;
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.JavaFile;
+
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -24,76 +25,76 @@ import java.util.Set;
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 @AutoService(Processor.class)
 public class ConfigurableProcessor extends AbstractProcessor {
-    private ConfigurableSettings settings;
+	private ConfigurableSettings settings;
 
-    @Override
-    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(Configurable.class);
-        if (elements.isEmpty()) return false;
+	@Override
+	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+		Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(Configurable.class);
+		if (elements.isEmpty()) return false;
 
-        loadSettings(processingEnv);
-        if (settings == null) return true;
+		loadSettings(processingEnv);
+		if (settings == null) return true;
 
-        ConfigurableEntries entries = ConfigurableEntries.fromElements(elements, settings, processingEnv);
-        if (entries == null) return true;
+		ConfigurableEntries entries = ConfigurableEntries.fromElements(elements, settings, processingEnv);
+		if (entries == null) return true;
 
-        ConfigLoaderGenerator generator = new ConfigLoaderGenerator(processingEnv, settings);
-        for(ConfigurableEntry entry : entries) {
-            generator.addEntry(entry);
-        }
-        if (generator.isEmpty()) return true;
+		ConfigLoaderGenerator generator = new ConfigLoaderGenerator(processingEnv, settings);
+		for (ConfigurableEntry entry : entries) {
+			generator.addEntry(entry);
+		}
+		if (generator.isEmpty()) return true;
 
-        try {
-            JavaFile generated = generator.generate();
-            generated.writeTo(processingEnv.getFiler());
-            processingEnv.getMessager().printNote("Generated config loader for '%s'.".formatted(settings.name()));
-        } catch (IOException e) {
-            processingEnv.getMessager().printError("Failed to generate config loader:\n%s: %s".formatted(
-                    e.getClass().getCanonicalName(),
-                    e.getMessage()
-            ));
-        }
+		try {
+			JavaFile generated = generator.generate();
+			generated.writeTo(processingEnv.getFiler());
+			processingEnv.getMessager().printNote("Generated config loader for '%s'.".formatted(settings.name()));
+		} catch (IOException e) {
+			processingEnv.getMessager().printError("Failed to generate config loader:\n%s: %s".formatted(
+					e.getClass().getCanonicalName(),
+					e.getMessage()
+			));
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    private void loadSettings(ProcessingEnvironment processingEnv) {
-        if (settings != null) return;
+	private void loadSettings(ProcessingEnvironment processingEnv) {
+		if (settings != null) return;
 
-        Messager messager = processingEnv.getMessager();
+		Messager messager = processingEnv.getMessager();
 
-        Path projectDir = Path.of(System.getProperty("user.dir"));
-        Path configPath = projectDir.resolve("configurable.properties");
-        try (InputStream configStream = new FileInputStream(configPath.toFile())) {
-            Properties properties = new Properties();
-            properties.load(configStream);
-            try {
-                settings = ConfigurableSettings.fromProperties(properties);
-            } catch (IllegalArgumentException e) {
-                messager.printError("Invalid configurable.properties: %s".formatted(e.getMessage()));
-            }
-        } catch (IOException e) {
-            messager.printError("Failed to read configurable.properties:\n%s: %s".formatted(
-                    e.getClass().getCanonicalName(),
-                    e.getMessage()
-            ));
-        }
+		Path projectDir = Path.of(System.getProperty("user.dir"));
+		Path configPath = projectDir.resolve("configurable.properties");
+		try (InputStream configStream = new FileInputStream(configPath.toFile())) {
+			Properties properties = new Properties();
+			properties.load(configStream);
+			try {
+				settings = ConfigurableSettings.fromProperties(properties);
+			} catch (IllegalArgumentException e) {
+				messager.printError("Invalid configurable.properties: %s".formatted(e.getMessage()));
+			}
+		} catch (IOException e) {
+			messager.printError("Failed to read configurable.properties:\n%s: %s".formatted(
+					e.getClass().getCanonicalName(),
+					e.getMessage()
+			));
+		}
 
-        if (settings == null) return;
+		if (settings == null) return;
 
-        Filer filer = processingEnv.getFiler();
-        String propertiesFile = "META-INF/configurable.properties";
-        try {
-            FileObject fileObject = filer.createResource(StandardLocation.CLASS_OUTPUT, "", propertiesFile);
-            try (OutputStream out = fileObject.openOutputStream()) {
-                Properties properties = settings.toProperties();
-                properties.store(out, "Generated by ConfigurableProcessor");
-            }
-        } catch (IOException e) {
-            messager.printError("Failed to write configurable.properties:\n%s: %s".formatted(
-                    e.getClass().getCanonicalName(),
-                    e.getMessage()
-            ));
-        }
-    }
+		Filer filer = processingEnv.getFiler();
+		String propertiesFile = "META-INF/configurable.properties";
+		try {
+			FileObject fileObject = filer.createResource(StandardLocation.CLASS_OUTPUT, "", propertiesFile);
+			try (OutputStream out = fileObject.openOutputStream()) {
+				Properties properties = settings.toProperties();
+				properties.store(out, "Generated by ConfigurableProcessor");
+			}
+		} catch (IOException e) {
+			messager.printError("Failed to write configurable.properties:\n%s: %s".formatted(
+					e.getClass().getCanonicalName(),
+					e.getMessage()
+			));
+		}
+	}
 }

@@ -7,10 +7,12 @@ import com.bawnorton.configurable.reference.validator.ValidatorReference;
 import com.bawnorton.configurable.service.ConfigLoader;
 import com.bawnorton.configurable.util.GenericType;
 import com.google.auto.service.AutoService;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.processing.Generated;
+
 import sources.field.CommentedField;
 
 /**
@@ -19,34 +21,42 @@ import sources.field.CommentedField;
 @Generated("com.bawnorton.configurable.processor.generator.ConfigLoaderGenerator")
 @AutoService(ConfigLoader.class)
 public final class GeneratedConfigLoader implements ConfigLoader {
-    public static final FieldReference<Integer> field = FieldReference.builder(value -> CommentedField.field = value, () -> CommentedField.field, new GenericType(Integer.class), "FIELD").doesSync(true).comment("A single field annotated with @Configurable.\n"
-                                                                                                                                                                                                                  + " Default value is 42.").validator(ValidatorReference.<Integer>builder().messageProvider(ignored -> "Value for 'FIELD' must be a number. Resetting to default value: '42'").fallback(true).defaultSupplier(() -> 42).build()).build();
+	public static final FieldReference<Integer> field = FieldReference.builder(value -> CommentedField.field = value, () -> CommentedField.field, new GenericType(Integer.class), "FIELD")
+			.doesSync(true)
+			.comment("A single field annotated with @Configurable.\n"
+					+ " Default value is 42.")
+			.validator(ValidatorReference.<Integer>builder()
+					.messageProvider(ignored -> "Value for 'FIELD' must be a number. Resetting to default value: '42'")
+					.fallback(true)
+					.defaultSupplier(() -> 42)
+					.build())
+			.build();
 
-    @Override
-    public String getName() {
-        return "test-project";
-    }
+	@Override
+	public String getName() {
+		return "test-project";
+	}
 
-    @Override
-    public FileType getFileType() {
-        return FileType.TOML;
-    }
+	@Override
+	public FileType getFileType() {
+		return FileType.TOML;
+	}
 
-    @Override
-    public void load(SaveLoader saveLoader) {
-        saveLoader.load(getFields());
-    }
+	@Override
+	public void load(SaveLoader saveLoader) {
+		saveLoader.load(getFields());
+	}
 
-    @Override
-    public void save(SaveLoader saveLoader) {
-        saveLoader.save(getFields());
-    }
+	@Override
+	public void save(SaveLoader saveLoader) {
+		saveLoader.save(getFields());
+	}
 
-    @Override
-    public List<FieldReference<?>> getFields() {
-        List<FieldReference<?>> fields = new ArrayList<>();
-        fields.add(field);
-        fields.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
-        return fields;
-    }
+	@Override
+	public List<FieldReference<?>> getFields() {
+		List<FieldReference<?>> fields = new ArrayList<>();
+		fields.add(field);
+		fields.sort(Comparator.comparing(ref -> "%s.%s".formatted(ref.group(), ref.name())));
+		return fields;
+	}
 }

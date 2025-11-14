@@ -1,373 +1,315 @@
 package com.bawnorton.configurable.io;
 
+import com.bawnorton.configurable.io.typed.TypedHandler;
+import com.bawnorton.configurable.io.typed.TypedHandlerCollection;
+import com.bawnorton.configurable.io.typed.TypedReader;
+import com.bawnorton.configurable.io.typed.TypedWriter;
 import com.bawnorton.configurable.util.GenericType;
 import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class SerialisationHelper {
-    public static Object interpret(JsonElement element, GenericType genericHolder) {
-        if (element == null || element.isJsonNull()) {
-            return null;
-        }
+	private static final TypedHandlerCollection TYPED_HANDLERS;
+	private static final TypedHandler<Enum<?>> ENUM_HANDLER;
+	private static final TypedHandler<Object> ARRAY_HANDLER;
+	private static final TypedHandler<List<?>> LIST_HANDLER;
 
-        Class<?> expectedType = genericHolder.type();
-        if (genericHolder.isRaw()) {
-            if (expectedType == String.class) {
-                return element.getAsString();
-            } else if (expectedType == Integer.class || expectedType == int.class) {
-                return element.getAsInt();
-            } else if (expectedType == Long.class || expectedType == long.class) {
-                return element.getAsLong();
-            } else if (expectedType == Double.class || expectedType == double.class) {
-                return element.getAsDouble();
-            } else if (expectedType == Boolean.class || expectedType == boolean.class) {
-                return element.getAsBoolean();
-            } else if (expectedType == Float.class || expectedType == float.class) {
-                return element.getAsFloat();
-            } else if (expectedType == Byte.class || expectedType == byte.class) {
-                return (byte) element.getAsInt();
-            } else if (expectedType == Short.class || expectedType == short.class) {
-                return (short) element.getAsInt();
-            } else if (expectedType == Character.class || expectedType == char.class) {
-                String str = element.getAsString();
-                if (str.length() != 1) {
-                    throw new IllegalArgumentException("Expected a single character for type char, but got: %s".formatted(str));
-                }
-                return str.charAt(0);
-            } else if (expectedType.isEnum()) {
-                //noinspection unchecked,rawtypes
-                return Enum.valueOf((Class<Enum>) expectedType, element.getAsString());
-            } else if (expectedType.isArray()) {
-                if (!element.isJsonArray()) {
-                    throw new IllegalArgumentException("Expected a JSON array for type array, but got: %s".formatted(element));
-                }
-                JsonArray jsonArray = element.getAsJsonArray();
-                int size = jsonArray.size();
-                Class<?> componentType = expectedType.getComponentType();
-                Object array = Array.newInstance(componentType, size);
+	static {
+		TYPED_HANDLERS = new TypedHandlerCollection();
+		TYPED_HANDLERS.register(String.class, null,
+				TypedReader.<String>create()
+						.json(TypedReader.JsonReader.contextless(JsonElement::getAsString))
+						.toml(TypedReader.TomlReader.contextless(UnmodifiableConfig::get))
+						.object(TypedReader.ObjectReader.contextless(Object::toString))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.STRING_UTF8::decode)),
+				TypedWriter.<String>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.STRING_UTF8::encode))
+		);
+		TYPED_HANDLERS.register(Integer.class, int.class,
+				TypedReader.<Integer>create()
+						.json(TypedReader.JsonReader.contextless(JsonElement::getAsInt))
+						.toml(TypedReader.TomlReader.contextless(UnmodifiableConfig::getInt))
+						.object(TypedReader.ObjectReader.contextless(item -> ((Number) item).intValue()))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.VAR_INT::decode)),
+				TypedWriter.<Integer>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.VAR_INT::encode))
+		);
+		TYPED_HANDLERS.register(Long.class, long.class,
+				TypedReader.<Long>create()
+						.json(TypedReader.JsonReader.contextless(JsonElement::getAsLong))
+						.toml(TypedReader.TomlReader.contextless((config, path) -> config.<Number>getRaw(path)
+								.longValue()))
+						.object(TypedReader.ObjectReader.contextless(item -> ((Number) item).longValue()))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.VAR_LONG::decode)),
+				TypedWriter.<Long>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.VAR_LONG::encode))
+		);
+		TYPED_HANDLERS.register(Boolean.class, boolean.class,
+				TypedReader.<Boolean>create()
+						.json(TypedReader.JsonReader.contextless(JsonElement::getAsBoolean))
+						.toml(TypedReader.TomlReader.contextless(UnmodifiableConfig::get))
+						.object(TypedReader.ObjectReader.contextless(item -> (Boolean) item))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.BOOL::decode)),
+				TypedWriter.<Boolean>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.BOOL::encode))
+		);
+		TYPED_HANDLERS.register(Double.class, double.class,
+				TypedReader.<Double>create()
+						.json(TypedReader.JsonReader.contextless(JsonElement::getAsDouble))
+						.toml(TypedReader.TomlReader.contextless((config, path) -> config.<Number>getRaw(path)
+								.doubleValue()))
+						.object(TypedReader.ObjectReader.contextless(item -> ((Number) item).doubleValue()))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.DOUBLE::decode)),
+				TypedWriter.<Double>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.DOUBLE::encode))
+		);
+		TYPED_HANDLERS.register(Float.class, float.class,
+				TypedReader.<Float>create()
+						.json(TypedReader.JsonReader.contextless(JsonElement::getAsFloat))
+						.toml(TypedReader.TomlReader.contextless((config, path) -> config.<Number>getRaw(path)
+								.floatValue()))
+						.object(TypedReader.ObjectReader.contextless(item -> ((Number) item).floatValue()))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.FLOAT::decode)),
+				TypedWriter.<Float>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.FLOAT::encode))
+		);
+		TYPED_HANDLERS.register(Byte.class, byte.class,
+				TypedReader.<Byte>create()
+						.json(TypedReader.JsonReader.contextless(element -> element.getAsNumber().byteValue()))
+						.toml(TypedReader.TomlReader.contextless(UnmodifiableConfig::getByte))
+						.object(TypedReader.ObjectReader.contextless(item -> ((Number) item).byteValue()))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.BYTE::decode)),
+				TypedWriter.<Byte>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.BYTE::encode))
+		);
+		TYPED_HANDLERS.register(Short.class, short.class,
+				TypedReader.<Short>create()
+						.json(TypedReader.JsonReader.contextless(element -> element.getAsNumber().shortValue()))
+						.toml(TypedReader.TomlReader.contextless(UnmodifiableConfig::getShort))
+						.object(TypedReader.ObjectReader.contextless(item -> ((Number) item).shortValue()))
+						.byteBuf(TypedReader.ByteBufReader.contextless(ByteBufCodecs.SHORT::decode)),
+				TypedWriter.<Short>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless(ByteBufCodecs.SHORT::encode))
+		);
+		Function<String, Character> charParser = str -> {
+			if (str.length() != 1) {
+				throw new IllegalArgumentException("Expected a single character for type char, but got: %s".formatted(str));
+			}
+			return str.charAt(0);
+		};
+		TYPED_HANDLERS.register(Character.class, char.class,
+				TypedReader.<Character>create()
+						.json(TypedReader.JsonReader.contextless(element -> charParser.apply(element.getAsString())))
+						.toml(TypedReader.TomlReader.contextless((config, path) -> charParser.apply(config.get(path))))
+						.object(TypedReader.ObjectReader.contextless(item -> charParser.apply(item.toString())))
+						.byteBuf(TypedReader.ByteBufReader.contextless(byteBuf -> {
+							int value = ByteBufCodecs.VAR_INT.decode(byteBuf);
+							return (char) value;
+						})),
+				TypedWriter.<Character>create()
+						.byteBuf(TypedWriter.ByteBufWriter.contextless((byteBuf, value) -> ByteBufCodecs.VAR_INT.encode(byteBuf, (int) value)))
+		);
+		//noinspection unchecked,rawtypes
+		ENUM_HANDLER = new TypedHandler<>(
+				TypedReader.<Enum<?>>create()
+						.json((element, expectedType) -> Enum.valueOf((Class<Enum>) expectedType.type(), element.getAsString()))
+						.toml((config, path, expectedType) -> Enum.valueOf((Class<Enum>) expectedType.type(), config.get(path)))
+						.object((item, expectedType) -> Enum.valueOf((Class<Enum>) expectedType.type(), item.toString()))
+						.byteBuf((byteBuf, expectedType) -> Enum.valueOf((Class<Enum>) expectedType.type(), ByteBufCodecs.STRING_UTF8.decode(byteBuf))),
+				TypedWriter.<Enum<?>>create()
+						.byteBuf((byteBuf, item, expectedType) -> ByteBufCodecs.STRING_UTF8.encode(byteBuf, item.name()))
+		);
+		ARRAY_HANDLER = new TypedHandler<>(
+				TypedReader.create()
+						.json((element, expectedType) -> {
+							if (!element.isJsonArray()) {
+								throw new IllegalArgumentException("Expected a JSON array for type array, but got: %s".formatted(element));
+							}
+							JsonArray jsonArray = element.getAsJsonArray();
+							int size = jsonArray.size();
+							Class<?> componentType = expectedType.type().getComponentType();
+							Object array = Array.newInstance(componentType, size);
 
-                for (int i = 0; i < size; i++) {
-                    JsonElement jsonElement = jsonArray.get(i);
-                    Object value = interpret(jsonElement, new GenericType(componentType));
-                    Array.set(array, i, value);
-                }
-                return array;
-            } else {
-                throw new IllegalArgumentException("Unsupported type: %s".formatted(expectedType.getName()));
-            }
-        } else {
-            GenericType[] genericTypes = genericHolder.genericTypes();
-            if (genericTypes.length == 1) {
-                GenericType genericType = genericTypes[0];
-                if (List.class.isAssignableFrom(expectedType)) {
-                    if (!element.isJsonArray()) {
-                        throw new IllegalArgumentException("Expected a JSON array for type List, but got: %s".formatted(element));
-                    }
-                    return element.getAsJsonArray()
-                                  .asList()
-                                  .stream()
-                                  .map(item -> interpret(item, genericType))
-                                  .toList();
-                } else {
-                    throw new IllegalArgumentException("Unsupported generic type: %s".formatted(expectedType.getName()));
-                }
-            } else {
-                throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");
-            }
-        }
-    }
+							for (int i = 0; i < size; i++) {
+								JsonElement jsonElement = jsonArray.get(i);
+								Object value = interpret(jsonElement, new GenericType(componentType));
+								Array.set(array, i, value);
+							}
+							return array;
+						})
+						.toml((config, path, expectedType) -> {
+							List<?> list = config.get(path);
+							if (list == null) return null;
 
-    public static Object interpret(CommentedConfig toml, String path, GenericType genericHolder) {
-        if (toml == null || !toml.contains(path)) {
-            return null;
-        }
-        Class<?> expectedType = genericHolder.type();
-        if (genericHolder.isRaw()) {
-            if (expectedType == String.class) {
-                return toml.<String>get(path);
-            } else if (expectedType == Integer.class || expectedType == int.class) {
-                return toml.<Number>get(path).intValue();
-            } else if (expectedType == Long.class || expectedType == long.class) {
-                return toml.getLong(path);
-            } else if (expectedType == Double.class || expectedType == double.class) {
-                return toml.<Number>get(path).doubleValue();
-            } else if (expectedType == Boolean.class || expectedType == boolean.class) {
-                return toml.<Boolean>get(path);
-            } else if (expectedType == Float.class || expectedType == float.class) {
-                return toml.<Number>get(path).floatValue();
-            } else if (expectedType == Byte.class || expectedType == byte.class) {
-                return toml.getByte(path);
-            } else if (expectedType == Short.class || expectedType == short.class) {
-                return toml.getShort(path);
-            } else if (expectedType == Character.class || expectedType == char.class) {
-                return toml.<String>get(path).charAt(0);
-            } else if (expectedType.isEnum()) {
-                //noinspection unchecked,rawtypes
-                return toml.getEnum(path, (Class<Enum>) expectedType);
-            } else if (expectedType.isArray()) {
-                List<?> list = toml.get(path);
-                if (list == null) return null;
+							Class<?> componentType = expectedType.type().getComponentType();
+							int size = list.size();
+							Object array = Array.newInstance(componentType, size);
+							for (int i = 0; i < size; i++) {
+								Object item = list.get(i);
+								Object value = interpret(item, new GenericType(componentType));
+								Array.set(array, i, value);
+							}
+							return array;
+						})
+						.object((item, expectedType) -> {
+							if (!(item instanceof List<?> list)) {
+								throw new IllegalArgumentException("Expected a List for type array, but got: %s".formatted(item));
+							}
+							Class<?> componentType = expectedType.type().getComponentType();
+							int size = list.size();
+							Object array = Array.newInstance(componentType, size);
+							for (int i = 0; i < size; i++) {
+								Object value = interpret(list.get(i), new GenericType(componentType));
+								Array.set(array, i, value);
+							}
+							return array;
+						})
+						.byteBuf((byteBuf, expectedType) -> {
+							int length = ByteBufCodecs.VAR_INT.decode(byteBuf);
+							Class<?> componentType = expectedType.type().getComponentType();
+							Object array = Array.newInstance(componentType, length);
+							for (int i = 0; i < length; i++) {
+								Object item = interpet(byteBuf, new GenericType(componentType));
+								Array.set(array, i, item);
+							}
+							return array;
+						}),
+				TypedWriter.create()
+						.byteBuf((byteBuf, item, expectedType) -> {
+							int length = Array.getLength(item);
+							ByteBufCodecs.VAR_INT.encode(byteBuf, length);
+							Class<?> componentType = expectedType.type().getComponentType();
+							for (int i = 0; i < length; i++) {
+								Object arrayItem = Array.get(item, i);
+								encode(byteBuf, arrayItem, new GenericType(componentType));
+							}
+						})
+		);
+		LIST_HANDLER = new TypedHandler<>(
+				TypedReader.<List<?>>create()
+						.json((element, expectedType) -> {
+							if (!element.isJsonArray()) {
+								throw new IllegalArgumentException("Expected a JSON array for type List, but got: %s".formatted(element));
+							}
+							List<Object> interpretedList = new ArrayList<>();
+							for (JsonElement item : element.getAsJsonArray()) {
+								interpretedList.add(interpret(item, expectedType.genericTypes()[0]));
+							}
+							return interpretedList;
+						})
+						.toml((config, path, expectedType) -> {
+							List<?> list = config.get(path);
+							if (list == null) return null;
 
-                Class<?> componentType = expectedType.getComponentType();
-                int size = list.size();
-                Object array = Array.newInstance(componentType, size);
-                for (int i = 0; i < size; i++) {
-                    Object item = list.get(i);
-                    Object value = interpret(item, new GenericType(componentType));
-                    Array.set(array, i, value);
-                }
-                return array;
-            } else {
-                throw new IllegalArgumentException("Unsupported type: %s".formatted(expectedType.getName()));
-            }
-        } else {
-            GenericType[] genericTypes = genericHolder.genericTypes();
-            if (genericTypes.length == 1) {
-                GenericType genericType = genericTypes[0];
-                if (List.class.isAssignableFrom(expectedType)) {
-                    List<?> list = toml.get(path);
-                    if (list == null) return null;
+							List<Object> interpretedList = new ArrayList<>(list.size());
+							for (Object item : list) {
+								interpretedList.add(interpret(item, expectedType.genericTypes()[0]));
+							}
+							return interpretedList;
+						})
+						.object((item, expectedType) -> {
+							if (!(item instanceof List<?> list)) {
+								throw new IllegalArgumentException("Expected a List for type List, but got: %s".formatted(item));
+							}
+							List<Object> interpretedList = new ArrayList<>(list.size());
+							for (Object listItem : list) {
+								interpretedList.add(interpret(listItem, expectedType.genericTypes()[0]));
+							}
+							return interpretedList;
+						})
+						.byteBuf((byteBuf, expectedType) -> {
+							int length = ByteBufCodecs.VAR_INT.decode(byteBuf);
+							List<Object> interpretedList = new ArrayList<>(length);
+							for (int i = 0; i < length; i++) {
+								Object item = interpet(byteBuf, expectedType.genericTypes()[0]);
+								interpretedList.add(item);
+							}
+							return interpretedList;
+						}),
+				TypedWriter.<List<?>>create()
+						.byteBuf((byteBuf, item, expectedType) -> {
+							ByteBufCodecs.VAR_INT.encode(byteBuf, item.size());
+							for (Object listItem : item) {
+								encode(byteBuf, listItem, expectedType.genericTypes()[0]);
+							}
+						})
+		);
+	}
 
-                    List<Object> interpretedList = new ArrayList<>(list.size());
-                    for (Object item : list) {
-                        interpretedList.add(interpret(item, genericType));
-                    }
-                    return interpretedList;
-                } else {
-                    throw new IllegalArgumentException("Unsupported generic type: %s".formatted(expectedType.getName()));
-                }
-            } else {
-                throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");
-            }
-        }
-    }
+	public static Object interpret(JsonElement element, GenericType genericType) {
+		return getTypedHandler(genericType).readFromJson(element);
+	}
 
-    public static Object interpret(Object item, GenericType genericHolder) {
-        if (item == null) return null;
+	public static Object interpret(CommentedConfig toml, String path, GenericType genericType) {
+		return getTypedHandler(genericType).readFromToml(toml, path);
+	}
 
-        Class<?> expectedType = genericHolder.type();
-        if (genericHolder.isRaw()) {
-            if (expectedType == String.class) {
-                return item.toString();
-            } else if (expectedType == Integer.class || expectedType == int.class) {
-                return ((Number) item).intValue();
-            } else if (expectedType == Long.class || expectedType == long.class) {
-                return ((Number) item).longValue();
-            } else if (expectedType == Double.class || expectedType == double.class) {
-                return ((Number) item).doubleValue();
-            } else if (expectedType == Boolean.class || expectedType == boolean.class) {
-                return item;
-            } else if (expectedType == Float.class || expectedType == float.class) {
-                return ((Number) item).floatValue();
-            } else if (expectedType == Byte.class || expectedType == byte.class) {
-                return ((Number) item).byteValue();
-            } else if (expectedType == Short.class || expectedType == short.class) {
-                return ((Number) item).shortValue();
-            } else if (expectedType == Character.class || expectedType == char.class) {
-                String str = item.toString();
-                if (str.length() != 1) {
-                    throw new IllegalArgumentException("Expected a single character for type char, but got: %s".formatted(str));
-                }
-                return str.charAt(0);
-            } else if (expectedType.isEnum()) {
-                //noinspection unchecked,rawtypes
-                return Enum.valueOf((Class<Enum>) expectedType, item.toString());
-            } else if (expectedType.isArray()) {
-                if (!(item instanceof List<?> list)) {
-                    throw new IllegalArgumentException("Expected a List for type array, but got: %s".formatted(item));
-                }
-                Class<?> componentType = expectedType.getComponentType();
-                int size = list.size();
-                Object array = Array.newInstance(componentType, size);
-                for (int i = 0; i < size; i++) {
-                    Object value = interpret(list.get(i), new GenericType(componentType));
-                    Array.set(array, i, value);
-                }
-                return array;
-            } else {
-                throw new IllegalArgumentException("Unsupported type: %s".formatted(expectedType.getName()));
-            }
-        } else {
-            GenericType[] genericTypes = genericHolder.genericTypes();
-            if (genericTypes.length == 1) {
-                GenericType genericType = genericTypes[0];
-                if (List.class.isAssignableFrom(expectedType)) {
-                    if (!(item instanceof List<?> list)) {
-                        throw new IllegalArgumentException("Expected a List for type List, but got: %s".formatted(item));
-                    }
-                    List<Object> interpretedList = new ArrayList<>(list.size());
-                    for (Object listItem : list) {
-                        interpretedList.add(interpret(listItem, genericType));
-                    }
-                    return interpretedList;
-                } else {
-                    throw new IllegalArgumentException("Unsupported generic type: %s".formatted(expectedType.getName()));
-                }
-            } else {
-                throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");
-            }
-        }
-    }
+	public static Object interpret(Object item, GenericType genericType) {
+		return getTypedHandler(genericType).readFromObject(item);
+	}
 
-    public static void encode(ByteBuf byteBuf, Object value, GenericType genericHolder) {
-        if (value == null) {
-            ByteBufCodecs.VAR_INT.encode(byteBuf, -1);
-            return;
-        } else {
-            ByteBufCodecs.VAR_INT.encode(byteBuf, 0);
-        }
+	public static Object interpet(ByteBuf byteBuf, GenericType genericType) {
+		return getTypedHandler(genericType).readFromByteBuf(byteBuf);
+	}
 
-        Class<?> type = genericHolder.type();
-        if (genericHolder.isRaw()) {
-            if (type == String.class) {
-                ByteBufCodecs.STRING_UTF8.encode(byteBuf, (String) value);
-            } else if (type == Integer.class || type == int.class) {
-                ByteBufCodecs.VAR_INT.encode(byteBuf, (Integer) value);
-            } else if (type == Long.class || type == long.class) {
-                ByteBufCodecs.VAR_LONG.encode(byteBuf, (Long) value);
-            } else if (type == Double.class || type == double.class) {
-                ByteBufCodecs.DOUBLE.encode(byteBuf, (Double) value);
-            } else if (type == Boolean.class || type == boolean.class) {
-                ByteBufCodecs.BOOL.encode(byteBuf, (Boolean) value);
-            } else if (type == Float.class || type == float.class) {
-                ByteBufCodecs.FLOAT.encode(byteBuf, (Float) value);
-            } else if (type == Byte.class || type == byte.class) {
-                ByteBufCodecs.BYTE.encode(byteBuf, (Byte) value);
-            } else if (type == Short.class || type == short.class) {
-                ByteBufCodecs.SHORT.encode(byteBuf, (Short) value);
-            } else if (type == Character.class || type == char.class) {
-                ByteBufCodecs.VAR_INT.encode(byteBuf, (int) (Character) value);
-            } else if (type.isEnum()) {
-                ByteBufCodecs.STRING_UTF8.encode(byteBuf, ((Enum<?>) value).name());
-            } else if (type.isArray()) {
-                Class<?> componentType = type.getComponentType();
-                int length = Array.getLength(value);
-                ByteBufCodecs.VAR_INT.encode(byteBuf, length);
-                for (int i = 0; i < length; i++) {
-                    Object item = Array.get(value, i);
-                    encode(byteBuf, item, new GenericType(componentType));
-                }
-            } else {
-                throw new IllegalArgumentException("Unsupported type: %s".formatted(type.getName()));
-            }
-        } else {
-            GenericType[] genericTypes = genericHolder.genericTypes();
-            if (genericTypes.length == 1) {
-                GenericType genericType = genericTypes[0];
-                if (List.class.isAssignableFrom(type)) {
-                    List<?> list = (List<?>) value;
-                    ByteBufCodecs.VAR_INT.encode(byteBuf, list.size());
-                    for (Object item : list) {
-                        encode(byteBuf, item, genericType);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Unsupported generic type: %s".formatted(type.getName()));
-                }
-            } else {
-                throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");
-            }
-        }
-    }
+	public static void encode(ByteBuf byteBuf, Object value, GenericType genericType) {
+		getTypedHandler(genericType).writeToByteBuf(byteBuf, value);
+	}
 
-    public static Object interpet(ByteBuf byteBuf, GenericType genericHolder) {
-        int nullCheck = ByteBufCodecs.VAR_INT.decode(byteBuf);
-        if (nullCheck == -1) {
-            return null; // Represents a null value
-        } else if (nullCheck != 0) {
-            throw new IllegalArgumentException("Expected a null check value of -1 or 0, but got: %d".formatted(nullCheck));
-        }
+	private static @NotNull TypedHandler<?> getTypedHandler(GenericType genericType) {
+		TypedHandler<?> handler;
+		if (genericType.type().isEnum()) {
+			handler = ENUM_HANDLER;
+		} else if (genericType.type().isArray()) {
+			handler = ARRAY_HANDLER;
+		} else if (List.class.isAssignableFrom(genericType.type())) {
+			handler = LIST_HANDLER;
+		} else {
+			handler = TYPED_HANDLERS.getHandlerFor(genericType);
+		}
+		handler.attachExpectedType(genericType);
+		return handler;
+	}
 
-        Class<?> type = genericHolder.type();
-        if (genericHolder.isRaw()) {
-            if (type == String.class) {
-                return ByteBufCodecs.STRING_UTF8.decode(byteBuf);
-            } else if (type == Integer.class || type == int.class) {
-                return ByteBufCodecs.VAR_INT.decode(byteBuf);
-            } else if (type == Long.class || type == long.class) {
-                return ByteBufCodecs.VAR_LONG.decode(byteBuf);
-            } else if (type == Double.class || type == double.class) {
-                return ByteBufCodecs.DOUBLE.decode(byteBuf);
-            } else if (type == Boolean.class || type == boolean.class) {
-                return ByteBufCodecs.BOOL.decode(byteBuf);
-            } else if (type == Float.class || type == float.class) {
-                return ByteBufCodecs.FLOAT.decode(byteBuf);
-            } else if (type == Byte.class || type == byte.class) {
-                return ByteBufCodecs.BYTE.decode(byteBuf);
-            } else if (type == Short.class || type == short.class) {
-                return ByteBufCodecs.SHORT.decode(byteBuf);
-            } else if (type == Character.class || type == char.class) {
-                int value = ByteBufCodecs.VAR_INT.decode(byteBuf);
-                return (char) value;
-            } else if (type.isEnum()) {
-                String enumName = ByteBufCodecs.STRING_UTF8.decode(byteBuf);
-                //noinspection unchecked,rawtypes
-                return Enum.valueOf((Class<Enum>) type, enumName);
-            } else if (type.isArray()) {
-                int length = ByteBufCodecs.VAR_INT.decode(byteBuf);
-                Class<?> componentType = type.getComponentType();
-                Object array = Array.newInstance(componentType, length);
-                for (int i = 0; i < length; i++) {
-                    Object item = interpet(byteBuf, new GenericType(componentType));
-                    Array.set(array, i, item);
-                }
-                return array;
-            } else {
-                throw new IllegalArgumentException("Unsupported type: %s".formatted(type.getName()));
-            }
-        } else {
-            GenericType[] genericTypes = genericHolder.genericTypes();
-            if (genericTypes.length == 1) {
-                GenericType genericType = genericTypes[0];
-                if (List.class.isAssignableFrom(type)) {
-                    int size = ByteBufCodecs.VAR_INT.decode(byteBuf);
-                    List<Object> list = new ArrayList<>(size);
-                    for (int i = 0; i < size; i++) {
-                        Object item = interpet(byteBuf, genericType);
-                        list.add(item);
-                    }
-                    return list;
-                } else {
-                    throw new IllegalArgumentException("Unsupported generic type: %s".formatted(type.getName()));
-                }
-            } else {
-                throw new IllegalArgumentException("Generic types with more than one parameter are not supported.");
-            }
-        }
-    }
+	/**
+	 * TOML doesn't support array types directly so we need to convert them to lists.
+	 * Additionally, lists cant be of array types (List<String[]>), so we need to check for that.
+	 * TOML also doesn't support characters, so we convert them to strings.
+	 */
+	public static Object safeForToml(Object value) {
+		if (value == null) return null;
 
-    /**
-     * TOML doesn't support array types directly so we need to convert them to lists.
-     * Additionally, lists cant be of array types (List<String[]>), so we need to check for that.
-     * TOML also doesn't support characters, so we convert them to strings.
-     */
-    public static Object safeForToml(Object value) {
-        if (value == null) return null;
-
-        Class<?> type = value.getClass();
-        if (type.isArray()) {
-            int length = Array.getLength(value);
-            List<Object> asList = new ArrayList<>(length);
-            for (int i = 0; i < length; i++) {
-                Object item = Array.get(value, i);
-                asList.add(safeForToml(item));
-            }
-            return asList;
-        } else if (value instanceof List<?> list) {
-            List<Object> safeList = new ArrayList<>(list.size());
-            for (Object item : list) {
-                safeList.add(safeForToml(item));
-            }
-            return safeList;
-        } else if (type == Character.class) {
-            return value.toString();
-        } else {
-            return value;
-        }
-    }
+		Class<?> type = value.getClass();
+		if (type.isEnum()) {
+			return value.toString();
+		} else if (type.isArray()) {
+			int length = Array.getLength(value);
+			List<Object> asList = new ArrayList<>(length);
+			for (int i = 0; i < length; i++) {
+				Object item = Array.get(value, i);
+				asList.add(safeForToml(item));
+			}
+			return asList;
+		} else if (value instanceof List<?> list) {
+			List<Object> safeList = new ArrayList<>(list.size());
+			for (Object item : list) {
+				safeList.add(safeForToml(item));
+			}
+			return safeList;
+		} else if (type == Character.class) {
+			return value.toString();
+		} else {
+			return value;
+		}
+	}
 }

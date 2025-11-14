@@ -1,6 +1,7 @@
 package com.bawnorton.configurable.networking;
 
 //? if fabric {
+
 import com.bawnorton.configurable.ConfigurableLoader;
 import com.bawnorton.configurable.service.ConfigLoader;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -8,6 +9,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,45 +17,45 @@ import java.util.Set;
 import java.util.UUID;
 
 public class Networking {
-    private static final Map<UUID, Set<String>> clientConfigs = new HashMap<>();
+	private static final Map<UUID, Set<String>> clientConfigs = new HashMap<>();
 
-    public static void init() {
-        PayloadTypeRegistry.playS2C().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
+	public static void init() {
+		PayloadTypeRegistry.playS2C().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
 
-        PayloadTypeRegistry.playC2S().register(HandshakePaylod.TYPE, HandshakePaylod.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(HandshakePaylod.TYPE, HandshakePaylod.STREAM_CODEC);
 
-        ServerPlayNetworking.registerGlobalReceiver(HandshakePaylod.TYPE, Networking::handleHandshake);
+		ServerPlayNetworking.registerGlobalReceiver(HandshakePaylod.TYPE, Networking::handleHandshake);
 
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clientConfigs.remove(getPlayerId(handler.getPlayer())));
-    }
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clientConfigs.remove(getPlayerId(handler.getPlayer())));
+	}
 
-    private static void handleHandshake(HandshakePaylod handshakePaylod, ServerPlayNetworking.Context context) {
-        clientConfigs.put(getPlayerId(context.player()), handshakePaylod.configs());
-        syncConfigs(context.player());
-    }
+	private static void handleHandshake(HandshakePaylod handshakePaylod, ServerPlayNetworking.Context context) {
+		clientConfigs.put(getPlayerId(context.player()), handshakePaylod.configs());
+		syncConfigs(context.player());
+	}
 
-    public static void syncConfigs(ServerPlayer player) {
-        Set<String> configs = clientConfigs.getOrDefault(getPlayerId(player), Set.of());
-        if(configs.isEmpty()) return;
+	public static void syncConfigs(ServerPlayer player) {
+		Set<String> configs = clientConfigs.getOrDefault(getPlayerId(player), Set.of());
+		if (configs.isEmpty()) return;
 
-        for(ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
-            if (configs.contains(loader.getName())) {
-                send(player, new SyncConfigPayload(loader.getName(), loader.getFields()));
-            }
-        }
-    }
-
-		private static UUID getPlayerId(ServerPlayer player) {
-			//? if >=1.21.10 {
-			return player.getGameProfile().id();
-			//?} else {
-			/*return player.getGameProfile().getId();
-			*///?}
+		for (ConfigLoader loader : ConfigurableLoader.getConfigLoaders()) {
+			if (configs.contains(loader.getName())) {
+				send(player, new SyncConfigPayload(loader.getName(), loader.getFields()));
+			}
 		}
+	}
 
-    public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
-        ServerPlayNetworking.send(player, payload);
-    }
+	private static UUID getPlayerId(ServerPlayer player) {
+		//? if >=1.21.10 {
+		return player.getGameProfile().id();
+		//?} else {
+		/*return player.getGameProfile().getId();
+		 *///?}
+	}
+
+	public static <T extends CustomPacketPayload> void send(ServerPlayer player, T payload) {
+		ServerPlayNetworking.send(player, payload);
+	}
 }
 //?} else {
 

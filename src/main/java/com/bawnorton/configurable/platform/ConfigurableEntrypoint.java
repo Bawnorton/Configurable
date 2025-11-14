@@ -8,10 +8,10 @@ import net.fabricmc.api.ModInitializer;
 
 @Entrypoint
 public class ConfigurableEntrypoint implements ModInitializer {
-    @Override
-    public void onInitialize() {
-        ConfigurableMain.init();
-    }
+	@Override
+	public void onInitialize() {
+		ConfigurableMain.init();
+	}
 }
 //?} else {
 /*import net.neoforged.fml.common.Mod;
