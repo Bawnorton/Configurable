@@ -1,7 +1,7 @@
 package com.bawnorton.configurable;
 
 import com.bawnorton.configurable.networking.Networking;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +13,7 @@ public class ConfigurableMain {
 		Networking.init();
 	}
 
-	public static ResourceLocation rl(String path) {
-		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+	public static Identifier rl(String path) {
+		return Identifier.fromNamespaceAndPath(MOD_ID, path);
 	}
 }

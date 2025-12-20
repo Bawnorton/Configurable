@@ -1,3 +1,7 @@
+# 3.3.1
+
+- Update to 1.21.11
+
 # 3.3.0
 
 - Add 1.21.5/6 artifacts

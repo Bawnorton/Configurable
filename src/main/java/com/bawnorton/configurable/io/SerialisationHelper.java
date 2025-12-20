@@ -112,10 +112,7 @@ public class SerialisationHelper {
 						.json(TypedReader.JsonReader.contextless(element -> charParser.apply(element.getAsString())))
 						.toml(TypedReader.TomlReader.contextless((config, path) -> charParser.apply(config.get(path))))
 						.object(TypedReader.ObjectReader.contextless(item -> charParser.apply(item.toString())))
-						.byteBuf(TypedReader.ByteBufReader.contextless(byteBuf -> {
-							int value = ByteBufCodecs.VAR_INT.decode(byteBuf);
-							return (char) value;
-						})),
+						.byteBuf(TypedReader.ByteBufReader.contextless(byteBuf -> (char) ByteBufCodecs.VAR_INT.decode(byteBuf).intValue())),
 				TypedWriter.<Character>create()
 						.byteBuf(TypedWriter.ByteBufWriter.contextless((byteBuf, value) -> ByteBufCodecs.VAR_INT.encode(byteBuf, (int) value)))
 		);

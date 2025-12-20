@@ -16,15 +16,16 @@ import java.nio.file.Path;
 public class ConfigurableTestHelper {
 	public static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableTestHelper.class);
 	private static final String VERSION =
-			/*? if 1.21.1 {*//*"1.21.1"*/
-			/*?} elif 1.21.5 {*//*"1.21.5"*/
+			/*? if 1.21.1 {*//*"1.21.1"
+			*//*?} elif 1.21.5 {*//*"1.21.5"*/
 			/*?} elif 1.21.8 {*//*"1.21.8"*/
-			/*?} elif 1.21.10 {*/"1.21.10"
+			/*?} elif 1.21.10 {*//*"1.21.10"
+			*//*?} elif 1.21.11 {*/"1.21.11"
 			/*?}*/;
 	private static final String LOADER =
 			/*? if fabric {*/"Fabric"
-			/*?} elif neoforge {*//*"NeoForge"*/
-			/*?}*/;
+			/*?} elif neoforge {*//*"NeoForge"
+			*//*?}*/;
 
 	public static void logModule() {
 		LOGGER.info(ConfigurableTestHelper::getModuleName);

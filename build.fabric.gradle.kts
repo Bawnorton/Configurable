@@ -32,7 +32,7 @@ dependencies {
         }
     })
 
-    modImplementation("net.fabricmc:fabric-loader:0.17.3")
+    modImplementation("net.fabricmc:fabric-loader:0.18.3")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
 
     include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
@@ -46,6 +46,8 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("com.google.testing.compile:compile-testing:0.21.0")
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
@@ -99,6 +101,15 @@ fletchingTable {
             environment = MixinEnvironment.Env.CLIENT
         }
     }
+}
+
+stonecutter {
+  replacements.string(eval(current.version, ">=1.21.11")) {
+    replace("net.minecraft.resources.ResourceLocation", "net.minecraft.resources.Identifier")
+  }
+  replacements.string(eval(current.version, ">=1.21.11")) {
+    replace("ResourceLocation", "Identifier")
+  }
 }
 
 tasks {
