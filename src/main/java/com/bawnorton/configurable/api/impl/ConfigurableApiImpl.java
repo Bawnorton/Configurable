@@ -127,7 +127,7 @@ public class ConfigurableApiImpl {
 			while (resources.hasMoreElements()) {
 				URL url = resources.nextElement();
 				String urlPath = url.getPath();
-				if (urlPath.startsWith(path)) {
+				if (urlPath.contains(path)) {
 					return url.openStream();
 				}
 			}

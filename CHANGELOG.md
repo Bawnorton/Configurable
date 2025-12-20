@@ -1,3 +1,7 @@
+# 3.3.2
+
+- Fix automatic config finding on neo
+
 # 3.3.1
 
 - Update to 1.21.11
