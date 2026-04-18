@@ -18,8 +18,9 @@ import java.security.CodeSource;
 import java.util.Enumeration;
 import java.util.Properties;
 
+
 @ApiStatus.Internal
-public class ConfigurableApiImpl {
+public final class ConfigurableApiImpl {
 	public static void saveChanges(ServerLevel level, boolean sync) {
 		ConfigLoader configLoader = getCallersConfigLoader();
 		ConfigurableLoader.saveChanges(configLoader, level, sync);

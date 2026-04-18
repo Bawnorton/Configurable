@@ -1,3 +1,7 @@
+# 3.4.0
+
+- Add custom type support to API
+
 # 3.3.2
 
 - Fix automatic config finding on neo

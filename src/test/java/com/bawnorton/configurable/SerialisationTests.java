@@ -1,16 +1,26 @@
 package com.bawnorton.configurable;
 
+import com.bawnorton.configurable.bootstrap.ServiceLoadedValue;
 import com.bawnorton.configurable.helper.ConfigurableTestHelper;
 import com.bawnorton.configurable.io.FileType;
 import com.bawnorton.configurable.io.SaveLoader;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.service.ConfigLoader;
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.file.FileNotFoundAction;
+import com.electronwill.nightconfig.toml.TomlParser;
 import com.google.common.io.Resources;
 import com.google.testing.compile.Compilation;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.quiltmc.parsers.json.JsonReader;
+import org.quiltmc.parsers.json.gson.GsonReader;
 
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -184,5 +194,48 @@ public class SerialisationTests extends BaseTest {
 				expectedToml,
 				configDir.resolve("group_serialisation.toml")
 		);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testCustomTypeCompileAndConfigOutputs() {
+		ConfigurableTestHelper.logModule();
+		Compilation compilation = testCompilationSuccess("sources/serialisation/CustomTypeCompileSerialisation.java");
+
+		ConfigLoader instance = getLoaderFromCompilation(compilation);
+
+		Path root = Path.of(System.getProperty("user.dir")).getParent().getParent();
+		Path configDir = root.resolve("test-output/%s/".formatted(ConfigurableTestHelper.getModuleName()));
+
+		SaveLoader saveLoader = new SaveLoader(
+				configDir.resolve("custom_type_compile_serialisation.json5"),
+				FileType.JSON
+		);
+		FieldReference<Object> fieldReference = (FieldReference<Object>) instance.getFields().getFirst();
+		instance.save(saveLoader);
+		fieldReference.set(new ServiceLoadedValue("changed-value"));
+		instance.load(saveLoader);
+		Assertions.assertEquals(new ServiceLoadedValue("seed-value"), fieldReference.get());
+		Path jsonPath = configDir.resolve("custom_type_compile_serialisation.json5");
+		Assertions.assertTrue(Files.exists(jsonPath), "Expected emitted JSON config file to exist");
+		try (GsonReader reader = new GsonReader(JsonReader.json5(jsonPath))) {
+			JsonElement tree = JsonParser.parseReader(reader);
+			Assertions.assertEquals("seed-value", tree.getAsJsonObject().get("CUSTOM_VALUE").getAsString());
+		} catch (IOException e) {
+			throw new AssertionError("Failed to parse emitted JSON config", e);
+		}
+
+		saveLoader = new SaveLoader(
+				configDir.resolve("custom_type_compile_serialisation.toml"),
+				FileType.TOML
+		);
+		instance.save(saveLoader);
+		fieldReference.set(new ServiceLoadedValue("changed-value"));
+		instance.load(saveLoader);
+		Assertions.assertEquals(new ServiceLoadedValue("seed-value"), fieldReference.get());
+		Path tomlPath = configDir.resolve("custom_type_compile_serialisation.toml");
+		Assertions.assertTrue(Files.exists(tomlPath), "Expected emitted TOML config file to exist");
+		CommentedConfig parsedToml = new TomlParser().parse(tomlPath, FileNotFoundAction.THROW_ERROR);
+		Assertions.assertEquals("seed-value", parsedToml.get("CUSTOM_VALUE"));
 	}
 }

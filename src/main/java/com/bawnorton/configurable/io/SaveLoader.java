@@ -1,6 +1,7 @@
 package com.bawnorton.configurable.io;
 
 import com.bawnorton.configurable.ConfigurableMain;
+import com.bawnorton.configurable.api.serialisation.SerialisationApi;
 import com.bawnorton.configurable.reference.FieldReference;
 import com.bawnorton.configurable.reference.validator.FieldValidator;
 import com.bawnorton.configurable.util.GenericType;
@@ -20,7 +21,6 @@ import org.quiltmc.parsers.json.JsonWriter;
 import org.quiltmc.parsers.json.gson.GsonReader;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -76,9 +76,9 @@ public class SaveLoader {
 
 				Object value;
 				try {
-					value = SerialisationHelper.interpret(element, ref.genericType());
+					value = SerialisationApi.decode(element, ref.genericType());
 				} catch (Exception e) {
-					ConfigurableMain.LOGGER.error("Failed to interpret value for JSON field '{}'", ref.fullName());
+					ConfigurableMain.LOGGER.error("Failed to decode value for JSON field '{}'", ref.fullName());
 					ConfigurableMain.LOGGER.debug("Exception details:", e);
 					handleInvalidValue(ref, null);
 					continue;
@@ -124,9 +124,9 @@ public class SaveLoader {
 				String coordinate = ref.group() == null ? ref.name() : "%s.%s".formatted(ref.group(), ref.name());
 				Object value;
 				try {
-					value = SerialisationHelper.interpret(parsed, coordinate, expectedType);
+					value = SerialisationApi.decode(parsed, coordinate, expectedType);
 				} catch (Exception e) {
-					ConfigurableMain.LOGGER.error("Failed to interpret value for TOML field '{}'", ref.fullName());
+					ConfigurableMain.LOGGER.error("Failed to decode value for TOML field '{}'", ref.fullName());
 					ConfigurableMain.LOGGER.debug("Exception details:", e);
 					handleInvalidValue(ref, null);
 					continue;
@@ -186,7 +186,8 @@ public class SaveLoader {
 				}
 				currentGroup = changeGroupPath(writer, ref.group(), currentGroup);
 				writer.name(ref.name());
-				writeValue(writer, ref.get());
+				JsonElement encodedValue = SerialisationApi.encodeJson(ref.get(), ref.genericType());
+				writeJsonElement(writer, encodedValue);
 			}
 			if (currentGroup != null) {
 				for (String ignored : currentGroup.split("\\.")) {
@@ -200,30 +201,34 @@ public class SaveLoader {
 		}
 	}
 
-	private void writeValue(JsonWriter writer, Object value) throws IOException {
-		if (value == null) {
+	private void writeJsonElement(JsonWriter writer, JsonElement value) throws IOException {
+		if (value == null || value.isJsonNull()) {
 			writer.nullValue();
-		} else if (value.getClass().isArray()) {
+		} else if (value.isJsonArray()) {
 			writer.beginArray();
-			int length = Array.getLength(value);
-			for (int i = 0; i < length; i++) {
-				writeValue(writer, Array.get(value, i));
+			for (JsonElement item : value.getAsJsonArray()) {
+				writeJsonElement(writer, item);
 			}
 			writer.endArray();
-		} else if (value instanceof List<?> list) {
-			writer.beginArray();
-			for (Object item : list) {
-				writeValue(writer, item);
+		} else if (value.isJsonObject()) {
+			writer.beginObject();
+			for (var entry : value.getAsJsonObject().entrySet()) {
+				writer.name(entry.getKey());
+				writeJsonElement(writer, entry.getValue());
 			}
-			writer.endArray();
+			writer.endObject();
 		} else {
-			switch (value) {
-				case String str -> writer.value(str);
-				case Number n -> writer.value(n);
-				case Boolean b -> writer.value(b);
-				case Character c -> writer.value(String.valueOf(c));
-				case Enum<?> e -> writer.value(e.name());
-				default -> throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName());
+			if (!value.isJsonPrimitive()) {
+				throw new IllegalArgumentException("Unsupported JSON element type: " + value.getClass().getName());
+			}
+			if (value.getAsJsonPrimitive().isString()) {
+				writer.value(value.getAsString());
+			} else if (value.getAsJsonPrimitive().isBoolean()) {
+				writer.value(value.getAsBoolean());
+			} else if (value.getAsJsonPrimitive().isNumber()) {
+				writer.value(value.getAsNumber());
+			} else {
+				throw new IllegalArgumentException("Unsupported JSON primitive: " + value);
 			}
 		}
 	}
@@ -270,7 +275,7 @@ public class SaveLoader {
 				if (ref.comment() != null) {
 					config.setComment(path, " %s".formatted(ref.comment()));
 				}
-				Object value = SerialisationHelper.safeForToml(ref.get());
+				Object value = SerialisationApi.encodeToml(ref.get(), ref.genericType());
 				if (value != null) {
 					config.set(path, value);
 				}

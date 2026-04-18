@@ -3,6 +3,7 @@ package com.bawnorton.configurable.io.typed;
 import com.bawnorton.configurable.util.GenericType;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 
@@ -64,5 +65,21 @@ public final class TypedHandler<T> {
 		}
 
 		writer.writeByteBuf(buf, (T) item, expectedType);
+	}
+
+	@SuppressWarnings("unchecked")
+	public JsonElement writeToJson(Object item) {
+		if (item == null) {
+			return JsonNull.INSTANCE;
+		}
+
+		return writer.writeJson((T) item, expectedType);
+	}
+
+	@SuppressWarnings("unchecked")
+	public Object writeToToml(Object item) {
+		if (item == null) return null;
+
+		return writer.writeToml((T) item, expectedType);
 	}
 }
