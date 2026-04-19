@@ -20,9 +20,14 @@ public class Networking {
 	private static final Map<UUID, Set<String>> clientConfigs = new HashMap<>();
 
 	public static void init() {
-		PayloadTypeRegistry.playS2C().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
-
+		//? if <= 1.21.11 {
+		 PayloadTypeRegistry.playS2C().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);
+		//?} else
+		/*PayloadTypeRegistry.clientboundPlay().register(SyncConfigPayload.TYPE, SyncConfigPayload.STREAM_CODEC);*/
+		//? if <= 1.21.11 {
 		PayloadTypeRegistry.playC2S().register(HandshakePaylod.TYPE, HandshakePaylod.STREAM_CODEC);
+        //?} else
+        /*PayloadTypeRegistry.serverboundPlay().register(HandshakePaylod.TYPE, HandshakePaylod.STREAM_CODEC);*/
 
 		ServerPlayNetworking.registerGlobalReceiver(HandshakePaylod.TYPE, Networking::handleHandshake);
 
