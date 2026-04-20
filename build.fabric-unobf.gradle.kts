@@ -1,16 +1,16 @@
-import configurable.utils.applyMixinDebugSettings
-import configurable.utils.deps
-import configurable.utils.mod
+@file:Suppress("UnstableApiUsage")
+
 import dev.kikugie.fletching_table.annotation.MixinEnvironment
+import configurable.utils.*
 
 plugins {
     kotlin("jvm")
     `maven-publish`
-    id("net.neoforged.moddev")
     id("configurable.common")
+    id("net.fabricmc.fabric-loom")
     id("me.modmuss50.mod-publish-plugin")
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"
-    id("dev.kikugie.fletching-table.neoforge") version "0.1.0-alpha.14"
+    id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.14"
 }
 
 repositories {
@@ -24,13 +24,18 @@ val loader: String by project
 base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 
 dependencies {
-    jarJar(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
-    jarJar(implementation("org.quiltmc.parsers:json:0.3.1")!!)
-    jarJar(implementation("org.quiltmc.parsers:gson:0.3.1")!!)
+    minecraft("com.mojang:minecraft:$minecraft")
+
+    implementation("net.fabricmc:fabric-loader:0.19.2")
+    implementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
+
+    include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
+    include(implementation("org.quiltmc.parsers:json:0.3.1")!!)
+    include(implementation("org.quiltmc.parsers:gson:0.3.1")!!)
+    include(implementation("com.electronwill.night-config:toml:3.8.3")!!)
+    include(implementation("com.electronwill.night-config:core:3.8.3")!!)
 
     implementation("com.palantir.javapoet:javapoet:0.7.0")
-    implementation("com.electronwill.night-config:toml:3.8.3")
-    implementation("org.slf4j:slf4j-api:2.0.9")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -50,63 +55,45 @@ java {
     }
 }
 
-neoForge {
-    version = deps("neoforge")
+loom {
+    accessWidenerPath.set(rootProject.file("src/main/resources/$minecraft.accesswidener"))
 
-    validateAccessTransformers = true
-    accessTransformers.from(rootProject.file("src/main/resources/$minecraft-accesstransformer.cfg"))
-
-    mods {
-        register(mod("id")!!) {
-            sourceSet(sourceSets["main"])
+    fabricApi {
+        configureDataGeneration {
+            createRunConfiguration = true
+            client = true
+            modId = mod("id")!!
         }
     }
 
-    deps("parchment") {
-        if (stonecutter.eval(stonecutter.current.version, "<=1.21.11")) {
-            parchment {
-                val (mc, version) = it.split(':')
-                mappingsVersion = version
-                minecraftVersion = mc
-            }
-        }
+    runConfigs.all {
+        ideConfigGenerated(false)
     }
 
-    runs {
-        all {
-            gameDirectory = rootProject.file("run")
-        }
+    runConfigs["client"].apply {
+        ideConfigGenerated(true)
+        runDir = "../../run"
+        programArgs("--username=Bawnorton", "--uuid=17c06cab-bf05-4ade-a8d6-ed14aaf70545")
+        appendProjectPathToConfigName = false
+        name = "Fabric Client $minecraft"
+    }
 
-        register("client") {
-            ideName = "NeoForge Client $minecraft"
-            client()
-
-            programArgument("--username=Bawnorton")
-            programArgument("--uuid=17c06cab-bf05-4ade-a8d6-ed14aaf70545")
-        }
-
-        register("data") {
-            disableIdeRun()
-            if (stonecutter.eval(minecraft, ">1.21.1")) {
-                serverData()
-            } else {
-                data()
-            }
-            programArguments.addAll(
-                "--mod", "${mod("id")}",
-                "--output", project.file("src/main/generated").toString()
-            )
-        }
+    runConfigs["datagen"].apply {
+        name = "Fabric Data Generation $minecraft"
     }
 
     afterEvaluate {
-        runs.configureEach {
-            applyMixinDebugSettings(::jvmArgument, ::systemProperty)
+        runConfigs.configureEach {
+            applyMixinDebugSettings(::vmArg, ::property)
         }
     }
 }
 
 fletchingTable {
+    fabric {
+        entrypointMappings.put("fabric-datagen", "net.fabricmc.fabric.api.datagen.v1.FabricDataGeneratorEntrypoint")
+    }
+
     mixins.register("main") {
         mixin("default", "configurable.mixins.json")
         mixin("client", "configurable.client.mixins.json") {
@@ -125,24 +112,24 @@ stonecutter {
 }
 
 tasks {
-    named("createMinecraftArtifacts") {
-        dependsOn("stonecutterGenerate")
-    }
-
     register<Copy>("buildAndCollect") {
         group = "build"
         from(jar.map { it.archiveFile })
-        into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
+        into(rootProject.layout.buildDirectory.file("libs/${mod("version")}"))
         dependsOn("build")
     }
 
-    build {
-        dependsOn("runData")
+    processResources {
+        exclude("META-INF/neoforge.mods.toml")
+        exclude { it.name.endsWith("-accesstransformer.cfg") }
     }
 
-    processResources {
-        exclude("fabric.mod.json", "configurable.fabric.mixins.json")
-        exclude { it.name.endsWith(".accesswidener") }
+    jar {
+        dependsOn("runDatagen")
+    }
+
+    named<Jar>("sourcesJar") {
+        dependsOn("runDatagen")
     }
 
     test {
@@ -151,13 +138,6 @@ tasks {
         jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
         jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
         jvmArgs("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
-    }
-}
-
-sourceSets {
-    test {
-        compileClasspath += sourceSets.main.get().compileClasspath
-        runtimeClasspath += sourceSets.main.get().runtimeClasspath
     }
 }
 
@@ -183,16 +163,15 @@ extensions.configure<PublishingExtension> {
     }
 }
 
-
 publishMods {
     val mrToken = providers.gradleProperty("MODRINTH_TOKEN")
     val cfToken = providers.gradleProperty("CURSEFORGE_TOKEN")
 
     type = BETA
     file = tasks.jar.map { it.archiveFile.get() }
-    additionalFiles.from(tasks.named<org.gradle.jvm.tasks.Jar>("sourcesJar").map { it.archiveFile.get() })
+    additionalFiles.from(tasks.named<Jar>("sourcesJar").map { it.archiveFile.get() })
 
-    displayName = "${mod("name")} Neoforge ${mod("version")} for $minecraft"
+    displayName = "${mod("name")} Fabric ${mod("version")} for $minecraft"
     version = mod("version")
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add(loader)
@@ -204,11 +183,13 @@ publishMods {
         projectId = property("publishing.modrinth") as String
         accessToken = mrToken
         minecraftVersions.addAll(compatibleVersions)
+        requires("fabric-api")
     }
 
     curseforge {
         projectId = property("publishing.curseforge") as String
         accessToken = cfToken
         minecraftVersions.addAll(compatibleVersions)
+        requires("fabric-api")
     }
 }
