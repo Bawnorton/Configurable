@@ -23,8 +23,7 @@ tasks {
             awExclude || atExclude
         }
 
-        val compatibleVersionString = mod("compatible_versions")!!
-        val compatibleVersions = compatibleVersionString.split(",").map { it.trim() }
+        val compatibleVersions = mod<List<String>>("compatible_versions")
 
         val props = mapOf(
             "mod_id" to mod("id"),
@@ -33,7 +32,7 @@ tasks {
             "mod_description" to mod("description"),
             "mod_license" to mod("license"),
             "minecraft_version" to minecraft,
-            "minecraft_dependency" to compatibleVersions.first()
+            "minecraft_dependency" to compatibleVersions
         )
 
         inputs.properties(props)

@@ -1,5 +1,3 @@
-import dev.kikugie.semver.data.SemanticVersion
-
 pluginManagement {
   repositories {
     mavenCentral()
@@ -12,28 +10,12 @@ pluginManagement {
 }
 
 plugins {
-  id("dev.kikugie.stonecutter") version "0.7.6"
+  id("dev.kikugie.stonecutter") version "0.9.1"
 }
 
 stonecutter {
-  create(rootProject) {
-    fun ver(it: String) = SemanticVersion.parse(it).getOrNull()!!
-    fun mc(mcVersion: String, name: String = mcVersion, loaders: Iterable<String>) =
-      loaders.forEach {
-        vers("$name-$it", mcVersion).buildscript =
-          if (ver(mcVersion) > ver("1.21.11") && it == "fabric") "build.$it-unobf.gradle.kts"
-          else "build.$it.gradle.kts"
-      }
-
-    mc("1.21.1", loaders = listOf("fabric", "neoforge"))
-    mc("1.21.5", loaders = listOf("fabric", "neoforge"))
-    mc("1.21.8", loaders = listOf("fabric", "neoforge"))
-    mc("1.21.10", loaders = listOf("fabric", "neoforge"))
-    mc("1.21.11", loaders = listOf("fabric", "neoforge"))
-    mc("26.1.2", loaders = listOf("fabric", "neoforge"))
-
-    vcsVersion = "1.21.11-fabric"
-  }
+  create(rootProject, file("versions.json"))
+  // vcsVersion = "26.1.2-fabric"
 }
 
 gradle.beforeProject {

@@ -1,6 +1,4 @@
-import configurable.utils.applyMixinDebugSettings
-import configurable.utils.deps
-import configurable.utils.mod
+import configurable.utils.*
 import dev.kikugie.fletching_table.annotation.MixinEnvironment
 
 plugins {
@@ -11,6 +9,7 @@ plugins {
     id("me.modmuss50.mod-publish-plugin")
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"
     id("dev.kikugie.fletching-table.neoforge") version "0.1.0-alpha.14"
+    id("dev.isxander.secrets") version "0.1.0"
 }
 
 repositories {
@@ -21,7 +20,10 @@ repositories {
 
 val minecraft: String by project
 val loader: String by project
-base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
+
+sc.properties.tags(minecraft)
+
+base.archivesName = "${mod<String>("id")}-${mod<String>("version")}+$minecraft-$loader"
 
 dependencies {
     jarJar(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
@@ -51,18 +53,18 @@ java {
 }
 
 neoForge {
-    version = deps("neoforge")
+    version = deps<String>("neoforge")
 
     validateAccessTransformers = true
     accessTransformers.from(rootProject.file("src/main/resources/$minecraft-accesstransformer.cfg"))
 
     mods {
-        register(mod("id")!!) {
+        register(mod<String>("id")!!) {
             sourceSet(sourceSets["main"])
         }
     }
 
-    deps("parchment") {
+    deps<String>("parchment") {
         if (stonecutter.eval(stonecutter.current.version, "<=1.21.11")) {
             parchment {
                 val (mc, version) = it.split(':')
@@ -93,7 +95,7 @@ neoForge {
                 data()
             }
             programArguments.addAll(
-                "--mod", "${mod("id")}",
+                "--mod", "${mod<String>("id")}",
                 "--output", project.file("src/main/generated").toString()
             )
         }
@@ -161,22 +163,29 @@ sourceSets {
     }
 }
 
+val isPublishing = gradle.startParameter.taskNames.any {
+    it.contains("publish", ignoreCase = true)
+}
+
 extensions.configure<PublishingExtension> {
     repositories {
         maven {
             name = "bawnorton"
             url = uri("https://maven.bawnorton.com/releases")
-            credentials(PasswordCredentials::class)
-            authentication {
-                create<BasicAuthentication>("basic")
+
+            if(isPublishing) {
+                credentials {
+                    username = onePassword["op://Private/Maven API Key/username"].get()
+                    password = onePassword["op://Private/Maven API Key/credential"].get()
+                }
             }
         }
     }
     publications {
         create<MavenPublication>("maven") {
-            groupId = "${mod("group")}.${mod("id")}"
-            artifactId = "${mod("id")}-$loader"
-            version = "${mod("version")}+$minecraft"
+            groupId = "${mod<String>("group")}.${mod<String>("id")}"
+            artifactId = "${mod<String>("id")}-$loader"
+            version = "${mod<String>("version")}+$minecraft"
 
             from(components["java"])
         }
@@ -185,30 +194,29 @@ extensions.configure<PublishingExtension> {
 
 
 publishMods {
-    val mrToken = providers.gradleProperty("MODRINTH_TOKEN")
-    val cfToken = providers.gradleProperty("CURSEFORGE_TOKEN")
+    val mrTokenProvider = onePassword["op://Private/Modrinth API Key/credential"]
+    val cfTokenProvider = onePassword["op://Private/Curseforge API Key/credential"]
 
-    type = BETA
+    type = STABLE
     file = tasks.jar.map { it.archiveFile.get() }
     additionalFiles.from(tasks.named<org.gradle.jvm.tasks.Jar>("sourcesJar").map { it.archiveFile.get() })
 
-    displayName = "${mod("name")} Neoforge ${mod("version")} for $minecraft"
-    version = mod("version")
+    displayName = "${mod<String>("name")} Neoforge ${mod<String>("version")} for $minecraft"
+    version = mod<String>("version")
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add(loader)
 
-    val compatibleVersionString = mod("compatible_versions")!!
-    val compatibleVersions = compatibleVersionString.split(",").map { it.trim() }
+    val compatibleVersions = sc.properties.raw("mod", "compatible_versions").to<List<String>>()
 
     modrinth {
         projectId = property("publishing.modrinth") as String
-        accessToken = mrToken
+        accessToken = mrTokenProvider.get()
         minecraftVersions.addAll(compatibleVersions)
     }
 
     curseforge {
         projectId = property("publishing.curseforge") as String
-        accessToken = cfToken
+        accessToken = cfTokenProvider.get()
         minecraftVersions.addAll(compatibleVersions)
     }
 }

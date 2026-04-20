@@ -24,10 +24,10 @@ import java.util.Set;
 @SupportedAnnotationTypes("com.bawnorton.configurable.Configurable")
 @SupportedSourceVersion(
 		/*? if <= 1.21.11 {*/
-		SourceVersion.RELEASE_21
-		/*?} else {*/
-		/*SourceVersion.RELEASE_25
-		/^}^/
+		/*SourceVersion.RELEASE_21
+		*//*?} else {*/
+		SourceVersion.RELEASE_25
+		/*?}*/
 )
 @AutoService(Processor.class)
 public class ConfigurableProcessor extends AbstractProcessor {
@@ -104,4 +104,3 @@ public class ConfigurableProcessor extends AbstractProcessor {
 		}
 	}
 }
-*/

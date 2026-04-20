@@ -21,13 +21,16 @@ repositories {
 
 val minecraft: String by project
 val loader: String by project
-base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
+
+sc.properties.tags(minecraft, loader)
+
+base.archivesName = "${mod<String>("id")}-${mod<String>("version")}+$minecraft-$loader"
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
 
     implementation("net.fabricmc:fabric-loader:0.19.2")
-    implementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${deps<String>("fabric_api")}")
 
     include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
     include(implementation("org.quiltmc.parsers:json:0.3.1")!!)
@@ -46,13 +49,8 @@ dependencies {
 
 java {
     withSourcesJar()
-    if (stonecutter.eval(minecraft, "<=1.21.11")){
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    } else {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
-    }
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 loom {
@@ -62,7 +60,7 @@ loom {
         configureDataGeneration {
             createRunConfiguration = true
             client = true
-            modId = mod("id")!!
+            modId = mod<String>("id")
         }
     }
 
@@ -115,7 +113,7 @@ tasks {
     register<Copy>("buildAndCollect") {
         group = "build"
         from(jar.map { it.archiveFile })
-        into(rootProject.layout.buildDirectory.file("libs/${mod("version")}"))
+        into(rootProject.layout.buildDirectory.file("libs/${mod<String>("version")}"))
         dependsOn("build")
     }
 
@@ -154,9 +152,9 @@ extensions.configure<PublishingExtension> {
     }
     publications {
         create<MavenPublication>("maven") {
-            groupId = "${mod("group")}.${mod("id")}"
-            artifactId = "${mod("id")}-$loader"
-            version = "${mod("version")}+$minecraft"
+            groupId = "${mod<String>("group")}.${mod<String>("id")}"
+            artifactId = "${mod<String>("id")}-$loader"
+            version = "${mod<String>("version")}+$minecraft"
 
             from(components["java"])
         }
@@ -167,17 +165,16 @@ publishMods {
     val mrToken = providers.gradleProperty("MODRINTH_TOKEN")
     val cfToken = providers.gradleProperty("CURSEFORGE_TOKEN")
 
-    type = BETA
+    type = STABLE
     file = tasks.jar.map { it.archiveFile.get() }
     additionalFiles.from(tasks.named<Jar>("sourcesJar").map { it.archiveFile.get() })
 
-    displayName = "${mod("name")} Fabric ${mod("version")} for $minecraft"
-    version = mod("version")
+    displayName = "${mod<String>("name")} Fabric ${mod<String>("version")} for $minecraft"
+    version = mod<String>("version")
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add(loader)
 
-    val compatibleVersionString = mod("compatible_versions")!!
-    val compatibleVersions = compatibleVersionString.split(",").map { it.trim() }
+    val compatibleVersions = sc.properties.raw("mod", "compatible_versions").to<List<String>>()
 
     modrinth {
         projectId = property("publishing.modrinth") as String

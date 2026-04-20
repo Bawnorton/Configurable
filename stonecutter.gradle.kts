@@ -1,5 +1,3 @@
-import dev.kikugie.stonecutter.data.tree.struct.ProjectNode
-
 plugins {
     kotlin("jvm") version "2.2.0" apply false
     id("dev.kikugie.stonecutter")
@@ -8,19 +6,19 @@ plugins {
     id("me.modmuss50.mod-publish-plugin") version "0.8.+" apply false
 }
 
-stonecutter active "1.21.11-fabric"
+stonecutter active "26.1.2-fabric"
 
 stonecutter parameters {
     constants.match(node.metadata.project.substringAfterLast('-'), "fabric", "neoforge")
 }
 
 stonecutter tasks {
-    val ordering = Comparator
-        .comparing<ProjectNode, _> { stonecutter.parse(it.metadata.version) }
-        .thenComparingInt { if (it.metadata.project.endsWith("fabric")) 1 else 0 }
-
-    order("publishModrinth", ordering)
-    order("publishCurseforge", ordering)
+//    val ordering = Comparator
+//        .comparing<ProjectNode, _> { stonecutter.parse(it.metadata.version) }
+//        .thenComparingInt { if (it.metadata.project.endsWith("fabric")) 1 else 0 }
+//
+//    order("publishModrinth", ordering)
+//    order("publishCurseforge", ordering)
 }
 
 
