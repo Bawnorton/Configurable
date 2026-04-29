@@ -23,7 +23,7 @@ val loader: String by project
 
 sc.properties.tags(minecraft)
 
-base.archivesName = "${mod<String>("id")}-${mod<String>("version")}+$minecraft-$loader"
+base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 
 dependencies {
     jarJar(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
@@ -53,18 +53,18 @@ java {
 }
 
 neoForge {
-    version = deps<String>("neoforge")
+    version = deps("neoforge")
 
     validateAccessTransformers = true
     accessTransformers.from(rootProject.file("src/main/resources/$minecraft-accesstransformer.cfg"))
 
     mods {
-        register(mod<String>("id")!!) {
+        register(mod("id")!!) {
             sourceSet(sourceSets["main"])
         }
     }
 
-    deps<String>("parchment") {
+    deps("parchment") {
         if (stonecutter.eval(stonecutter.current.version, "<=1.21.11")) {
             parchment {
                 val (mc, version) = it.split(':')
@@ -95,7 +95,7 @@ neoForge {
                 data()
             }
             programArguments.addAll(
-                "--mod", "${mod<String>("id")}",
+                "--mod", "${mod("id")}",
                 "--output", project.file("src/main/generated").toString()
             )
         }
@@ -183,9 +183,9 @@ extensions.configure<PublishingExtension> {
     }
     publications {
         create<MavenPublication>("maven") {
-            groupId = "${mod<String>("group")}.${mod<String>("id")}"
-            artifactId = "${mod<String>("id")}-$loader"
-            version = "${mod<String>("version")}+$minecraft"
+            groupId = "${mod("group")}.${mod("id")}"
+            artifactId = "${mod("id")}-$loader"
+            version = "${mod("version")}+$minecraft"
 
             from(components["java"])
         }
@@ -201,8 +201,8 @@ publishMods {
     file = tasks.jar.map { it.archiveFile.get() }
     additionalFiles.from(tasks.named<org.gradle.jvm.tasks.Jar>("sourcesJar").map { it.archiveFile.get() })
 
-    displayName = "${mod<String>("name")} Neoforge ${mod<String>("version")} for $minecraft"
-    version = mod<String>("version")
+    displayName = "${mod("name")} Neoforge ${mod("version")} for $minecraft"
+    version = mod("version")
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add(loader)
 
@@ -210,13 +210,13 @@ publishMods {
 
     modrinth {
         projectId = property("publishing.modrinth") as String
-        accessToken = mrTokenProvider.get()
+        accessToken = mrTokenProvider
         minecraftVersions.addAll(compatibleVersions)
     }
 
     curseforge {
         projectId = property("publishing.curseforge") as String
-        accessToken = cfTokenProvider.get()
+        accessToken = cfTokenProvider
         minecraftVersions.addAll(compatibleVersions)
     }
 }

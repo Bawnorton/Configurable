@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.2.0" apply false
     id("dev.kikugie.stonecutter")
-    id("fabric-loom") version "1.15-SNAPSHOT" apply false
+    id("fabric-loom") version "1.16-SNAPSHOT" apply false
     id("net.neoforged.moddev") version "2.0.141" apply false
     id("me.modmuss50.mod-publish-plugin") version "0.8.+" apply false
 }
@@ -13,12 +13,10 @@ stonecutter parameters {
 }
 
 stonecutter tasks {
-//    val ordering = Comparator
-//        .comparing<ProjectNode, _> { stonecutter.parse(it.metadata.version) }
-//        .thenComparingInt { if (it.metadata.project.endsWith("fabric")) 1 else 0 }
-//
-//    order("publishModrinth", ordering)
-//    order("publishCurseforge", ordering)
+    val ordering = versionComparator.thenComparingInt { if(it.metadata.project.contains("fabric")) 1 else 0 }
+
+    order("publishModrinth", ordering)
+    order("publishCurseforge", ordering)
 }
 
 

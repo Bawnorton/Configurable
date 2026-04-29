@@ -69,7 +69,7 @@ public class ConfigurableProcessor extends AbstractProcessor {
 
 		Messager messager = processingEnv.getMessager();
 
-		Path projectDir = Path.of(System.getProperty("user.dir"));
+		Path projectDir = findProjectDir(processingEnv);
 		Path configPath = projectDir.resolve("configurable.properties");
 		try (InputStream configStream = new FileInputStream(configPath.toFile())) {
 			Properties properties = new Properties();
@@ -102,5 +102,26 @@ public class ConfigurableProcessor extends AbstractProcessor {
 					e.getMessage()
 			));
 		}
+	}
+
+	private Path findProjectDir(ProcessingEnvironment processingEnv) {
+		try {
+			FileObject dummy = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "configurable_dummy.tmp");
+			Path path = Path.of(dummy.toUri()).getParent();
+			dummy.delete();
+
+			while (path != null) {
+				if (path.resolve("configurable.properties").toFile().exists()) {
+					return path;
+				}
+				if (path.resolve("build.gradle").toFile().exists() || path.resolve("build.gradle.kts").toFile().exists()) {
+					return path;
+				}
+				path = path.getParent();
+			}
+		} catch (Exception e) {
+			// ignore
+		}
+		return Path.of(System.getProperty("user.dir"));
 	}
 }

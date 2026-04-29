@@ -11,6 +11,7 @@ plugins {
     id("me.modmuss50.mod-publish-plugin")
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"
     id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.14"
+    id("dev.isxander.secrets") version "0.1.0"
 }
 
 repositories {
@@ -24,13 +25,13 @@ val loader: String by project
 
 sc.properties.tags(minecraft, loader)
 
-base.archivesName = "${mod<String>("id")}-${mod<String>("version")}+$minecraft-$loader"
+base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
 
     implementation("net.fabricmc:fabric-loader:0.19.2")
-    implementation("net.fabricmc.fabric-api:fabric-api:${deps<String>("fabric_api")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
 
     include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
     include(implementation("org.quiltmc.parsers:json:0.3.1")!!)
@@ -60,7 +61,7 @@ loom {
         configureDataGeneration {
             createRunConfiguration = true
             client = true
-            modId = mod<String>("id")
+            modId = mod("id")
         }
     }
 
@@ -113,7 +114,7 @@ tasks {
     register<Copy>("buildAndCollect") {
         group = "build"
         from(jar.map { it.archiveFile })
-        into(rootProject.layout.buildDirectory.file("libs/${mod<String>("version")}"))
+        into(rootProject.layout.buildDirectory.file("libs/${mod("version")}"))
         dependsOn("build")
     }
 
@@ -139,22 +140,29 @@ tasks {
     }
 }
 
+val isPublishing = gradle.startParameter.taskNames.any {
+    it.contains("publish", ignoreCase = true)
+}
+
 extensions.configure<PublishingExtension> {
     repositories {
         maven {
             name = "bawnorton"
             url = uri("https://maven.bawnorton.com/releases")
-            credentials(PasswordCredentials::class)
-            authentication {
-                create<BasicAuthentication>("basic")
+
+            if(isPublishing) {
+                credentials {
+                    username = onePassword["op://Private/Maven API Key/username"].get()
+                    password = onePassword["op://Private/Maven API Key/credential"].get()
+                }
             }
         }
     }
     publications {
         create<MavenPublication>("maven") {
-            groupId = "${mod<String>("group")}.${mod<String>("id")}"
-            artifactId = "${mod<String>("id")}-$loader"
-            version = "${mod<String>("version")}+$minecraft"
+            groupId = "${mod("group")}.${mod("id")}"
+            artifactId = "${mod("id")}-$loader"
+            version = "${mod("version")}+$minecraft"
 
             from(components["java"])
         }
@@ -162,15 +170,15 @@ extensions.configure<PublishingExtension> {
 }
 
 publishMods {
-    val mrToken = providers.gradleProperty("MODRINTH_TOKEN")
-    val cfToken = providers.gradleProperty("CURSEFORGE_TOKEN")
+    val mrTokenProvider = onePassword["op://Private/Modrinth API Key/credential"]
+    val cfTokenProvider = onePassword["op://Private/Curseforge API Key/credential"]
 
     type = STABLE
     file = tasks.jar.map { it.archiveFile.get() }
     additionalFiles.from(tasks.named<Jar>("sourcesJar").map { it.archiveFile.get() })
 
-    displayName = "${mod<String>("name")} Fabric ${mod<String>("version")} for $minecraft"
-    version = mod<String>("version")
+    displayName = "${mod("name")} Fabric ${mod("version")} for $minecraft"
+    version = mod("version")
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add(loader)
 
@@ -178,14 +186,14 @@ publishMods {
 
     modrinth {
         projectId = property("publishing.modrinth") as String
-        accessToken = mrToken
+        accessToken = mrTokenProvider
         minecraftVersions.addAll(compatibleVersions)
         requires("fabric-api")
     }
 
     curseforge {
         projectId = property("publishing.curseforge") as String
-        accessToken = cfToken
+        accessToken = cfTokenProvider
         minecraftVersions.addAll(compatibleVersions)
         requires("fabric-api")
     }

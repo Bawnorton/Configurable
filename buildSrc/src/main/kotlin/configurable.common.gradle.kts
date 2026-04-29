@@ -23,7 +23,16 @@ tasks {
             awExclude || atExclude
         }
 
-        val compatibleVersions = mod<List<String>>("compatible_versions")
+        fun listProp(name: String): List<String> {
+            var index = 0;
+            var list = mutableListOf<String>()
+            while (true) {
+                val element = project.findProperty("$name.$index") ?: break
+                list.add(element as String)
+                index++
+            }
+            return list
+        }
 
         val props = mapOf(
             "mod_id" to mod("id"),
@@ -32,7 +41,7 @@ tasks {
             "mod_description" to mod("description"),
             "mod_license" to mod("license"),
             "minecraft_version" to minecraft,
-            "minecraft_dependency" to compatibleVersions
+            "minecraft_dependency" to listProp("mod.compatible_versions").first(),
         )
 
         inputs.properties(props)

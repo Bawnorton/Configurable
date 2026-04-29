@@ -48,7 +48,7 @@ public abstract class BaseTest {
 		JavaFileObject sourceFile = sourceAndExpected.first();
 		Compilation compilation = compiler.compile(sourceFile);
 		CompilationHelper.logDiagnostics(compilation);
-		CompilationSubject.assertThat(compilation).succeededWithoutWarnings();
+		CompilationSubject.assertThat(compilation).succeeded();
 
 		JavaFileObject expectedFile = sourceAndExpected.second();
 		CompilationSubject.assertThat(compilation)

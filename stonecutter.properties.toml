@@ -1,7 +1,7 @@
 mod.group="com.bawnorton"
 mod.id="configurable"
 mod.name="Configurable"
-mod.version="3.4.0"
+mod.version="3.5.1"
 mod.author="Bawnorton"
 mod.license="MIT"
 mod.description="Config library that allows decentralised settings in a mod"

@@ -1,3 +1,11 @@
+# 3.5.1
+
+- Improve finding of properties file
+
+# 3.5.0
+
+- Update to 26.1
+
 # 3.4.0
 
 - Add custom type support to API

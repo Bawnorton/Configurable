@@ -25,19 +25,19 @@ val loader: String by project
 
 sc.properties.tags(minecraft, loader)
 
-base.archivesName = "${mod<String>("id")}-${mod<String>("version")}+$minecraft-$loader"
+base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
     mappings(loom.layered {
         officialMojangMappings()
-        deps<String>("parchment") {
+        deps("parchment") {
             parchment("org.parchmentmc.data:parchment-$it@zip")
         }
     })
 
     modImplementation("net.fabricmc:fabric-loader:0.18.3")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${deps<String>("fabric_api")}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
 
     include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
     include(implementation("org.quiltmc.parsers:json:0.3.1")!!)
@@ -67,7 +67,7 @@ loom {
         configureDataGeneration {
             createRunConfiguration = true
             client = true
-            modId = mod<String>("id")
+            modId = mod("id")
         }
     }
 
@@ -120,7 +120,7 @@ tasks {
     register<Copy>("buildAndCollect") {
         group = "build"
         from(remapJar.map { it.archiveFile })
-        into(rootProject.layout.buildDirectory.file("libs/${mod<String>("version")}"))
+        into(rootProject.layout.buildDirectory.file("libs/${mod("version")}"))
         dependsOn("build")
     }
 
@@ -166,9 +166,9 @@ extensions.configure<PublishingExtension> {
     }
     publications {
         create<MavenPublication>("maven") {
-            groupId = "${mod<String>("group")}.${mod<String>("id")}"
-            artifactId = "${mod<String>("id")}-$loader"
-            version = "${mod<String>("version")}+$minecraft"
+            groupId = "${mod("group")}.${mod("id")}"
+            artifactId = "${mod("id")}-$loader"
+            version = "${mod("version")}+$minecraft"
 
             from(components["java"])
         }
@@ -183,8 +183,8 @@ publishMods {
     file = tasks.remapJar.map { it.archiveFile.get() }
     additionalFiles.from(tasks.remapSourcesJar.map { it.archiveFile.get() })
 
-    displayName = "${mod<String>("name")} Fabric ${mod<String>("version")} for $minecraft"
-    version = mod<String>("version")
+    displayName = "${mod("name")} Fabric ${mod("version")} for $minecraft"
+    version = mod("version")
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add(loader)
 
@@ -192,14 +192,14 @@ publishMods {
 
     modrinth {
         projectId = property("publishing.modrinth") as String
-        accessToken = mrTokenProvider.get()
+        accessToken = mrTokenProvider
         minecraftVersions.addAll(compatibleVersions)
         requires("fabric-api")
     }
 
     curseforge {
         projectId = property("publishing.curseforge") as String
-        accessToken = cfTokenProvider.get()
+        accessToken = cfTokenProvider
         minecraftVersions.addAll(compatibleVersions)
         requires("fabric-api")
     }
