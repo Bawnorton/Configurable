@@ -21,7 +21,8 @@ public class ConfigurableTestHelper {
 			/*?} elif 1.21.8 {*//*"1.21.8"*/
 			/*?} elif 1.21.10 {*//*"1.21.10"
 			*//*?} elif 1.21.11 {*//*"1.21.11"
-			*//*?} elif 26.1.2 {*/ "26.1.2" /*?}*/;
+			*//*?} elif 26.1.2 {*//*"26.1.2"
+			*//*?} elif 26.2 {*/ "26.2" /*?}*/;
 	private static final String LOADER =
 			/*? if fabric {*/"Fabric"
 			/*?} elif neoforge {*//*"NeoForge"
