@@ -17,7 +17,7 @@
   "environment": "*",
   "accessWidener": "${minecraft_version}.accesswidener",
   "depends": {
-    "minecraft": "~${minecraft_dependency}",
+    "minecraft": "${minecraft_dependency}",
     "fabric-api": "*",
     "fabricloader": ">=0.16.0"
   },

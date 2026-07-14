@@ -6,14 +6,14 @@ plugins {
     id("me.modmuss50.mod-publish-plugin") version "0.8.+" apply false
 }
 
-stonecutter active "26.1.2-fabric"
+stonecutter active "26.2-fabric"
 
 stonecutter parameters {
     constants.match(node.metadata.project.substringAfterLast('-'), "fabric", "neoforge")
 }
 
 stonecutter tasks {
-    val ordering = versionComparator.thenComparingInt { if(it.metadata.project.contains("fabric")) 1 else 0 }
+    val ordering = versionComparator.thenComparingInt { if (it.metadata.project.contains("fabric")) 1 else 0 }
 
     order("publishModrinth", ordering)
     order("publishCurseforge", ordering)
@@ -25,16 +25,18 @@ for (version in stonecutter.versions.map { it.version }.distinct()) tasks.regist
     dependsOn(stonecutter.tasks.named("publishMods") { metadata.version == version })
 }
 
-for (version in stonecutter.versions.map { it.version }.distinct()) tasks.register("publishAll${version}FabricPublicationsToBawnortonRepository") {
-  group = "publishing"
-  dependsOn(stonecutter.tasks.named("publishAllPublicationsToBawnortonRepository") {
-    metadata.version == version && metadata.project.contains("fabric")
-  })
+for (version in stonecutter.versions.map { it.version }
+    .distinct()) tasks.register("publishAll${version}FabricPublicationsToBawnortonRepository") {
+    group = "publishing"
+    dependsOn(stonecutter.tasks.named("publishAllPublicationsToBawnortonRepository") {
+        metadata.version == version && metadata.project.contains("fabric")
+    })
 }
 
-for (version in stonecutter.versions.map { it.version }.distinct()) tasks.register("publishAll${version}NeoforgePublicationsToBawnortonRepository") {
-  group = "publishing"
-  dependsOn(stonecutter.tasks.named("publishAllPublicationsToBawnortonRepository") {
-    metadata.version == version && metadata.project.contains("neoforge")
-  })
+for (version in stonecutter.versions.map { it.version }
+    .distinct()) tasks.register("publishAll${version}NeoforgePublicationsToBawnortonRepository") {
+    group = "publishing"
+    dependsOn(stonecutter.tasks.named("publishAllPublicationsToBawnortonRepository") {
+        metadata.version == version && metadata.project.contains("neoforge")
+    })
 }

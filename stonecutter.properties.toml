@@ -1,7 +1,7 @@
 mod.group="com.bawnorton"
 mod.id="configurable"
 mod.name="Configurable"
-mod.version="3.5.1"
+mod.version="3.5.2"
 mod.author="Bawnorton"
 mod.license="MIT"
 mod.description="Config library that allows decentralised settings in a mod"
@@ -38,14 +38,16 @@ deps.parchment="1.21.10:2025.10.12"
 mod.compatible_versions=["1.21.9", "1.21.10"]
 
 ["1.21.11"]
-deps.neoforge="21.11.12-beta"
-deps.fabric_api="0.140.0+1.21.11"
+deps.neoforge="21.11.42"
+deps.fabric_api="0.141.4+1.21.11"
 deps.parchment="1.21.10:2025.10.12"
 
 mod.compatible_versions=["1.21.11"]
 
-["26.1.2"]
-deps.neoforge="26.1.2.19-beta"
-deps.fabric_api="0.146.1+26.1.2"
+["26.2"]
+deps.neoforge="26.2.0.13-beta"
+deps.fabric_api="0.154.2+26.2"
+deps.fabric_minecraft_dependency=">=26.1 <26.3"
+deps.neoforge_minecraft_dependency="[26.1, 26.3)"
 
-mod.compatible_versions=["26.1", "26.1.1", "26.1.2"]
+mod.compatible_versions=["26.1", "26.1.1", "26.1.2", "26.2"]

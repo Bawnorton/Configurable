@@ -1,3 +1,7 @@
+# 3.5.2
+
+- Update to 26.2
+
 # 3.5.1
 
 - Improve finding of properties file
