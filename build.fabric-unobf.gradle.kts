@@ -30,7 +30,7 @@ base.archivesName = "${mod("id")}-${mod("version")}+$minecraft-$loader"
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
 
-    implementation("net.fabricmc:fabric-loader:0.19.2")
+    implementation("net.fabricmc:fabric-loader:0.19.5")
     implementation("net.fabricmc.fabric-api:fabric-api:${deps("fabric_api")}")
 
     include(api(annotationProcessor("com.google.auto.service:auto-service:1.0")!!)!!)
@@ -55,8 +55,6 @@ java {
 }
 
 loom {
-    accessWidenerPath.set(rootProject.file("src/main/resources/$minecraft.accesswidener"))
-
     fabricApi {
         configureDataGeneration {
             createRunConfiguration = true
@@ -120,7 +118,6 @@ tasks {
 
     processResources {
         exclude("META-INF/neoforge.mods.toml")
-        exclude { it.name.endsWith("-accesstransformer.cfg") }
     }
 
     jar {

@@ -15,7 +15,6 @@
   "icon": "assets/${mod_id}/icon.png",
   "license": "${mod_license}",
   "environment": "*",
-  "accessWidener": "${minecraft_version}.accesswidener",
   "depends": {
     "minecraft": "${minecraft_dependency}",
     "fabric-api": "*",

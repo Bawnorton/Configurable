@@ -55,9 +55,6 @@ java {
 neoForge {
     version = deps("neoforge")
 
-    validateAccessTransformers = true
-    accessTransformers.from(rootProject.file("src/main/resources/$minecraft-accesstransformer.cfg"))
-
     mods {
         register(mod("id")!!) {
             sourceSet(sourceSets["main"])
@@ -144,7 +141,6 @@ tasks {
 
     processResources {
         exclude("fabric.mod.json", "configurable.fabric.mixins.json")
-        exclude { it.name.endsWith(".accesswidener") }
     }
 
     test {

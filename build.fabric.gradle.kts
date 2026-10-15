@@ -61,8 +61,6 @@ java {
 }
 
 loom {
-    accessWidenerPath.set(rootProject.file("src/main/resources/$minecraft.accesswidener"))
-
     fabricApi {
         configureDataGeneration {
             createRunConfiguration = true
@@ -126,7 +124,6 @@ tasks {
 
     processResources {
         exclude("META-INF/neoforge.mods.toml")
-        exclude { it.name.endsWith("-accesstransformer.cfg") }
     }
 
     remapJar {
